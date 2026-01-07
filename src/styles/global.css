@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Background global do app */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+.dark body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+/* Markdown */
+.prose img {
+  border-radius: 0.5rem;
+  max-width: 100%;
+}
+
+.input {
+  @apply w-full px-3 py-2 rounded border
+    bg-white text-gray-900 border-gray-300
+    focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.dark .input {
+  @apply bg-gray-900 text-gray-100 border-gray-700
+    focus:ring-blue-400;
+}
