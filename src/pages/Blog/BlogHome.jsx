@@ -5,6 +5,7 @@ import PostCardSkeleton from "../../components/PostCardSkeleton";
 import Filters from "../../components/Filters";
 import useSEO from "../../hooks/useSEO";
 import PostsService from "../../services/posts.service";
+import EmptyState from "../../components/EmptyState";
 
 export default function BlogHome() {
   const [category, setCategory] = useState("");
@@ -47,9 +48,10 @@ export default function BlogHome() {
 
         {/* Estado vazio */}
         {!loading && filteredPosts.length === 0 && (
-          <p className="text-gray-500 dark:text-gray-400 mt-8">
-            Nenhum post publicado ainda.
-          </p>
+          <EmptyState
+            title="Nenhum post publicado ainda"
+            description="Estamos preparando conteúdos incríveis sobre marketing, tecnologia e crescimento. Volte em breve."
+          />
         )}
 
         {/* Posts */}
