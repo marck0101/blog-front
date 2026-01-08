@@ -1,4 +1,5 @@
 import { uploadImage } from "../../services/uploadImage";
+import { generateUUID } from "../../utils/uuid";
 
 export default function ImageManager({
   images,
@@ -11,7 +12,7 @@ export default function ImageManager({
 
     setImages((prev) => [
       ...prev,
-      { url, id: crypto.randomUUID() },
+      { url, id: generateUUID() },
     ]);
 
     if (!coverImage) setCoverImage(url);
