@@ -32,7 +32,7 @@ export default function EditPost() {
     excerpt: "",
     content: "",
     category: "marketing",
-    published: false,
+    published: false, // 🔴 sincronizado com backend
     seo: {
       title: "",
       description: "",
@@ -42,6 +42,7 @@ export default function EditPost() {
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
 
+  /* ---------------- LOAD POST ---------------- */
   useEffect(() => {
     if (!id) return;
 
@@ -75,6 +76,7 @@ export default function EditPost() {
     loadPost();
   }, [id, navigate]);
 
+  /* ---------------- SAVE ---------------- */
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -85,7 +87,12 @@ export default function EditPost() {
         coverImage,
       });
 
-      showToast("Post atualizado com sucesso");
+      showToast(
+        form.published
+          ? "Post atualizado e publicado"
+          : "Post salvo como rascunho"
+      );
+
       setTimeout(() => navigate("/admin/posts"), 800);
     } catch {
       showToast("Erro ao salvar alterações", "error");
@@ -94,6 +101,7 @@ export default function EditPost() {
     }
   };
 
+  /* ---------------- LOADING ---------------- */
   if (loading) {
     return (
       <>
@@ -108,6 +116,7 @@ export default function EditPost() {
     );
   }
 
+  /* ---------------- RENDER ---------------- */
   return (
     <>
       <Header />
@@ -128,18 +137,23 @@ export default function EditPost() {
       <main className="max-w-5xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-bold mb-6">Editar publicação</h1>
 
+        {/* Título */}
         <input
           className="input"
+          placeholder="Título"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
 
+        {/* Slug */}
         <input
           className="input mt-2"
+          placeholder="Slug"
           value={form.slug}
           onChange={(e) => setForm({ ...form, slug: e.target.value })}
         />
 
+        {/* Categoria */}
         <select
           className="input mt-2"
           value={form.category}
@@ -152,12 +166,15 @@ export default function EditPost() {
           ))}
         </select>
 
+        {/* Resumo */}
         <textarea
           className="input mt-2"
+          placeholder="Resumo"
           value={form.excerpt}
           onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
         />
 
+        {/* Imagens */}
         <ImageManager
           images={gallery}
           setImages={setGallery}
@@ -165,17 +182,42 @@ export default function EditPost() {
           setCoverImage={setCoverImage}
         />
 
+        {/* Conteúdo */}
         <MarkdownEditor
           value={form.content}
           onChange={(content) => setForm({ ...form, content })}
         />
 
+        {/* STATUS DE PUBLICAÇÃO */}
+        <div className="mt-4 flex items-start gap-3">
+          <input
+            id="published"
+            type="checkbox"
+            checked={form.published}
+            onChange={(e) => setForm({ ...form, published: e.target.checked })}
+            className="mt-1"
+          />
+          <label htmlFor="published" className="text-sm">
+            <strong>Publicado</strong>
+            <p className="text-xs text-gray-500">
+              Se desmarcado, o post permanece como rascunho.
+            </p>
+          </label>
+        </div>
+
+        {/* Ação */}
         <button
           onClick={handleSave}
           disabled={saving}
-          className="mt-6 bg-blue-600 text-white px-4 py-2 rounded"
+          className={`mt-6 px-4 py-2 rounded text-white ${
+            form.published ? "bg-green-600" : "bg-blue-600"
+          }`}
         >
-          {saving ? "Salvando..." : "Salvar alterações"}
+          {saving
+            ? "Salvando..."
+            : form.published
+            ? "Salvar e publicar"
+            : "Salvar rascunho"}
         </button>
       </main>
     </>
