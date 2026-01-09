@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import PostsService from "../../services/posts.service";
 import PublishToggle from "../../components/PublishToggle";
 import Header from "../../components/Header";
@@ -15,6 +16,7 @@ export default function PostsList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [toast, setToast] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [previewPost, setPreviewPost] = useState(null);
 
   const navigate = useNavigate();
 
@@ -31,6 +33,18 @@ export default function PostsList() {
       .catch(() => showToast("Erro ao carregar posts", "error"))
       .finally(() => setLoading(false));
   }, []);
+
+  /* ---------------- ESC PREVIEW ---------------- */
+  useEffect(() => {
+    if (!previewPost) return;
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setPreviewPost(null);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewPost]);
 
   /* ---------------- ACTIONS ---------------- */
 
@@ -185,11 +199,14 @@ export default function PostsList() {
           {filteredPosts.map((post) => (
             <article
               key={post._id}
-              className="group rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5"
+              className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5"
             >
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                {/* Imagem */}
-                <div className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100">
+                {/* Imagem (abre preview) */}
+                <div
+                  onClick={() => setPreviewPost(post)}
+                  className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
+                >
                   {post.coverImage && (
                     <img
                       src={post.coverImage}
@@ -199,8 +216,11 @@ export default function PostsList() {
                   )}
                 </div>
 
-                {/* Conteúdo */}
-                <div className="flex-1">
+                {/* Conteúdo (abre preview) */}
+                <div
+                  onClick={() => setPreviewPost(post)}
+                  className="flex-1 cursor-pointer"
+                >
                   <h2 className="text-lg font-semibold">{post.title}</h2>
                   <p className="text-sm text-gray-500">
                     {post.category} •{" "}
@@ -215,9 +235,7 @@ export default function PostsList() {
                     disabled={loadingId === post._id}
                     onChange={() => handleToggleRequest(post)}
                   />
-
                   <Link to={`/admin/posts/${post._id}`}>✏️</Link>
-
                   <button onClick={() => handleDeleteRequest(post)}>🗑️</button>
                 </div>
               </div>
@@ -239,6 +257,40 @@ export default function PostsList() {
           ))}
         </div>
       </main>
+
+      {/* PREVIEW MODAL */}
+      {previewPost && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
+          <div className="bg-white dark:bg-gray-900 max-w-4xl w-full rounded-xl flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b flex justify-between">
+              <h2 className="font-bold">{previewPost.title}</h2>
+              <button onClick={() => setPreviewPost(null)}>✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <article className="prose dark:prose-invert max-w-none">
+                <ReactMarkdown>{previewPost.content}</ReactMarkdown>
+              </article>
+            </div>
+
+            <div className="border-t p-4 flex justify-end gap-3">
+              <button
+                onClick={() => setPreviewPost(null)}
+                className="px-4 py-2 rounded border"
+              >
+                Fechar
+              </button>
+
+              <button
+                onClick={() => navigate(`/admin/posts/${previewPost._id}`)}
+                className="px-4 py-2 rounded bg-blue-600 text-white"
+              >
+                Editar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm Dialog */}
       <ConfirmDialog

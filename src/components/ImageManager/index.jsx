@@ -1,5 +1,6 @@
 import { uploadImage } from "../../services/uploadImage";
 import { generateUUID } from "../../utils/uuid";
+import { useState } from "react";
 
 export default function ImageManager({
   images,
@@ -7,43 +8,137 @@ export default function ImageManager({
   coverImage,
   setCoverImage,
 }) {
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+  const validateFile = (file) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      showToast("Formato inválido. Use JPG, PNG ou WEBP.", "error");
+      return false;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      showToast("Imagem muito grande. Máx: 5MB.", "error");
+      return false;
+    }
+
+    return true;
+  };
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 2500);
+  };
+
   const handleUpload = async (file) => {
-    const url = await uploadImage(file);
+    if (!file) return;
 
-    setImages((prev) => [
-      ...prev,
-      { url, id: generateUUID() },
-    ]);
+    if (!validateFile(file)) return;
 
-    if (!coverImage) setCoverImage(url);
+    try {
+      setUploading(true);
+
+      const url = await uploadImage(file);
+
+      setImages((prev) => [...prev, { url, id: generateUUID() }]);
+
+      if (!coverImage) setCoverImage(url);
+
+      showToast("Imagem enviada com sucesso");
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao enviar imagem", "error");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = (id) => {
-    setImages((prev) => prev.filter((img) => img.id !== id));
+    setImages((prev) => {
+      const updated = prev.filter((img) => img.id !== id);
+
+      // Se removeu a imagem de capa
+      if (coverImage && !updated.find((img) => img.url === coverImage)) {
+        setCoverImage(updated[0]?.url || null);
+      }
+
+      return updated;
+    });
   };
 
-  const copyMarkdown = (url) => {
-    navigator.clipboard.writeText(`![Imagem](${url})`);
-    alert("Markdown copiado!");
+  const copyMarkdown = async (url) => {
+    const markdown = `![Imagem](${url})`;
+
+    // Clipboard API moderna (HTTPS / localhost)
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(markdown);
+        showToast("Markdown copiado");
+        return;
+      } catch (err) {
+        console.warn("Clipboard API falhou, usando fallback", err);
+      }
+    }
+
+    // Fallback (HTTP, mobile, IP local)
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = markdown;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+
+      showToast("Markdown copiado");
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao copiar markdown", "error");
+    }
   };
 
   return (
     <div className="mt-6">
       <h2 className="font-semibold mb-2">Imagens do post</h2>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleUpload(e.target.files[0])}
-      />
+      {/* Upload */}
+      <label className="inline-flex items-center gap-2 cursor-pointer">
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          disabled={uploading}
+          onChange={(e) => handleUpload(e.target.files[0])}
+        />
 
+        <span
+          className={`
+            px-4 py-2 rounded-lg text-sm
+            border
+            ${
+              uploading
+                ? "bg-gray-200 dark:bg-gray-800 cursor-not-allowed"
+                : "bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }
+          `}
+        >
+          {uploading ? "Enviando..." : "Adicionar imagem"}
+        </span>
+      </label>
+
+      {/* Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
         {images.map((img) => (
           <div
             key={img.id}
-            className="relative border rounded overflow-hidden"
+            className="relative border rounded-lg overflow-hidden bg-white dark:bg-gray-900"
           >
-            {/* BOTÃO REMOVER */}
+            {/* Remover */}
             <button
               onClick={() => removeImage(img.id)}
               className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
@@ -51,16 +146,12 @@ export default function ImageManager({
               ×
             </button>
 
-            <img
-              src={img.url}
-              alt=""
-              className="w-full h-40 object-cover"
-            />
+            <img src={img.url} alt="" className="w-full h-40 object-cover" />
 
             <div className="p-2 text-xs flex flex-col gap-1">
               <button
                 onClick={() => copyMarkdown(img.url)}
-                className="text-blue-600"
+                className="text-blue-600 hover:underline text-left"
               >
                 Copiar Markdown
               </button>
@@ -71,12 +162,27 @@ export default function ImageManager({
                   checked={coverImage === img.url}
                   onChange={() => setCoverImage(img.url)}
                 />
-                Capa
+                {coverImage === img.url
+                  ? "Capa (selecionada)"
+                  : "Definir como capa"}
               </label>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
+            toast.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

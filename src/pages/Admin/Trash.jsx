@@ -36,12 +36,15 @@ export default function Trash() {
   }, [previewPost]);
 
   /* ---------------- ACTIONS ---------------- */
-
   const restore = async (post, close = false) => {
     try {
+      // 1. Restaura o post (remove deletedAt)
       await PostsService.restore(post._id);
+      // 2. Garante que ele volte como rascunho
+      await PostsService.togglePublish(post._id, false);
+      // 3. Remove da lista da lixeira
       setPosts((prev) => prev.filter((p) => p._id !== post._id));
-      showToast("Post restaurado com sucesso");
+      showToast("Post restaurado como rascunho");
       if (close) setPreviewPost(null);
     } catch {
       showToast("Erro ao restaurar post", "error");

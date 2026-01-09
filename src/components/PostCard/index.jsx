@@ -2,76 +2,50 @@ import { Link } from "react-router-dom";
 
 export default function PostCard({ post }) {
   return (
-    <Link
-      to={`/blog/${post.slug}`}
-      className="
-        block
-        rounded-xl
-        bg-gray-900/60
-        hover:bg-gray-900/80
-        transition
-        border border-gray-800
-      "
-    >
+    <Link to={`/blog/${post.slug}`}>
       <article
         className="
-          flex flex-col sm:flex-row
-          gap-4 sm:gap-6
-          p-4 sm:p-6
+          group
+          rounded-xl
+          border border-gray-200 dark:border-gray-800
+          bg-white dark:bg-gray-900
+          p-4 sm:p-5
+          transition
+          hover:shadow-lg
         "
       >
-        {/* Imagem */}
-        {post.coverImage && (
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="
-              w-full
-              h-48
-              sm:w-40 sm:h-28
-              object-cover
-              rounded-lg
-              flex-shrink-0
-            "
-            loading="lazy"
-          />
-        )}
-
-        {/* Conteúdo */}
-        <div className="flex flex-col gap-2">
-          {/* Categoria e data */}
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span className="px-2 py-0.5 rounded bg-gray-800">
-              {post.category}
-            </span>
-            <span>{new Date(post.publishedAt).toLocaleDateString()}</span>
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+          {/* Imagem */}
+          <div className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
+            {post.coverImage && (
+              <img
+                src={post.coverImage}
+                alt={post.title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            )}
           </div>
 
-          {/* Título */}
-          <h2
-            className="
-              text-lg sm:text-xl
-              font-semibold
-              text-gray-100
-              leading-snug
-            "
-          >
-            {post.title}
-          </h2>
+          {/* Conteúdo */}
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 capitalize">
+                {post.category}
+              </span>
+              <span>{post.publishedAt}</span>
+            </div>
 
-          {/* Resumo (oculto no mobile para foco no título) */}
-          {post.excerpt && (
-            <p
-              className="
-                text-sm
-                text-gray-400
-                line-clamp-2
-                hidden sm:block
-              "
-            >
-              {post.excerpt}
-            </p>
-          )}
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {post.title}
+            </h2>
+
+            {post.excerpt && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                {post.excerpt}
+              </p>
+            )}
+          </div>
         </div>
       </article>
     </Link>
