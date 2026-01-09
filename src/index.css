@@ -1,3 +1,14 @@
+html,
+body {
+  overflow-x: hidden;
+}
+
+.tooltip {
+  position: absolute;
+  top: 100%;
+  margin-top: 0.5rem;
+}
+
 /* src/index.css */
 .prose img {
   border-radius: 0.5rem;
