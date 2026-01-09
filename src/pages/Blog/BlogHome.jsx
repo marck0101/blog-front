@@ -58,7 +58,7 @@ export default function BlogHome() {
         {!loading && (
           <div className="grid gap-6 mt-6">
             {filteredPosts?.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post._id} post={post} />
             ))}
           </div>
         )}

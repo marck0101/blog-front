@@ -14,7 +14,7 @@ export default function AppRoutes() {
         <Route path="/admin/posts" element={<PostsList />} />
         <Route path="/blog" element={<BlogHome />} />
         <Route path="/" element={<BlogHome />} />
-        <Route path="/blog/:slug" element={<Post />} />
+        <Route path="/blog/:id" element={<Post />} />
 
         <Route path="/admin/posts/:id" element={<EditPost />} />
         <Route path="/admin/trash" element={<Trash />} />

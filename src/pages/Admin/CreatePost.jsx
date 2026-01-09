@@ -16,6 +16,12 @@ const CATEGORIES = [
 export default function CreatePost() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const [form, setForm] = useState({
     title: "",
@@ -43,11 +49,10 @@ export default function CreatePost() {
         coverImage,
       });
 
-      alert("Post criado com sucesso");
-      navigate("/admin/posts");
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao criar post");
+      showToast("Post criado com sucesso");
+      setTimeout(() => navigate("/admin/posts"), 800);
+    } catch {
+      showToast("Erro ao criar post", "error");
     } finally {
       setLoading(false);
     }
@@ -58,12 +63,9 @@ export default function CreatePost() {
       <>
         <Header />
         <main className="max-w-6xl mx-auto px-6 py-10 space-y-4">
-          <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
-            Posts
-          </h1>
-
-          {Array.from({ length: 5 }).map((_, index) => (
-            <PostSkeleton key={index} />
+          <h1 className="text-2xl font-bold mb-6">Posts</h1>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <PostSkeleton key={i} />
           ))}
         </main>
       </>
@@ -73,10 +75,23 @@ export default function CreatePost() {
   return (
     <>
       <Header />
-      <main className="max-w-5xl mx-auto px-6 py-10 text-gray-900 dark:text-gray-100">
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
+            toast.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
+      <main className="max-w-5xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-bold mb-6">Criar publicação</h1>
 
-        {/* Título */}
         <input
           className="input"
           placeholder="Título"
@@ -84,7 +99,6 @@ export default function CreatePost() {
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
 
-        {/* Slug */}
         <input
           className="input mt-2"
           placeholder="Slug"
@@ -92,7 +106,6 @@ export default function CreatePost() {
           onChange={(e) => setForm({ ...form, slug: e.target.value })}
         />
 
-        {/* Categoria */}
         <select
           className="input mt-2"
           value={form.category}
@@ -105,7 +118,6 @@ export default function CreatePost() {
           ))}
         </select>
 
-        {/* Resumo */}
         <textarea
           className="input mt-2"
           placeholder="Resumo"
@@ -113,7 +125,6 @@ export default function CreatePost() {
           onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
         />
 
-        {/* Imagens */}
         <ImageManager
           images={gallery}
           setImages={setGallery}
@@ -121,48 +132,10 @@ export default function CreatePost() {
           setCoverImage={setCoverImage}
         />
 
-        {/* Conteúdo */}
         <MarkdownEditor
           value={form.content}
           onChange={(content) => setForm({ ...form, content })}
         />
-
-        {/* SEO */}
-        <h2 className="text-lg font-semibold mt-8 dark:text-gray-200">SEO</h2>
-
-        <input
-          className="input mt-2"
-          placeholder="Título SEO"
-          value={form.seo.title}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              seo: { ...form.seo, title: e.target.value },
-            })
-          }
-        />
-
-        <textarea
-          className="input mt-2"
-          placeholder="Descrição SEO"
-          value={form.seo.description}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              seo: { ...form.seo, description: e.target.value },
-            })
-          }
-        />
-
-        {/* Publicação */}
-        <label className="flex gap-2 mt-4">
-          <input
-            type="checkbox"
-            checked={form.published}
-            onChange={(e) => setForm({ ...form, published: e.target.checked })}
-          />
-          Publicar agora
-        </label>
 
         <button
           onClick={handleSubmit}

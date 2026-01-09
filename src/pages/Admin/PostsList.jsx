@@ -205,14 +205,16 @@ export default function PostsList() {
                 {/* Imagem (abre preview) */}
                 <div
                   onClick={() => setPreviewPost(post)}
-                  className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
+                  className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer flex items-center justify-center"
                 >
-                  {post.coverImage && (
+                  {post.coverImage ? (
                     <img
                       src={post.coverImage}
                       alt={post.title}
                       className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <span className="text-xs text-gray-400">Sem imagem</span>
                   )}
                 </div>
 

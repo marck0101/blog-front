@@ -8,32 +8,32 @@ import BackButton from "../../components/BackButton";
 import PostsService from "../../services/posts.service";
 
 export default function Post() {
-  const { slug } = useParams();
+  const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useSEO({
     title: post ? `${post.title} | Meu Blog` : "Carregando post...",
     description: post?.excerpt,
-    image: post?.coverImage,
+    image: post?.coverImage || "/og-default.png",
   });
 
   useEffect(() => {
+    if (!id) return;
+
     setLoading(true);
 
-    PostsService.getBySlug(slug)
+    PostsService.getPublicById(id)
       .then((res) => setPost(res.data))
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [id]);
 
   if (loading) {
     return (
       <BlogLayout>
         <main className="max-w-5xl mx-auto px-6 py-16">
-          <p className="text-gray-600 dark:text-gray-400">
-            Carregando post...
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">Carregando post...</p>
         </main>
       </BlogLayout>
     );
@@ -55,19 +55,18 @@ export default function Post() {
     <BlogLayout>
       <main className="max-w-3xl mx-auto px-6 py-10">
         <BackButton />
-        <Breadcrumb title={post?.title} />
+        <Breadcrumb title={post.title} />
 
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-          {post?.title}
+          {post.title}
         </h1>
 
         <p className="text-gray-500 dark:text-gray-400 mt-2">
-          {post?.category} •{" "}
-          {new Date(post?.publishedAt).toLocaleDateString()}
+          {post.category} • {new Date(post.publishedAt).toLocaleDateString()}
         </p>
 
         <article className="prose prose-lg max-w-none mt-8 dark:prose-invert">
-          <ReactMarkdown>{post?.content}</ReactMarkdown>
+          <ReactMarkdown>{post.content}</ReactMarkdown>
         </article>
       </main>
     </BlogLayout>
