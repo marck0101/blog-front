@@ -13,7 +13,7 @@ export default function BlogHome() {
   const [loading, setLoading] = useState(true);
 
   useSEO({
-    title: "Blog | Meu Blog",
+    title: "Blog | marck0101",
     description: "Artigos sobre marketing, tecnologia e desenvolvimento",
   });
 

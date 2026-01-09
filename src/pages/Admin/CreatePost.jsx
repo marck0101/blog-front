@@ -29,7 +29,7 @@ export default function CreatePost() {
     excerpt: "",
     content: "",
     category: "marketing",
-    published: false, // 🔴 default = rascunho
+    published: false, // default = rascunho
     seo: {
       title: "",
       description: "",
@@ -94,47 +94,82 @@ export default function CreatePost() {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-bold mb-6">Criar publicação</h1>
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+        <h1 className="text-2xl font-bold">Criar publicação</h1>
 
-        {/* Título */}
-        <input
-          className="input"
-          placeholder="Título"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-        />
+        {/* ===== DADOS BÁSICOS ===== */}
+        <section className="space-y-2">
+          <input
+            className="input"
+            placeholder="Título"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
 
-        {/* Slug */}
-        <input
-          className="input mt-2"
-          placeholder="Slug"
-          value={form.slug}
-          onChange={(e) => setForm({ ...form, slug: e.target.value })}
-        />
+          <input
+            className="input"
+            placeholder="Slug"
+            value={form.slug}
+            onChange={(e) => setForm({ ...form, slug: e.target.value })}
+          />
 
-        {/* Categoria */}
-        <select
-          className="input mt-2"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-        >
-          {CATEGORIES.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
+          <select
+            className="input"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
 
-        {/* Resumo */}
-        <textarea
-          className="input mt-2"
-          placeholder="Resumo"
-          value={form.excerpt}
-          onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-        />
+          <textarea
+            className="input"
+            placeholder="Resumo (excerpt)"
+            value={form.excerpt}
+            onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+          />
+        </section>
 
-        {/* Imagens */}
+        {/* ===== SEO ===== */}
+        <section className="rounded-lg border p-4 space-y-2 bg-gray-50 dark:bg-gray-900">
+          <h2 className="font-semibold text-sm uppercase text-gray-600 dark:text-gray-300">
+            SEO
+          </h2>
+
+          <input
+            className="input"
+            placeholder="Título SEO (meta title)"
+            value={form.seo.title}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                seo: { ...form.seo, title: e.target.value },
+              })
+            }
+          />
+
+          <textarea
+            className="input"
+            placeholder="Descrição SEO (meta description)"
+            value={form.seo.description}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                seo: { ...form.seo, description: e.target.value },
+              })
+            }
+          />
+
+          <p className="text-xs text-gray-500">
+            Caso vazio, o título e o resumo do post poderão ser usados
+            automaticamente.
+          </p>
+        </section>
+
+        {/* ===== IMAGENS ===== */}
         <ImageManager
           images={gallery}
           setImages={setGallery}
@@ -142,18 +177,21 @@ export default function CreatePost() {
           setCoverImage={setCoverImage}
         />
 
-        {/* Conteúdo */}
+        {/* ===== CONTEÚDO ===== */}
         <MarkdownEditor
           value={form.content}
           onChange={(content) => setForm({ ...form, content })}
         />
-        {/* Status de publicação */}
-        <div className="mt-4 flex items-start gap-3">
+
+        {/* ===== STATUS ===== */}
+        <div className="flex items-start gap-3">
           <input
             id="published"
             type="checkbox"
             checked={form.published}
-            onChange={(e) => setForm({ ...form, published: e.target.checked })}
+            onChange={(e) =>
+              setForm({ ...form, published: e.target.checked })
+            }
             className="mt-1"
           />
           <label htmlFor="published" className="text-sm">
@@ -164,11 +202,11 @@ export default function CreatePost() {
           </label>
         </div>
 
-        {/* Ação */}
+        {/* ===== AÇÃO ===== */}
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className={`mt-6 px-4 py-2 rounded text-white ${
+          className={`px-4 py-2 rounded text-white ${
             form.published ? "bg-green-600" : "bg-blue-600"
           }`}
         >

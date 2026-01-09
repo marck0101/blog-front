@@ -13,7 +13,7 @@ export default function Post() {
   const [loading, setLoading] = useState(true);
 
   useSEO({
-    title: post ? `${post.title} | Meu Blog` : "Carregando post...",
+    title: post ? `${post.title} | Blog marck0101` : "Carregando post...",
     description: post?.excerpt,
     image: post?.coverImage || "/og-default.png",
   });

@@ -66,7 +66,7 @@ export default function Header() {
             to={isAdminRoute ? "/admin/posts" : "/blog"}
             className="font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0"
           >
-            {isAdminRoute ? "Admin Blog" : "Meu Blog"}
+            {isAdminRoute ? "marck0101 Admin" : "marck0101"}
           </Link>
 
           {/* ================= NAV ================= */}
