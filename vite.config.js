@@ -7,4 +7,10 @@ export default defineConfig({
     host: true,
     port: 5173,
   },
+  // vite.config.js
+  resolve: {
+    alias: {
+      "@": "/src",
+    },
+  },
 });

@@ -1,24 +1,63 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import CreatePost from "../pages/Admin/CreatePost";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import PrivateRoute from "./PrivateRoute";
+
+import Login from "../pages/Admin/Login";
 import PostsList from "../pages/Admin/PostsList";
-import BlogHome from "../pages/Blog/BlogHome";
-import Post from "../pages/Blog/Post";
+import CreatePost from "../pages/Admin/CreatePost";
 import EditPost from "../pages/Admin/EditPost";
 import Trash from "../pages/Admin/Trash";
+
+import BlogHome from "../pages/Blog/BlogHome";
+import Post from "../pages/Blog/Post";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin/create-post" element={<CreatePost />} />
-        <Route path="/admin/posts" element={<PostsList />} />
+        {/* PUBLIC */}
+        <Route path="/" element={<Navigate to="/blog" />} />
         <Route path="/blog" element={<BlogHome />} />
-        <Route path="/" element={<BlogHome />} />
         <Route path="/blog/:id" element={<Post />} />
+        <Route path="/admin/login" element={<Login />} />
 
-        <Route path="/admin/posts/:id" element={<EditPost />} />
-        <Route path="/admin/trash" element={<Trash />} />
+        {/* ADMIN */}
+        <Route
+          path="/admin/posts"
+          element={
+            <PrivateRoute>
+              <PostsList />
+            </PrivateRoute>
+          }
+        />
 
+        <Route
+          path="/admin/create-post"
+          element={
+            <PrivateRoute>
+              <CreatePost />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/posts/:id"
+          element={
+            <PrivateRoute>
+              <EditPost />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/trash"
+          element={
+            <PrivateRoute>
+              <Trash />
+            </PrivateRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/blog" />} />
       </Routes>
     </BrowserRouter>
   );

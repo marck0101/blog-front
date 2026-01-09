@@ -1,17 +1,31 @@
 import axios from "axios";
 
-const isProd = import.meta.env.MODE === "production";
-
-const baseURL = isProd
-  ? import.meta.env.VITE_API_BASE_URL_PROD
-  : import.meta.env.VITE_API_BASE_URL_DEV;
-
-if (!baseURL) {
-  console.error("❌ VITE_API_BASE_URL não definida para o ambiente atual");
-}
-
 const api = axios.create({
-  baseURL,
+  baseURL: import.meta.env.VITE_API_URL,
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = "/admin/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
