@@ -8,6 +8,7 @@ import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import Select from "../../components/Select";
+import { Pencil, Trash } from "lucide-react";
 
 export default function PostsList() {
   const [posts, setPosts] = useState([]);
@@ -237,8 +238,12 @@ export default function PostsList() {
                     disabled={loadingId === post._id}
                     onChange={() => handleToggleRequest(post)}
                   />
-                  <Link to={`/admin/posts/${post._id}`}>✏️</Link>
-                  <button onClick={() => handleDeleteRequest(post)}>🗑️</button>
+                  <Link to={`/admin/posts/${post._id}`}>
+                    <Pencil size={16} className="mt-1" />
+                  </Link>
+                  <button onClick={() => handleDeleteRequest(post)}>
+                    <Trash size={16} className="mb-1" />
+                  </button>
                 </div>
               </div>
 
@@ -251,8 +256,12 @@ export default function PostsList() {
                 />
 
                 <div className="flex gap-4">
-                  <Link to={`/admin/posts/${post._id}`}>✏️</Link>
-                  <button onClick={() => handleDeleteRequest(post)}>🗑️</button>
+                  <Link to={`/admin/posts/${post._id}`}>
+                    <Pencil size={16} className="mt-1" />
+                  </Link>
+                  <button onClick={() => handleDeleteRequest(post)}>
+                    <Trash size={16} className="mb-1" />
+                  </button>
                 </div>
               </div>
             </article>

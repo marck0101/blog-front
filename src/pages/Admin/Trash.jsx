@@ -5,6 +5,7 @@ import Header from "../../components/Header";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import { CloudSync, ShieldAlert, View } from "lucide-react";
 
 export default function Trash() {
   const [posts, setPosts] = useState([]);
@@ -12,6 +13,10 @@ export default function Trash() {
   const [previewPost, setPreviewPost] = useState(null);
   const [toast, setToast] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+
+  const tooltipClass =
+    "absolute bottom-full mb-2 px-2 py-1 text-xs rounded bg-black text-white " +
+    "opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-50";
 
   /* ---------------- TOAST ---------------- */
   const showToast = (message, type = "success") => {
@@ -38,11 +43,8 @@ export default function Trash() {
   /* ---------------- ACTIONS ---------------- */
   const restore = async (post, close = false) => {
     try {
-      // 1. Restaura o post (remove deletedAt)
       await PostsService.restore(post._id);
-      // 2. Garante que ele volte como rascunho
       await PostsService.togglePublish(post._id, false);
-      // 3. Remove da lista da lixeira
       setPosts((prev) => prev.filter((p) => p._id !== post._id));
       showToast("Post restaurado como rascunho");
       if (close) setPreviewPost(null);
@@ -63,7 +65,6 @@ export default function Trash() {
   };
 
   /* ---------------- CONFIRM REQUESTS ---------------- */
-
   const restoreRequest = (post, close = false) => {
     setConfirmAction({
       title: "Restaurar post",
@@ -86,7 +87,6 @@ export default function Trash() {
   };
 
   /* ---------------- LOADING ---------------- */
-
   if (loading) {
     return (
       <>
@@ -102,7 +102,6 @@ export default function Trash() {
   }
 
   /* ---------------- RENDER ---------------- */
-
   return (
     <>
       <Header />
@@ -134,7 +133,7 @@ export default function Trash() {
           {posts.map((post) => (
             <article
               key={post._id}
-              className="group rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5 hover:shadow-lg"
+              className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5 hover:shadow-lg"
             >
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                 {/* Imagem */}
@@ -165,9 +164,31 @@ export default function Trash() {
 
                 {/* Ações desktop */}
                 <div className="hidden sm:flex gap-4 text-lg">
-                  <button onClick={() => setPreviewPost(post)}>👁</button>
-                  <button onClick={() => restoreRequest(post)}>↩️</button>
-                  <button onClick={() => removeRequest(post)}>❗</button>
+                  <button
+                    onClick={() => setPreviewPost(post)}
+                    className="relative group"
+                  >
+                    <View size={20} color="gray" />
+                    <span className={tooltipClass}>Visualizar</span>
+                  </button>
+
+                  <button
+                    onClick={() => restoreRequest(post)}
+                    className="relative group"
+                  >
+                    <CloudSync size={20} color="green" />
+                    <span className={tooltipClass}>Restaurar</span>
+                  </button>
+
+                  <button
+                    onClick={() => removeRequest(post)}
+                    className="relative group"
+                  >
+                    <ShieldAlert size={20} color="red" />
+                    <span className={tooltipClass}>
+                      Deletar permanentemente
+                    </span>
+                  </button>
                 </div>
               </div>
 

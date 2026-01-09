@@ -29,7 +29,7 @@ export default function CreatePost() {
     excerpt: "",
     content: "",
     category: "marketing",
-    published: false,
+    published: false, // 🔴 default = rascunho
     seo: {
       title: "",
       description: "",
@@ -49,7 +49,12 @@ export default function CreatePost() {
         coverImage,
       });
 
-      showToast("Post criado com sucesso");
+      showToast(
+        form.published
+          ? "Post publicado com sucesso"
+          : "Post salvo como rascunho"
+      );
+
       setTimeout(() => navigate("/admin/posts"), 800);
     } catch {
       showToast("Erro ao criar post", "error");
@@ -92,6 +97,7 @@ export default function CreatePost() {
       <main className="max-w-5xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-bold mb-6">Criar publicação</h1>
 
+        {/* Título */}
         <input
           className="input"
           placeholder="Título"
@@ -99,6 +105,7 @@ export default function CreatePost() {
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
 
+        {/* Slug */}
         <input
           className="input mt-2"
           placeholder="Slug"
@@ -106,6 +113,7 @@ export default function CreatePost() {
           onChange={(e) => setForm({ ...form, slug: e.target.value })}
         />
 
+        {/* Categoria */}
         <select
           className="input mt-2"
           value={form.category}
@@ -118,6 +126,7 @@ export default function CreatePost() {
           ))}
         </select>
 
+        {/* Resumo */}
         <textarea
           className="input mt-2"
           placeholder="Resumo"
@@ -125,6 +134,7 @@ export default function CreatePost() {
           onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
         />
 
+        {/* Imagens */}
         <ImageManager
           images={gallery}
           setImages={setGallery}
@@ -132,17 +142,41 @@ export default function CreatePost() {
           setCoverImage={setCoverImage}
         />
 
+        {/* Conteúdo */}
         <MarkdownEditor
           value={form.content}
           onChange={(content) => setForm({ ...form, content })}
         />
+        {/* Status de publicação */}
+        <div className="mt-4 flex items-start gap-3">
+          <input
+            id="published"
+            type="checkbox"
+            checked={form.published}
+            onChange={(e) => setForm({ ...form, published: e.target.checked })}
+            className="mt-1"
+          />
+          <label htmlFor="published" className="text-sm">
+            <strong>Publicar agora</strong>
+            <p className="text-xs text-gray-500">
+              Se desmarcado, o post será salvo como rascunho.
+            </p>
+          </label>
+        </div>
 
+        {/* Ação */}
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="mt-6 bg-blue-600 text-white px-4 py-2 rounded"
+          className={`mt-6 px-4 py-2 rounded text-white ${
+            form.published ? "bg-green-600" : "bg-blue-600"
+          }`}
         >
-          {loading ? "Salvando..." : "Publicar"}
+          {loading
+            ? "Salvando..."
+            : form.published
+            ? "Publicar"
+            : "Salvar rascunho"}
         </button>
       </main>
     </>
