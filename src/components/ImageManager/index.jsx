@@ -1,6 +1,7 @@
 import { uploadImage } from "../../services/uploadImage";
 import { generateUUID } from "../../utils/uuid";
 import { useState } from "react";
+import ImageDropzone from "../ImageDropzone";
 
 export default function ImageManager({
   images,
@@ -107,29 +108,12 @@ export default function ImageManager({
       <h2 className="font-semibold mb-2">Imagens do post</h2>
 
       {/* Upload */}
-      <label className="inline-flex items-center gap-2 cursor-pointer">
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
+      <div className="inline-flex items-center gap-2">
+        <ImageDropzone
           disabled={uploading}
-          onChange={(e) => handleUpload(e.target.files[0])}
+          onSelect={(file) => handleUpload(file)}
         />
-
-        <span
-          className={`
-            px-4 py-2 rounded-lg text-sm
-            border
-            ${
-              uploading
-                ? "bg-gray-200 dark:bg-gray-800 cursor-not-allowed"
-                : "bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
-            }
-          `}
-        >
-          {uploading ? "Enviando..." : "Adicionar imagem"}
-        </span>
-      </label>
+      </div>
 
       {/* Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
