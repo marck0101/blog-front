@@ -2,8 +2,12 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: false,
 });
 
+// =========================
+// REQUEST INTERCEPTOR
+// =========================
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -17,13 +21,22 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// =========================
+// RESPONSE INTERCEPTOR
+// =========================
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.clear();
-      window.location.href = "/admin/login";
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // evita loop infinito
+      if (!window.location.pathname.includes("/admin/login")) {
+        window.location.href = "/admin/login";
+      }
     }
+
     return Promise.reject(error);
   }
 );
