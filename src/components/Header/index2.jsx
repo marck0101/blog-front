@@ -1,9 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-// import { useContext } from "react";
-// import { AuthContext } from "@/context/AuthContext";
-
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
 import {
+  LogIn,
   LogOut,
   FileText,
   Plus,
@@ -15,13 +14,7 @@ import {
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // ================= AUTH (DESATIVADO) =================
-  // const { user, logout } = useContext(AuthContext);
-  // const isAuthenticated = !!user;
-
-  // Temporário: considera admin sempre acessível
-  const isAuthenticated = true;
+  const { user, logout } = useContext(AuthContext);
 
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isCreatePostRoute = location.pathname === "/admin/create-post";
@@ -34,24 +27,14 @@ export default function Header() {
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
-
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
   }, []);
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
     localStorage.setItem("theme", nextTheme);
-
-    if (nextTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
   };
 
   /**
@@ -67,27 +50,29 @@ export default function Header() {
          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
      }`;
 
+  // TOOLTIP: não ocupa espaço vertical
   const tooltipClass =
     "fixed pointer-events-none px-2 py-1 text-xs rounded bg-black text-white " +
-    "opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-[9999] translate-y-2";
+    "opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-[9999] " +
+    "translate-y-2";
 
   return (
     <>
       {/* ================= HEADER ================= */}
-      <header className="w-full border-b bg-white dark:bg-gray-900 dark:border-gray-800">
+      <header className="w-full border-b bg-white dark:bg-gray-900 dark:border-gray-800 overflow-hidden">
         <div className="w-full max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           {/* ================= LOGO ================= */}
           <Link
-            to={isAdminRoute ? "/blog" : "/admin/posts"}
+            to={!isAdminRoute ? "/admin/posts" : "/blog"}
             className="font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0"
           >
-            {isAdminRoute ? "marck0101" : "marck0101 Admin"}
+            {!isAdminRoute ? "marck0101 Admin" : "marck0101"}
           </Link>
 
           {/* ================= NAV ================= */}
           <nav className="flex gap-3 items-center">
             {/* ================= ADMIN ================= */}
-            {isAdminRoute && (
+            {!isAdminRoute && !user ? (
               <>
                 <Link
                   to="/admin/posts"
@@ -116,10 +101,8 @@ export default function Header() {
                   </span>
                 </Link>
               </>
-            )}
-
-            {/* ================= BLOG ================= */}
-            {!isAdminRoute && (
+            ) : (
+              /* ================= BLOG ================= */
               <>
                 <Link to="/blog" className={navItemClass(isActive("/blog"))}>
                   <ArrowsUpFromLine size={18} />
@@ -128,30 +111,46 @@ export default function Header() {
                   </span>
                 </Link>
 
-                <Link to="/admin/posts" className={navItemClass(false)}>
-                  <ShieldUser size={18} />
-                  <span className={tooltipClass} style={{ top: 64 }}>
-                    Área admin
-                  </span>
-                </Link>
+                {!user ? (
+                  <Link
+                    to="/admin/posts"
+                    className={navItemClass(isActive("/admin/posts"))}
+                  >
+                    <ShieldUser size={18} />
+                    <span className={tooltipClass} style={{ top: 64 }}>
+                      Área admin
+                    </span>
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => navigate("/admin/login")}
+                    className="relative group p-2 rounded border
+                      text-gray-700 dark:text-gray-200
+                      bg-gray-100 dark:bg-gray-800
+                      border-gray-300 dark:border-gray-700
+                      hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                  >
+                    <LogIn size={18} />
+                    <span className={tooltipClass} style={{ top: 64 }}>
+                      Fazer login
+                    </span>
+                  </button>
+                )}
               </>
             )}
 
-            {/* ================= LOGOUT (FUTURO) ================= */}
-            {/*
-            {isAuthenticated && (
+            {/* ================= LOGOUT ================= */}
+            {/* {!user && (
               <button
-                onClick={logout}
-                className="relative group p-2 rounded text-red-500
-                  hover:bg-red-100 dark:hover:bg-red-900 transition"
-              >
+                onClick={!logout}
+                className="relative group p-2 rounded text-red-500 hover:bg-red-100 dark:hover:bg-red-900 transition"
+              > */}
                 <LogOut size={18} />
-                <span className={tooltipClass} style={{ top: 64 }}>
+                {/* <span className={tooltipClass} style={{ top: 64 }}>
                   Sair
                 </span>
               </button>
-            )}
-            */}
+            )} */}
 
             {/* ================= THEME ================= */}
             <button
@@ -172,20 +171,21 @@ export default function Header() {
       </header>
 
       {/* ================= FLOATING CREATE POST BUTTON ================= */}
-      {isAdminRoute && !isCreatePostRoute && (
+      {!user && isAdminRoute && !isCreatePostRoute && (
         <button
           onClick={() => navigate("/admin/create-post")}
-          className="fixed bottom-6 right-6 z-50 group
-      flex items-center justify-center
-      w-14 h-14 rounded-full
-      bg-blue-600 hover:bg-blue-700
-      text-white shadow-lg transition"
+          className="fixed bottom-6 right-6 z-50 overflow-hidden group
+            flex items-center justify-center
+            w-14 h-14 rounded-full
+            bg-blue-600 hover:bg-blue-700
+            text-white shadow-lg
+            transition"
         >
           <Plus size={26} />
           <span
             className="fixed pointer-events-none right-20 bottom-8 px-3 py-1
-      text-xs rounded bg-black text-white opacity-0 group-hover:opacity-100
-      transition whitespace-nowrap"
+            text-xs rounded bg-black text-white opacity-0 group-hover:opacity-100
+            transition whitespace-nowrap"
           >
             Criar novo post
           </span>

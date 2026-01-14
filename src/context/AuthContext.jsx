@@ -10,15 +10,14 @@ export function AuthProvider({ children }) {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  const login = (data) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setUser(data.user);
+  const login = ({ token, user }) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
   };
 
   const logout = () => {
     localStorage.clear();
-    setUser(null);
     window.location.href = "/admin/login";
   };
 

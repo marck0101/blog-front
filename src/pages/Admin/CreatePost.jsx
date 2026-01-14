@@ -45,8 +45,8 @@ export default function CreatePost() {
 
       await PostsService.create({
         ...form,
-        gallery,
-        coverImage,
+        gallery: gallery.filter(Boolean),
+        coverImage: coverImage || "",
       });
 
       showToast(
@@ -189,9 +189,7 @@ export default function CreatePost() {
             id="published"
             type="checkbox"
             checked={form.published}
-            onChange={(e) =>
-              setForm({ ...form, published: e.target.checked })
-            }
+            onChange={(e) => setForm({ ...form, published: e.target.checked })}
             className="mt-1"
           />
           <label htmlFor="published" className="text-sm">

@@ -24,36 +24,36 @@ export default function AppRoutes() {
         <Route
           path="/admin/posts"
           element={
-            <PrivateRoute>
-              <PostsList />
-            </PrivateRoute>
+            // <PrivateRoute>
+            <PostsList />
+            // </PrivateRoute>
           }
         />
 
         <Route
           path="/admin/create-post"
           element={
-            <PrivateRoute>
-              <CreatePost />
-            </PrivateRoute>
+            // <PrivateRoute>
+            <CreatePost />
+            // </PrivateRoute>
           }
         />
 
         <Route
           path="/admin/posts/:id"
           element={
-            <PrivateRoute>
-              <EditPost />
-            </PrivateRoute>
+            // <PrivateRoute>
+            <EditPost />
+            // </PrivateRoute>
           }
         />
 
         <Route
           path="/admin/trash"
           element={
-            <PrivateRoute>
-              <Trash />
-            </PrivateRoute>
+            // <PrivateRoute>
+            <Trash />
+            // </PrivateRoute>
           }
         />
 

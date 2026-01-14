@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import PostsService from "../../services/posts.service";
 import Header from "../../components/Header";
@@ -25,12 +25,29 @@ export default function Trash() {
   };
 
   /* ---------------- LOAD ---------------- */
-  useEffect(() => {
-    PostsService.listDeleted()
-      .then((res) => setPosts(res.data))
-      .catch(() => showToast("Erro ao carregar lixeira", "error"))
-      .finally(() => setLoading(false));
+  const loadTrash = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await PostsService.getTrash();
+      setPosts(data);
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao carregar a lixeira", "error");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadTrash();
+  }, [loadTrash]);
+
+  // useEffect(() => {
+  //   PostsService.listDeleted()
+  //     .then((res) => setPosts(res.data))
+  //     .catch(() => showToast("Erro ao carregar lixeira", "error"))
+  //     .finally(() => setLoading(false));
+  // }, []);
 
   /* ---------------- ESC PREVIEW ---------------- */
   useEffect(() => {
@@ -43,9 +60,9 @@ export default function Trash() {
   /* ---------------- ACTIONS ---------------- */
   const restore = async (post, close = false) => {
     try {
-      await PostsService.restore(post._id);
-      await PostsService.togglePublish(post._id, false);
-      setPosts((prev) => prev.filter((p) => p._id !== post._id));
+      await PostsService.restore(post?._id);
+      await PostsService.togglePublish(post?._id, false);
+      setPosts((prev) => prev.filter((p) => p._id !== post?._id));
       showToast("Post restaurado como rascunho");
       if (close) setPreviewPost(null);
     } catch {
@@ -55,8 +72,8 @@ export default function Trash() {
 
   const remove = async (post, close = false) => {
     try {
-      await PostsService.deletePermanent(post._id);
-      setPosts((prev) => prev.filter((p) => p._id !== post._id));
+      await PostsService.deletePermanent(post?._id);
+      setPosts((prev) => prev.filter((p) => p._id !== post?._id));
       showToast("Post excluído permanentemente");
       if (close) setPreviewPost(null);
     } catch {
@@ -68,7 +85,7 @@ export default function Trash() {
   const restoreRequest = (post, close = false) => {
     setConfirmAction({
       title: "Restaurar post",
-      description: `Deseja restaurar o post "${post.title}"?`,
+      description: `Deseja restaurar o post "${post?.title}"?`,
       type: "info",
       confirmText: "Restaurar",
       onConfirm: () => restore(post, close),
@@ -132,16 +149,16 @@ export default function Trash() {
         <div className="space-y-4">
           {posts.map((post) => (
             <article
-              key={post._id}
+              key={post?._id}
               className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5 hover:shadow-lg"
             >
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                 {/* Imagem */}
                 <div className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100">
-                  {post.coverImage && (
+                  {post?.coverImage && (
                     <img
-                      src={post.coverImage}
-                      alt={post.title}
+                      src={post?.coverImage}
+                      alt={post?.title}
                       className="w-full h-full object-cover opacity-70"
                     />
                   )}
@@ -150,15 +167,15 @@ export default function Trash() {
                 {/* Conteúdo */}
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold flex gap-2 items-center">
-                    {post.title}
+                    {post?.title}
                     <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
                       EXCLUÍDO
                     </span>
                   </h2>
 
                   <p className="text-sm text-gray-500">
-                    {post.category} •{" "}
-                    {new Date(post.deletedAt).toLocaleDateString()}
+                    {post?.category} •{" "}
+                    {new Date(post?.deletedAt).toLocaleDateString()}
                   </p>
                 </div>
 
@@ -195,12 +212,16 @@ export default function Trash() {
               {/* Ações mobile */}
               <div className="flex sm:hidden justify-between mt-4 pt-4 border-t">
                 <button onClick={() => setPreviewPost(post)}>
-                  👁 Visualizar
+                  <View size={20} color="gray" />
                 </button>
 
                 <div className="flex gap-4">
-                  <button onClick={() => restoreRequest(post)}>↩️</button>
-                  <button onClick={() => removeRequest(post)}>❗</button>
+                  <button onClick={() => restoreRequest(post)}>
+                    <CloudSync size={20} color="green" />
+                  </button>
+                  <button onClick={() => removeRequest(post)}>
+                    <ShieldAlert size={20} color="red" />
+                  </button>
                 </div>
               </div>
             </article>
@@ -212,13 +233,13 @@ export default function Trash() {
           <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
             <div className="bg-white dark:bg-gray-900 max-w-4xl w-full rounded-xl flex flex-col max-h-[90vh]">
               <div className="p-4 border-b flex justify-between">
-                <h2 className="font-bold">{previewPost.title}</h2>
+                <h2 className="font-bold">{previewPost?.title}</h2>
                 <button onClick={() => setPreviewPost(null)}>✕</button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6">
                 <article className="prose dark:prose-invert max-w-none">
-                  <ReactMarkdown>{previewPost.content}</ReactMarkdown>
+                  <ReactMarkdown>{previewPost?.content}</ReactMarkdown>
                 </article>
               </div>
 

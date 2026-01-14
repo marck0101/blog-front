@@ -51,20 +51,20 @@ export default function EditPost() {
         const { data: post } = await PostsService.getById(id);
 
         setForm({
-          title: post.title || "",
-          slug: post.slug || "",
-          excerpt: post.excerpt || "",
-          content: post.content || "",
-          category: post.category || "marketing",
-          published: Boolean(post.published),
+          title: post?.title || "",
+          slug: post?.slug || "",
+          excerpt: post?.excerpt || "",
+          content: post?.content || "",
+          category: post?.category || "marketing",
+          published: Boolean(post?.published),
           seo: {
-            title: post.seo?.title || "",
-            description: post.seo?.description || "",
+            title: post?.seo?.title || "",
+            description: post?.seo?.description || "",
           },
         });
 
-        setGallery(post.gallery || []);
-        setCoverImage(post.coverImage || "");
+        setGallery(post?.gallery || []);
+        setCoverImage(post?.coverImage || "");
       } catch {
         showToast("Erro ao carregar post", "error");
         navigate("/admin/posts");
@@ -229,9 +229,7 @@ export default function EditPost() {
             id="published"
             type="checkbox"
             checked={form.published}
-            onChange={(e) =>
-              setForm({ ...form, published: e.target.checked })
-            }
+            onChange={(e) => setForm({ ...form, published: e.target.checked })}
             className="mt-1"
           />
           <label htmlFor="published" className="text-sm">
