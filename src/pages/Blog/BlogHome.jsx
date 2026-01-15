@@ -18,14 +18,26 @@ export default function BlogHome() {
   });
 
   useEffect(() => {
+    let mounted = true;
+
     PostsService.getPublished()
-      .then((data) => setPosts(data))
-      .catch(() => setPosts([]))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (mounted) setPosts(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (mounted) setPosts([]);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredPosts = category
-    ? posts?.filter((post) => post?.category === category)
+    ? posts.filter((post) => post?.category === category)
     : posts;
 
   return (
@@ -35,7 +47,6 @@ export default function BlogHome() {
 
         <Filters category={category} onChange={setCategory} />
 
-        {/* Skeleton */}
         {loading && (
           <div className="grid gap-6 mt-6">
             {Array.from({ length: 4 }).map((_, index) => (
@@ -44,7 +55,6 @@ export default function BlogHome() {
           </div>
         )}
 
-        {/* Estado vazio */}
         {!loading && filteredPosts.length === 0 && (
           <EmptyState
             title="Nenhum post publicado ainda"
@@ -52,7 +62,6 @@ export default function BlogHome() {
           />
         )}
 
-        {/* Posts */}
         {!loading && filteredPosts.length > 0 && (
           <div className="grid gap-6 mt-6">
             {filteredPosts.map((post) => (

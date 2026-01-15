@@ -108,7 +108,7 @@ export default function PostsList() {
 
   /* ---------------- FILTER ---------------- */
 
-  const filteredPosts = posts.filter((post) => {
+  const filteredPosts = posts?.filter((post) => {
     if (statusFilter === "published") return post?.published;
     if (statusFilter === "draft") return !post?.published;
     return true;
@@ -187,7 +187,7 @@ export default function PostsList() {
           </div>
         </div>
 
-        {filteredPosts.length === 0 && (
+        {filteredPosts?.length === 0 && (
           <EmptyState
             title="Nenhum post encontrado"
             description="Não há posts para o filtro selecionado."
@@ -197,7 +197,7 @@ export default function PostsList() {
         )}
 
         <div className="space-y-4">
-          {filteredPosts.map((post) => (
+          {filteredPosts?.map((post) => (
             <article
               key={post?._id}
               className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5"

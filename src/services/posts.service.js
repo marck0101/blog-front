@@ -1,15 +1,24 @@
 import api from "./api";
 
+const normalizeArray = (data) => (Array.isArray(data) ? data : []);
+
 const PostsService = {
   /* ================= LISTAGEM ================= */
 
   async getPublished() {
     const { data } = await api.get("/posts");
-    return data;
+    return normalizeArray(data);
   },
 
   async getAll() {
     const { data } = await api.get("/posts");
+    return normalizeArray(data);
+  },
+
+  /* ================= CRIAÇÃO ================= */
+
+  async create(payload) {
+    const { data } = await api.post("/posts", payload);
     return data;
   },
 
@@ -17,13 +26,14 @@ const PostsService = {
 
   async getById(id) {
     const { data } = await api.get(`/posts/${id}`);
-    return data;
+    return data || null;
   },
 
-  // trash
+  /* ================= LIXEIRA (FUTURO) ================= */
+
   async getTrash() {
     const { data } = await api.get("/posts/trash/list");
-    return data;
+    return normalizeArray(data);
   },
 
   async trash(id) {
@@ -38,4 +48,3 @@ const PostsService = {
 };
 
 export default PostsService;
-
