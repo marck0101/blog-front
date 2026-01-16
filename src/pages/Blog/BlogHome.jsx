@@ -11,6 +11,25 @@ export default function BlogHome() {
   const [category, setCategory] = useState("");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  /* ================= NORMALIZAÇÃO ================= */
+  const normalizePost = (post) => ({
+    id: post._id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    category: post.category,
+    coverImage: post.coverImage || null,
+    publishedAt: post.publishedAt || post.createdAt,
+  });
+
+  /* ================= TOAST ================= */
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useSEO({
     title: "Blog | marck0101",
@@ -22,14 +41,17 @@ export default function BlogHome() {
 
     PostsService.getPublished()
       .then((data) => {
-        if (mounted) setPosts(Array.isArray(data) ? data : []);
+        if (!mounted) return;
+        const normalized = data.map(normalizePost);
+        setPosts(normalized);
       })
       .catch(() => {
-        if (mounted) setPosts([]);
+        if (mounted) {
+          setPosts([]);
+          showToast("Erro ao carregar posts", "error");
+        }
       })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+      .finally(() => mounted && setLoading(false));
 
     return () => {
       mounted = false;
@@ -37,11 +59,23 @@ export default function BlogHome() {
   }, []);
 
   const filteredPosts = category
-    ? posts.filter((post) => post?.category === category)
+    ? posts.filter((post) => post.category === category)
     : posts;
 
   return (
     <BlogLayout>
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
+            toast.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <main className="max-w-5xl mx-auto px-6 py-10">
         <h1 className="text-3xl font-bold mb-4">Blog</h1>
 
@@ -62,10 +96,10 @@ export default function BlogHome() {
           />
         )}
 
-        {!loading && filteredPosts.length > 0 && (
+        {!loading && (
           <div className="grid gap-6 mt-6">
             {filteredPosts.map((post) => (
-              <PostCard key={post._id} post={post} />
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         )}

@@ -29,10 +29,18 @@ export default function PostsList() {
 
   /* ---------------- LOAD ---------------- */
   useEffect(() => {
+    let mounted = true;
     PostsService.getPublished()
-  .then(setPosts)
-      .catch(() => showToast("Erro ao carregar posts", "error"))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (mounted) setPosts(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (mounted) setPosts([]);
+        showToast("Erro ao carregar posts", "error");
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
   }, []);
 
   /* ---------------- ESC PREVIEW ---------------- */

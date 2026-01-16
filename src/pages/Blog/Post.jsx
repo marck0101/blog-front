@@ -30,6 +30,8 @@ export default function Post() {
   // }, [id]);
 
   useEffect(() => {
+    console.log("id->",id)
+    console.log("post->",post)
     if (!id) return;
 
     setLoading(true);

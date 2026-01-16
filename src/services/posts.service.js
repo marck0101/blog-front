@@ -15,6 +15,20 @@ const PostsService = {
     return normalizeArray(data);
   },
 
+  /* ================= POST PÚBLICO ================= */
+
+  async getPublicById(id) {
+    const { data } = await api.get(`/posts/${id}`);
+    return data || null;
+  },
+
+  /* ================= POST ADMIN ================= */
+
+  async getById(id) {
+    const { data } = await api.get(`/posts/${id}`);
+    return data || null;
+  },
+
   /* ================= CRIAÇÃO ================= */
 
   async create(payload) {
@@ -22,14 +36,7 @@ const PostsService = {
     return data;
   },
 
-  /* ================= POST POR ID ================= */
-
-  async getById(id) {
-    const { data } = await api.get(`/posts/${id}`);
-    return data || null;
-  },
-
-  /* ================= LIXEIRA (FUTURO) ================= */
+  /* ================= LIXEIRA ================= */
 
   async getTrash() {
     const { data } = await api.get("/posts/trash/list");
