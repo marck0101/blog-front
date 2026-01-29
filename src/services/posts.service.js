@@ -26,7 +26,7 @@ const resolvePostsBasePath = () => {
   if (base.endsWith("/api")) return "/posts";
 
   // Caso contrário, a API provavelmente está na raiz do domínio e precisamos prefixar "/api".
-  return "/api/posts";
+  return "/posts";
 };
 
 const postsBasePath = () => resolvePostsBasePath();
