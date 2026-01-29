@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 export default function PostCard({ post }) {
+  console.log('obj todo aqui',post)
   return (
     <article className="rounded-xl border bg-white dark:bg-gray-900 overflow-hidden">
       <Link

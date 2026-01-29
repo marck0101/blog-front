@@ -18,26 +18,33 @@ export default function Post() {
     image: post?.coverImage || "/og-default.png",
   });
 
-  // useEffect(() => {
-  //   if (!id) return;
-
-  //   setLoading(true);
-
-  //   PostsService.getPublicById(id)
-  //     .then((res) => setPost(res?.data))
-  //     .catch(() => setPost(null))
-  //     .finally(() => setLoading(false));
-  // }, [id]);
-
   useEffect(() => {
-    console.log("id->",id)
-    console.log("post->",post)
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
-    PostsService.getById(id)
-      .then(setPost)
-      .catch(() => setPost(null))
+
+    PostsService.getPublicById(id)
+      .then((postData) => {
+        if (!postData) {
+          console.warn("Post retornou null/undefined");
+          setPost(null);
+          return;
+        }
+        console.log("Post carregado com sucesso:", postData.title, postData.id);
+        setPost(postData);
+      })
+      .catch((err) => {
+        console.error("[Post]", {
+          id,
+          status: err?.response?.status,
+          message: err?.message,
+          errorData: err?.response?.data,
+        });
+        setPost(null);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
