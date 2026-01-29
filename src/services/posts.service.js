@@ -19,7 +19,7 @@ const resolvePostsBasePath = () => {
   if (!base) {
     // Sem baseURL definida: assume que o axios está apontando para o mesmo host do frontend
     // e que o backend está em /api.
-    return "/api/posts";
+    return "/posts";
   }
 
   // Se a baseURL já termina com "/api", então NÃO devemos repetir "/api" nos endpoints.
