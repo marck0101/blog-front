@@ -93,6 +93,32 @@ const PostsService = {
     return data;
   },
 
+  /* ================= CALENDÁRIO / HEATMAP ================= */
+
+  async getCalendar(year, month) {
+    const { data } = await api.get("/posts/calendar", { params: { year, month } });
+    return data;
+  },
+
+  async getHeatmap(year) {
+    const { data } = await api.get("/posts/heatmap", { params: { year } });
+    return data;
+  },
+
+  async getTodayPlanned() {
+    const { data } = await api.get("/posts/today-planned");
+    return data;
+  },
+
+  async publishNow(id) {
+    const { data } = await api.put(`/posts/${safeId(id)}`, {
+      status: "published",
+      published: true,
+      publishedAt: new Date().toISOString(),
+    });
+    return data;
+  },
+
   /* ================= IMAGENS ================= */
 
   async removeImage(id, imageUrl) {

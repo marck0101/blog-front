@@ -9,6 +9,7 @@ import {
   ArrowsUpFromLine,
   LayoutDashboard,
   Users,
+  CalendarDays,
 } from "lucide-react";
 
 export default function Header() {
@@ -84,6 +85,11 @@ export default function Header() {
                 <Link to="/admin/subscribers" className={navItemClass(isActive("/admin/subscribers"))}>
                   <Users size={18} />
                   <span className={tooltipClass} style={{ top: 64 }}>Assinantes</span>
+                </Link>
+
+                <Link to="/admin/calendar" className={navItemClass(isActive("/admin/calendar"))}>
+                  <CalendarDays size={18} />
+                  <span className={tooltipClass} style={{ top: 64 }}>Calendário</span>
                 </Link>
 
                 <Link to="/blog" className={navItemClass(false)}>

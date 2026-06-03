@@ -8,6 +8,7 @@ import CreatePost from "../pages/Admin/CreatePost";
 import EditPost from "../pages/Admin/EditPost";
 import Trash from "../pages/Admin/Trash";
 import Subscribers from "../pages/Admin/Subscribers";
+import Calendar from "../pages/Admin/Calendar";
 
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
@@ -75,6 +76,15 @@ export default function AppRoutes() {
           element={
             <PrivateRoute>
               <Subscribers />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/calendar"
+          element={
+            <PrivateRoute>
+              <Calendar />
             </PrivateRoute>
           }
         />

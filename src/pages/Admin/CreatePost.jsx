@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import RichTextEditor from "../../components/RichTextEditor";
@@ -13,8 +13,11 @@ import PostSkeleton from "../../components/PostSkeleton";
 
 export default function CreatePost() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const urlPlannedAt = searchParams.get("plannedAt") || "";
 
   const [form, setForm] = useState({
     title: "",
@@ -22,7 +25,8 @@ export default function CreatePost() {
     excerpt: "",
     content: "",
     category: "marketing",
-    published: false,
+    status: urlPlannedAt ? "planned" : "draft",
+    plannedAt: urlPlannedAt || "",
     seo: { title: "", description: "" },
   });
 
@@ -52,11 +56,16 @@ export default function CreatePost() {
 
       await PostsService.create({
         ...form,
+        published: form.status === "published",
+        plannedAt: form.status === "planned" ? form.plannedAt || null : null,
         gallery: gallery.filter(Boolean),
         coverImage: finalCoverUrl || "",
       });
 
-      showToast(form.published ? "Post publicado com sucesso" : "Post salvo como rascunho");
+      const msg =
+        form.status === "published" ? "Post publicado com sucesso" :
+        form.status === "planned" ? "Post planejado salvo" : "Rascunho salvo";
+      showToast(msg);
       setTimeout(() => navigate("/admin/posts"), 800);
     } catch {
       showToast("Erro ao criar post", "error");
@@ -169,27 +178,56 @@ export default function CreatePost() {
         />
 
         {/* STATUS */}
-        <div className="flex items-start gap-3">
-          <input
-            id="published"
-            type="checkbox"
-            checked={form.published}
-            onChange={(e) => setForm({ ...form, published: e.target.checked })}
-            className="mt-1"
-          />
-          <label htmlFor="published" className="text-sm">
-            <strong>Publicar agora</strong>
-            <p className="text-xs text-gray-500">Se desmarcado, o post será salvo como rascunho.</p>
-          </label>
-        </div>
+        <section className="space-y-3">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "draft",     label: "Rascunho" },
+              { value: "planned",   label: "Planejado" },
+              { value: "published", label: "Publicar agora" },
+            ].map(({ value, label }) => (
+              <label key={value} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="status"
+                  value={value}
+                  checked={form.status === value}
+                  onChange={() => setForm({ ...form, status: value })}
+                  className="accent-blue-600"
+                />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+
+          {form.status === "planned" && (
+            <div>
+              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+                Data planejada
+              </label>
+              <input
+                type="date"
+                value={form.plannedAt}
+                onChange={(e) => setForm({ ...form, plannedAt: e.target.value })}
+                className="input w-48"
+              />
+            </div>
+          )}
+        </section>
 
         {/* AÇÃO */}
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className={`px-4 py-2 rounded text-white ${form.published ? "bg-green-600" : "bg-blue-600"}`}
+          className={`px-4 py-2 rounded text-white ${
+            form.status === "published" ? "bg-green-600 hover:bg-green-700" :
+            form.status === "planned"   ? "bg-blue-600 hover:bg-blue-700" :
+                                          "bg-gray-600 hover:bg-gray-700"
+          } transition`}
         >
-          {form.published ? "Publicar" : "Salvar rascunho"}
+          {form.status === "published" ? "Publicar" :
+           form.status === "planned"   ? "Salvar como planejado" :
+                                         "Salvar rascunho"}
         </button>
       </main>
     </>
