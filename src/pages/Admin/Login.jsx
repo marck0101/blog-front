@@ -15,7 +15,7 @@ export default function Login() {
 
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      navigate("/admin/posts");
+      navigate("/admin");
     }
   }, [navigate]);
 
@@ -26,7 +26,7 @@ export default function Login() {
     try {
       const data = await AuthService.login(email, password);
       login(data);
-      navigate("/admin/posts");
+      navigate("/admin");
     } catch {
       setError("Credenciais inválidas");
     }

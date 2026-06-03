@@ -8,53 +8,42 @@ import BackButton from "../../components/BackButton";
 import PostsService from "../../services/posts.service";
 
 export default function Post() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useSEO({
-    title: post ? `${post?.title} | Blog marck0101` : "Carregando post?...",
+    title: post ? `${post.title} | Blog marck0101` : "Carregando...",
     description: post?.excerpt,
     image: post?.coverImage || "/og-default.png",
   });
 
   useEffect(() => {
-    if (!id) {
+    if (!slug) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
 
-    PostsService.getPublicById(id)
+    PostsService.getBySlug(slug)
       .then((postData) => {
-        if (!postData) {
-          console.warn("Post retornou null/undefined");
-          setPost(null);
-          return;
-        }
-        console.log("Post carregado com sucesso:", postData.title, postData.id);
-        setPost(postData);
+        if (postData) return postData;
+        // Fallback: tenta por ID (posts antigos sem slug limpo)
+        return PostsService.getPublicById(slug);
       })
-      .catch((err) => {
-        console.error("[Post]", {
-          id,
-          status: err?.response?.status,
-          message: err?.message,
-          errorData: err?.response?.data,
-        });
-        setPost(null);
+      .then((postData) => {
+        setPost(postData || null);
       })
+      .catch(() => setPost(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return (
       <BlogLayout>
         <main className="max-w-5xl mx-auto px-6 py-16">
-          <p className="text-gray-600 dark:text-gray-400">
-            Carregando post?...
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">Carregando...</p>
         </main>
       </BlogLayout>
     );
@@ -76,18 +65,18 @@ export default function Post() {
     <BlogLayout>
       <main className="max-w-3xl mx-auto px-6 py-10">
         <BackButton />
-        <Breadcrumb title={post?.title} />
+        <Breadcrumb title={post.title} />
 
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-          {post?.title}
+          {post.title}
         </h1>
 
         <p className="text-gray-500 dark:text-gray-400 mt-2">
-          {post?.category} • {new Date(post?.publishedAt).toLocaleDateString()}
+          {post.category} • {new Date(post.publishedAt).toLocaleDateString()}
         </p>
 
         <article className="prose prose-lg max-w-none mt-8 dark:prose-invert">
-          <ReactMarkdown>{post?.content}</ReactMarkdown>
+          <ReactMarkdown>{post.content}</ReactMarkdown>
         </article>
       </main>
     </BlogLayout>

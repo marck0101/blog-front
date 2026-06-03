@@ -40,10 +40,9 @@ export default function BlogHome() {
     let mounted = true;
 
     PostsService.getPublished()
-      .then((data) => {
+      .then(({ posts }) => {
         if (!mounted) return;
-        const normalized = data.map(normalizePost);
-        setPosts(normalized);
+        setPosts(posts.map(normalizePost));
       })
       .catch(() => {
         if (mounted) {

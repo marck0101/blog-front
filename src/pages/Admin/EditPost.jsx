@@ -3,7 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import ImageManager from "../../components/ImageManager";
+import CoverImageUpload from "../../components/CoverImageUpload";
 import PostsService from "../../services/posts.service";
+import UploadService from "../../services/upload.service";
 import PostSkeleton from "../../components/PostSkeleton";
 
 const CATEGORIES = [
@@ -21,11 +23,6 @@ export default function EditPost() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
   const [form, setForm] = useState({
     title: "",
     slug: "",
@@ -33,66 +30,65 @@ export default function EditPost() {
     content: "",
     category: "marketing",
     published: false,
-    seo: {
-      title: "",
-      description: "",
-    },
+    seo: { title: "", description: "" },
   });
 
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
 
-  /* ================= LOAD POST ================= */
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  /* LOAD POST */
   useEffect(() => {
     if (!id) return;
 
-    const loadPost = async () => {
-      try {
-        const { data: post } = await PostsService.getById(id);
-
+    PostsService.getById(id)
+      .then((post) => {
+        if (!post) throw new Error("Post não encontrado");
         setForm({
-          title: post?.title || "",
-          slug: post?.slug || "",
-          excerpt: post?.excerpt || "",
-          content: post?.content || "",
-          category: post?.category || "marketing",
-          published: Boolean(post?.published),
+          title: post.title || "",
+          slug: post.slug || "",
+          excerpt: post.excerpt || "",
+          content: post.content || "",
+          category: post.category || "marketing",
+          published: Boolean(post.published),
           seo: {
-            title: post?.seo?.title || "",
-            description: post?.seo?.description || "",
+            title: post.seo?.title || "",
+            description: post.seo?.description || "",
           },
         });
-
-        setGallery(post?.gallery || []);
-        setCoverImage(post?.coverImage || "");
-      } catch {
+        setGallery(post.gallery || []);
+        setCoverImage(post.coverImage || "");
+      })
+      .catch(() => {
         showToast("Erro ao carregar post", "error");
         navigate("/admin/posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPost();
+      })
+      .finally(() => setLoading(false));
   }, [id, navigate]);
 
-  /* ================= SAVE ================= */
+  /* SAVE */
   const handleSave = async () => {
     try {
       setSaving(true);
 
+      let finalCoverUrl = coverImage;
+
+      if (coverFile) {
+        finalCoverUrl = await UploadService.uploadCover(coverFile);
+      }
+
       await PostsService.update(id, {
         ...form,
         gallery,
-        coverImage,
+        coverImage: finalCoverUrl || "",
       });
 
-      showToast(
-        form.published
-          ? "Post atualizado e publicado"
-          : "Post salvo como rascunho"
-      );
-
+      showToast(form.published ? "Post atualizado e publicado" : "Post salvo como rascunho");
       setTimeout(() => navigate("/admin/posts"), 800);
     } catch {
       showToast("Erro ao salvar alterações", "error");
@@ -101,35 +97,26 @@ export default function EditPost() {
     }
   };
 
-  /* ================= LOADING ================= */
   if (loading) {
     return (
       <>
         <Header />
         <main className="max-w-6xl mx-auto px-6 py-10 space-y-4">
-          <h1 className="text-2xl font-bold mb-6">Posts</h1>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <PostSkeleton key={i} />
-          ))}
+          <h1 className="text-2xl font-bold mb-6">Carregando post...</h1>
+          {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
         </main>
       </>
     );
   }
 
-  /* ================= RENDER ================= */
   return (
     <>
       <Header />
 
-      {/* Toast */}
       {toast && (
-        <div
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success"
-              ? "bg-green-600 text-white"
-              : "bg-red-600 text-white"
-          }`}
-        >
+        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
+          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
+        }`}>
           {toast.message}
         </div>
       )}
@@ -137,7 +124,7 @@ export default function EditPost() {
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
         <h1 className="text-2xl font-bold">Editar publicação</h1>
 
-        {/* ===== DADOS BÁSICOS ===== */}
+        {/* DADOS BÁSICOS */}
         <section className="space-y-2">
           <input
             className="input"
@@ -145,26 +132,21 @@ export default function EditPost() {
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
-
           <input
             className="input"
             placeholder="Slug"
             value={form.slug}
             onChange={(e) => setForm({ ...form, slug: e.target.value })}
           />
-
           <select
             className="input"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
             {CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
           </select>
-
           <textarea
             className="input"
             placeholder="Resumo (excerpt)"
@@ -173,43 +155,36 @@ export default function EditPost() {
           />
         </section>
 
-        {/* ===== SEO ===== */}
+        {/* SEO */}
         <section className="rounded-lg border p-4 space-y-2 bg-gray-50 dark:bg-gray-900">
-          <h2 className="font-semibold text-sm uppercase text-gray-600 dark:text-gray-300">
-            SEO
-          </h2>
-
+          <h2 className="font-semibold text-sm uppercase text-gray-600 dark:text-gray-300">SEO</h2>
           <input
             className="input"
             placeholder="Título SEO (meta title)"
             value={form.seo.title}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                seo: { ...form.seo, title: e.target.value },
-              })
-            }
+            onChange={(e) => setForm({ ...form, seo: { ...form.seo, title: e.target.value } })}
           />
-
           <textarea
             className="input"
             placeholder="Descrição SEO (meta description)"
             value={form.seo.description}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                seo: { ...form.seo, description: e.target.value },
-              })
-            }
+            onChange={(e) => setForm({ ...form, seo: { ...form.seo, description: e.target.value } })}
           />
-
           <p className="text-xs text-gray-500">
-            Caso vazio, o título e o resumo do post poderão ser usados
-            automaticamente.
+            Caso vazio, o título e o resumo do post serão usados automaticamente.
           </p>
         </section>
 
-        {/* ===== IMAGENS ===== */}
+        {/* IMAGEM DE CAPA */}
+        <CoverImageUpload
+          existingUrl={coverImage}
+          onFileSelect={(file) => {
+            setCoverFile(file);
+            if (!file) setCoverImage("");
+          }}
+        />
+
+        {/* GALERIA DE IMAGENS */}
         <ImageManager
           images={gallery}
           setImages={setGallery}
@@ -217,13 +192,13 @@ export default function EditPost() {
           setCoverImage={setCoverImage}
         />
 
-        {/* ===== CONTEÚDO ===== */}
+        {/* CONTEÚDO */}
         <MarkdownEditor
           value={form.content}
           onChange={(content) => setForm({ ...form, content })}
         />
 
-        {/* ===== STATUS ===== */}
+        {/* STATUS */}
         <div className="flex items-start gap-3">
           <input
             id="published"
@@ -234,25 +209,17 @@ export default function EditPost() {
           />
           <label htmlFor="published" className="text-sm">
             <strong>Publicado</strong>
-            <p className="text-xs text-gray-500">
-              Se desmarcado, o post permanece como rascunho.
-            </p>
+            <p className="text-xs text-gray-500">Se desmarcado, o post permanece como rascunho.</p>
           </label>
         </div>
 
-        {/* ===== AÇÃO ===== */}
+        {/* AÇÃO */}
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`px-4 py-2 rounded text-white ${
-            form.published ? "bg-green-600" : "bg-blue-600"
-          }`}
+          className={`px-4 py-2 rounded text-white ${form.published ? "bg-green-600" : "bg-blue-600"}`}
         >
-          {saving
-            ? "Salvando..."
-            : form.published
-            ? "Salvar e publicar"
-            : "Salvar rascunho"}
+          {saving ? "Salvando..." : form.published ? "Salvar e publicar" : "Salvar rascunho"}
         </button>
       </main>
     </>

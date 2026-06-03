@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 
 import Login from "../pages/Admin/Login";
+import Dashboard from "../pages/Admin/Dashboard";
 import PostsList from "../pages/Admin/PostsList";
 import CreatePost from "../pages/Admin/CreatePost";
 import EditPost from "../pages/Admin/EditPost";
@@ -17,43 +18,52 @@ export default function AppRoutes() {
         {/* PUBLIC */}
         <Route path="/" element={<Navigate to="/blog" />} />
         <Route path="/blog" element={<BlogHome />} />
-        <Route path="/blog/:id" element={<Post />} />
+        <Route path="/blog/:slug" element={<Post />} />
         <Route path="/admin/login" element={<Login />} />
 
         {/* ADMIN */}
         <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/admin/posts"
           element={
-            // <PrivateRoute>
-            <PostsList />
-            // </PrivateRoute>
+            <PrivateRoute>
+              <PostsList />
+            </PrivateRoute>
           }
         />
 
         <Route
           path="/admin/create-post"
           element={
-            // <PrivateRoute>
-            <CreatePost />
-            // </PrivateRoute>
+            <PrivateRoute>
+              <CreatePost />
+            </PrivateRoute>
           }
         />
 
         <Route
           path="/admin/posts/:id"
           element={
-            // <PrivateRoute>
-            <EditPost />
-            // </PrivateRoute>
+            <PrivateRoute>
+              <EditPost />
+            </PrivateRoute>
           }
         />
 
         <Route
           path="/admin/trash"
           element={
-            // <PrivateRoute>
-            <Trash />
-            // </PrivateRoute>
+            <PrivateRoute>
+              <Trash />
+            </PrivateRoute>
           }
         />
 
