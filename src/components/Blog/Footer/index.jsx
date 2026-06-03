@@ -1,11 +1,26 @@
 import { Link } from "react-router-dom";
+import { Linkedin, Github, MessageCircle } from "lucide-react";
 import authorPhoto from "../../../assets/author.webp";
 
-// Configure suas redes sociais aqui
 const SOCIAL_LINKS = [
-  // { label: "Instagram", url: "https://instagram.com/marck0101" },
-  // { label: "LinkedIn", url: "https://linkedin.com/in/marck0101" },
-  // { label: "YouTube", url: "https://youtube.com/@marck0101" },
+  {
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/marcos-henrique-corrêa-618392209/",
+    icon: Linkedin,
+    hoverColor: "hover:text-[#0077B5]",
+  },
+  {
+    label: "GitHub",
+    url: "https://github.com/marck0101",
+    icon: Github,
+    hoverColor: "hover:text-gray-900 dark:hover:text-gray-100",
+  },
+  {
+    label: "WhatsApp",
+    url: "https://wa.me/5555963370494",
+    icon: MessageCircle,
+    hoverColor: "hover:text-[#25D366]",
+  },
 ];
 
 const QUICK_LINKS = [
@@ -73,26 +88,21 @@ export default function BlogFooter() {
           <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-4">
             Redes sociais
           </h3>
-          {SOCIAL_LINKS.length > 0 ? (
-            <ul className="space-y-2">
-              {SOCIAL_LINKS.map(({ label, url }) => (
-                <li key={label}>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-400 dark:text-gray-600 italic">
-              Em breve...
-            </p>
-          )}
+          <ul className="space-y-3">
+            {SOCIAL_LINKS.map(({ label, url, icon: Icon, hoverColor }) => (
+              <li key={label}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 ${hoverColor} transition`}
+                >
+                  <Icon size={20} />
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
