@@ -19,6 +19,7 @@ export default function FilterChips({
   onChange,
   allLabel = "Todas",
   multiSelect = true,
+  showAll = true,
 }) {
   const isAll = multiSelect
     ? selected.length === 0
@@ -38,13 +39,15 @@ export default function FilterChips({
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button
-        type="button"
-        className={chip(isAll)}
-        onClick={() => onChange(multiSelect ? [] : "all")}
-      >
-        {allLabel}
-      </button>
+      {showAll && (
+        <button
+          type="button"
+          className={chip(isAll)}
+          onClick={() => onChange(multiSelect ? [] : "all")}
+        >
+          {allLabel}
+        </button>
+      )}
 
       {options.map((opt) => {
         const val = opt.slug ?? opt.value;

@@ -1,19 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
+import FilterChips from "../../components/FilterChips";
 import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
+import SubscriberService from "../../services/subscriber.service";
 import PostSkeleton from "../../components/PostSkeleton";
-
-const CATEGORIES = [
-  { value: "marketing", label: "Marketing" },
-  { value: "trafego", label: "Tráfego Pago" },
-  { value: "growth", label: "Growth" },
-  { value: "tecnologia", label: "Tecnologia" },
-];
 
 export default function CreatePost() {
   const navigate = useNavigate();
@@ -33,6 +28,11 @@ export default function CreatePost() {
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
   const [coverFile, setCoverFile] = useState(null);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    SubscriberService.getCategories().then(setCategories).catch(() => {});
+  }, []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -105,15 +105,16 @@ export default function CreatePost() {
             value={form.slug}
             onChange={(e) => setForm({ ...form, slug: e.target.value })}
           />
-          <select
-            className="input"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-          >
-            {CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Categoria</p>
+            <FilterChips
+              options={categories}
+              selected={form.category}
+              onChange={(val) => setForm({ ...form, category: val })}
+              multiSelect={false}
+              showAll={false}
+            />
+          </div>
           <textarea
             className="input"
             placeholder="Resumo (excerpt)"
