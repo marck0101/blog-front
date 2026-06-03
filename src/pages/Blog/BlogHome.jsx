@@ -1,5 +1,5 @@
 import BlogLayout from "../../layouts/BlogLayout";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
@@ -13,22 +13,33 @@ import EmptyState from "../../components/EmptyState";
 import SubscribeForm from "../../components/SubscribeForm";
 
 export default function BlogHome() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Categoria ativa vem sempre da URL — fonte de verdade única
+  const activeCategory = searchParams.get("categoria") || "";
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-
-  const [selectedCategories, setSelectedCategories] = useState(() => {
-    const cat = searchParams.get("categoria");
-    return cat ? [cat] : [];
-  });
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
+
+  // Controla se é o primeiro render (não rola na carga inicial)
+  const isFirst = useRef(true);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
   }, []);
+
+  // Scroll suave para #posts quando a categoria muda por navegação (não no mount)
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
+    }
+    const el = document.getElementById("posts");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [activeCategory]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -50,7 +61,10 @@ export default function BlogHome() {
     let mounted = true;
     setLoading(true);
 
-    PostsService.getPublished(1, 20, { categories: selectedCategories, search })
+    PostsService.getPublished(1, 20, {
+      categories: activeCategory ? [activeCategory] : [],
+      search,
+    })
       .then(({ posts: data }) => {
         if (!mounted) return;
         setPosts(data.map(normalizePost));
@@ -63,22 +77,31 @@ export default function BlogHome() {
       })
       .finally(() => mounted && setLoading(false));
 
-    return () => {
-      mounted = false;
-    };
-  }, [selectedCategories, search]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { mounted = false; };
+  }, [activeCategory, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const cleanup = load();
     return cleanup;
   }, [load]);
 
-  const changeFilter = (setter) => (val) => setter(val);
+  // Chip clicado na página → atualiza URL
+  const handleCategoryChange = (val) => {
+    // val = slug string (FilterChips multiSelect=false)
+    if (!val || val === "all") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ categoria: val });
+    }
+  };
 
   const clearFilters = () => {
-    setSelectedCategories([]);
+    setSearchParams({});
     setSearch("");
   };
+
+  const activeCatLabel =
+    categories.find((c) => c.slug === activeCategory)?.label || activeCategory;
 
   return (
     <BlogLayout>
@@ -120,7 +143,6 @@ export default function BlogHome() {
             </a>
           </div>
 
-          {/* Avatar do autor */}
           <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl md:text-4xl font-bold select-none shadow-lg">
             M
           </div>
@@ -129,23 +151,31 @@ export default function BlogHome() {
 
       {/* Posts */}
       <main id="posts" className="max-w-5xl mx-auto px-6 py-10">
-        {/* Categoria chips */}
+
+        {/* Título dinâmico quando há filtro */}
+        {activeCategory && activeCatLabel && (
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Posts sobre {activeCatLabel}
+          </h2>
+        )}
+
+        {/* Chips de categoria */}
         {categories.length > 0 && (
           <div className="mb-4">
             <FilterChips
               options={categories}
-              selected={selectedCategories}
-              onChange={changeFilter(setSelectedCategories)}
+              selected={activeCategory || "all"}
+              onChange={handleCategoryChange}
               allLabel="Todas as categorias"
-              multiSelect
+              multiSelect={false}
             />
           </div>
         )}
 
-        {/* Busca por título */}
+        {/* Busca */}
         <div className="mb-6">
           <FilterBar
-            onSearch={changeFilter(setSearch)}
+            onSearch={(val) => setSearch(val)}
             showDateRange={false}
             onClear={clearFilters}
             searchPlaceholder="Buscar artigo..."
@@ -162,8 +192,16 @@ export default function BlogHome() {
 
         {!loading && posts.length === 0 && (
           <EmptyState
-            title="Nenhum post encontrado"
-            description="Tente outros filtros ou aguarde novos artigos."
+            title={
+              activeCategory
+                ? `Nenhum post sobre ${activeCatLabel} ainda`
+                : "Nenhum post encontrado"
+            }
+            description={
+              activeCategory
+                ? "Confira outras categorias!"
+                : "Tente outros filtros ou aguarde novos artigos."
+            }
           />
         )}
 

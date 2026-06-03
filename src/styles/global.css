@@ -48,3 +48,7 @@ body {
 .animate-fade-in {
   animation: fade-in 0.25s ease-out;
 }
+
+/* Esconde scrollbar mas mantém scroll funcional */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
