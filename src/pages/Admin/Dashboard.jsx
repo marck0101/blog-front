@@ -7,6 +7,8 @@ import {
   Trash2,
   CalendarDays,
   AlertCircle,
+  Users,
+  UserCheck,
 } from "lucide-react";
 import Header from "../../components/Header";
 import DashboardService from "../../services/dashboard.service";
@@ -67,8 +69,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Cards de métricas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Cards de métricas — Posts */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
           ) : (
@@ -100,6 +102,30 @@ export default function Dashboard() {
                 label="Na lixeira"
                 colorClass="bg-red-500"
                 to="/admin/trash"
+              />
+            </>
+          )}
+        </div>
+
+        {/* Cards de métricas — Assinantes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {loading ? (
+            Array.from({ length: 2 }).map((_, i) => <StatCardSkeleton key={i} />)
+          ) : (
+            <>
+              <StatCard
+                icon={UserCheck}
+                value={stats?.activeSubscribers ?? "—"}
+                label="Assinantes ativos"
+                colorClass="bg-teal-500"
+                to="/admin/subscribers"
+              />
+              <StatCard
+                icon={Users}
+                value={stats?.totalSubscribers ?? "—"}
+                label="Total de assinantes"
+                colorClass="bg-indigo-500"
+                to="/admin/subscribers"
               />
             </>
           )}

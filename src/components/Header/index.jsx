@@ -8,6 +8,7 @@ import {
   Trash,
   ArrowsUpFromLine,
   LayoutDashboard,
+  Users,
 } from "lucide-react";
 
 export default function Header() {
@@ -78,6 +79,11 @@ export default function Header() {
                 <Link to="/admin/trash" className={navItemClass(isActive("/admin/trash"))}>
                   <Trash size={18} />
                   <span className={tooltipClass} style={{ top: 64 }}>Lixeira</span>
+                </Link>
+
+                <Link to="/admin/subscribers" className={navItemClass(isActive("/admin/subscribers"))}>
+                  <Users size={18} />
+                  <span className={tooltipClass} style={{ top: 64 }}>Assinantes</span>
                 </Link>
 
                 <Link to="/blog" className={navItemClass(false)}>

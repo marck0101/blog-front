@@ -7,6 +7,7 @@ import PostsList from "../pages/Admin/PostsList";
 import CreatePost from "../pages/Admin/CreatePost";
 import EditPost from "../pages/Admin/EditPost";
 import Trash from "../pages/Admin/Trash";
+import Subscribers from "../pages/Admin/Subscribers";
 
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
@@ -63,6 +64,15 @@ export default function AppRoutes() {
           element={
             <PrivateRoute>
               <Trash />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/subscribers"
+          element={
+            <PrivateRoute>
+              <Subscribers />
             </PrivateRoute>
           }
         />

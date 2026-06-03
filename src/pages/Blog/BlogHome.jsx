@@ -6,6 +6,7 @@ import Filters from "../../components/Filters";
 import useSEO from "../../hooks/useSEO";
 import PostsService from "../../services/posts.service";
 import EmptyState from "../../components/EmptyState";
+import SubscribeForm from "../../components/SubscribeForm";
 
 export default function BlogHome() {
   const [category, setCategory] = useState("");
@@ -102,6 +103,10 @@ export default function BlogHome() {
             ))}
           </div>
         )}
+
+        <div className="mt-12">
+          <SubscribeForm />
+        </div>
       </main>
     </BlogLayout>
   );

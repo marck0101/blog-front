@@ -6,6 +6,7 @@ import useSEO from "../../hooks/useSEO";
 import Breadcrumb from "../../components/Breadcrumb";
 import BackButton from "../../components/BackButton";
 import PostsService from "../../services/posts.service";
+import SubscribeForm from "../../components/SubscribeForm";
 
 export default function Post() {
   const { slug } = useParams();
@@ -78,6 +79,10 @@ export default function Post() {
         <article className="prose prose-lg max-w-none mt-8 dark:prose-invert">
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </article>
+
+        <div className="mt-12">
+          <SubscribeForm />
+        </div>
       </main>
     </BlogLayout>
   );
