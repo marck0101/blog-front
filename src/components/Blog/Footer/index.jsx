@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import authorPhoto from "../../../assets/author.webp";
 
 // Configure suas redes sociais aqui
 const SOCIAL_LINKS = [
@@ -21,12 +22,19 @@ export default function BlogFooter() {
       <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Coluna esquerda — logo + descrição */}
         <div>
-          <Link
-            to="/blog"
-            className="font-bold text-lg text-gray-900 dark:text-gray-100"
-          >
-            marck0101
-          </Link>
+          <div className="flex items-center gap-3">
+            <img
+              src={authorPhoto}
+              alt="Marcos Henrique"
+              className="w-10 h-10 rounded-full object-cover object-top shrink-0"
+            />
+            <Link
+              to="/blog"
+              className="font-bold text-lg text-gray-900 dark:text-gray-100"
+            >
+              marck0101
+            </Link>
+          </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
             Blog do Marcos Henrique sobre marketing digital, tráfego pago e
             growth. Estratégias práticas para quem quer resultados reais.

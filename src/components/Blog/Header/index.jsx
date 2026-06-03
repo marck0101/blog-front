@@ -1,17 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Menu, X, Lock, ChevronDown } from "lucide-react";
+import { Menu, X, Lock } from "lucide-react";
 import SubscriberService from "../../../services/subscriber.service";
 import ThemeToggle from "../../ThemeToggle";
-
-const MAX_VISIBLE = 6;
 
 export default function BlogHeader() {
   const [categories, setCategories] = useState([]);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
 
   const [searchParams] = useSearchParams();
   // Suporta múltiplas categorias: /blog?categoria=a&categoria=b
@@ -31,31 +27,14 @@ export default function BlogHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Fecha drawer e dropdown com Escape
+  // Fecha drawer com Escape
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        setDropdownOpen(false);
-      }
+      if (e.key === "Escape") setMenuOpen(false);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
-
-  // Fecha dropdown ao clicar fora
-  useEffect(() => {
-    if (!dropdownOpen) return;
-    const onClick = (e) => {
-      if (!dropdownRef.current?.contains(e.target)) setDropdownOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [dropdownOpen]);
-
-  const visibleCats = categories.slice(0, MAX_VISIBLE);
-  const hiddenCats = categories.slice(MAX_VISIBLE);
-  const hiddenHasActive = hiddenCats.some((c) => c.slug === singleActive);
 
   const navLinkClass = (slug) => {
     const isActive = slug === ""
@@ -85,10 +64,9 @@ export default function BlogHeader() {
           marck0101
         </Link>
 
-        {/* Desktop nav — categorias com overflow scroll */}
+        {/* Desktop nav — todas as categorias com scroll horizontal */}
         <nav className="hidden md:flex items-center flex-1 min-w-0 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1">
-            {/* Todos */}
             <Link
               to="/blog"
               className={navLinkClass("")}
@@ -96,7 +74,7 @@ export default function BlogHeader() {
               Todos
             </Link>
 
-            {visibleCats.map((cat) => (
+            {categories.map((cat) => (
               <Link
                 key={cat.slug}
                 to={`/blog?categoria=${cat.slug}`}
@@ -105,41 +83,6 @@ export default function BlogHeader() {
                 {cat.label}
               </Link>
             ))}
-
-            {/* Dropdown "Mais" */}
-            {hiddenCats.length > 0 && (
-              <div ref={dropdownRef} className="relative">
-                <button
-                  onClick={() => setDropdownOpen((v) => !v)}
-                  className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition ${
-                    hiddenHasActive
-                      ? "font-semibold text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  Mais <ChevronDown size={12} />
-                </button>
-
-                {dropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50">
-                    {hiddenCats.map((cat) => (
-                      <Link
-                        key={cat.slug}
-                        to={`/blog?categoria=${cat.slug}`}
-                        onClick={() => setDropdownOpen(false)}
-                        className={`block px-4 py-2 text-sm transition ${
-                          cat.slug === singleActive
-                            ? "font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        {cat.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </nav>
 

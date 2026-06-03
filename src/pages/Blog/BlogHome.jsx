@@ -1,4 +1,5 @@
 import BlogLayout from "../../layouts/BlogLayout";
+import authorPhoto from "../../assets/author.webp";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
@@ -144,9 +145,11 @@ export default function BlogHome() {
             </a>
           </div>
 
-          <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl md:text-4xl font-bold select-none shadow-lg">
-            M
-          </div>
+          <img
+            src={authorPhoto}
+            alt="Marcos Henrique"
+            className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full object-cover object-top shadow-lg"
+          />
         </div>
       </section>
 
