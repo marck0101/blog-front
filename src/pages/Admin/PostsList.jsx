@@ -38,7 +38,7 @@ export default function PostsList() {
     let mounted = true;
     setLoading(true);
 
-    PostsService.getAll(page, POSTS_PER_PAGE)
+    PostsService.getAll(page, POSTS_PER_PAGE, statusFilter)
       .then(({ posts: data, total: t, totalPages: tp }) => {
         if (!mounted) return;
         setPosts(Array.isArray(data) ? data : []);
@@ -55,7 +55,7 @@ export default function PostsList() {
       });
 
     return () => { mounted = false; };
-  }, [page]);
+  }, [page, statusFilter]);
 
   /* ---------------- ESC PREVIEW ---------------- */
   useEffect(() => {
@@ -114,12 +114,8 @@ export default function PostsList() {
     });
   };
 
-  /* ---------------- FILTER (aplica na página atual) ---------------- */
-  const filteredPosts = posts.filter((post) => {
-    if (statusFilter === "published") return post?.published;
-    if (statusFilter === "draft") return !post?.published;
-    return true;
-  });
+  // Filtro aplicado no servidor; posts já vem filtrados da API
+  const filteredPosts = posts;
 
   /* ---------------- LOADING ---------------- */
   if (loading) {

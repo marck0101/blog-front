@@ -26,8 +26,11 @@ const PostsService = {
   /* ================= ADMIN ================= */
 
   // Retorna { posts, total, page, totalPages }
-  async getAll(page = 1, limit = 10) {
-    const { data } = await api.get("/posts", { params: { page, limit } });
+  async getAll(page = 1, limit = 10, statusFilter = "all") {
+    const params = { page, limit };
+    if (statusFilter === "published") params.published = "true";
+    if (statusFilter === "draft") params.published = "false";
+    const { data } = await api.get("/posts", { params });
     return data;
   },
 
