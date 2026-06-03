@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import AuthService from "../../services/auth.service";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import SEO from "../../components/SEO";
 
@@ -71,6 +71,13 @@ export default function Login() {
 
         <button className="bg-black text-white p-2 rounded">Entrar</button>
       </form>
+
+      <Link
+        to="/blog"
+        className="mt-6 block text-center text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+      >
+        ← Voltar ao blog
+      </Link>
     </div>
     </>
   );

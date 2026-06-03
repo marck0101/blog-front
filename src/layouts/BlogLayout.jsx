@@ -1,10 +1,12 @@
-import Header from '../components/Header'
+import BlogHeader from "../components/Blog/Header";
+import BlogFooter from "../components/Blog/Footer";
 
 export default function BlogLayout({ children }) {
   return (
-    <>
-      <Header />
-      {children}
-    </>
-  )
+    <div className="min-h-screen flex flex-col">
+      <BlogHeader />
+      <div className="flex-1">{children}</div>
+      <BlogFooter />
+    </div>
+  );
 }

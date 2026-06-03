@@ -1,5 +1,6 @@
 import BlogLayout from "../../layouts/BlogLayout";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
 import FilterChips from "../../components/FilterChips";
@@ -12,17 +13,19 @@ import EmptyState from "../../components/EmptyState";
 import SubscribeForm from "../../components/SubscribeForm";
 
 export default function BlogHome() {
+  const [searchParams] = useSearchParams();
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
-  // filtros
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    const cat = searchParams.get("categoria");
+    return cat ? [cat] : [];
+  });
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
 
-
-  /* --- categorias via API --- */
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
   }, []);
@@ -43,7 +46,6 @@ export default function BlogHome() {
     publishedAt: post.publishedAt || post.createdAt,
   });
 
-  /* --- fetch posts com filtros --- */
   const load = useCallback(() => {
     let mounted = true;
     setLoading(true);
@@ -61,7 +63,9 @@ export default function BlogHome() {
       })
       .finally(() => mounted && setLoading(false));
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [selectedCategories, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -84,6 +88,7 @@ export default function BlogHome() {
         url="/blog"
       />
       <BlogSchema />
+
       {toast && (
         <div
           className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
@@ -94,9 +99,36 @@ export default function BlogHome() {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-bold mb-6">Blog</h1>
+      {/* Hero */}
+      <section className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 flex flex-col md:flex-row items-center gap-10">
+          <div className="flex-1 text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+              Marketing que converte.
+              <br />
+              Conteúdo que cresce.
+            </h1>
+            <p className="mt-4 text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl">
+              Estratégias de tráfego pago, growth e marketing digital para quem
+              quer resultados reais.
+            </p>
+            <a
+              href="#posts"
+              className="mt-6 inline-flex items-center px-6 py-2.5 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+            >
+              Ver todos os posts
+            </a>
+          </div>
 
+          {/* Avatar do autor */}
+          <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl md:text-4xl font-bold select-none shadow-lg">
+            M
+          </div>
+        </div>
+      </section>
+
+      {/* Posts */}
+      <main id="posts" className="max-w-5xl mx-auto px-6 py-10">
         {/* Categoria chips */}
         {categories.length > 0 && (
           <div className="mb-4">
@@ -120,10 +152,11 @@ export default function BlogHome() {
           />
         </div>
 
-        {/* Posts */}
         {loading && (
           <div className="grid gap-6">
-            {Array.from({ length: 4 }).map((_, i) => <PostCardSkeleton key={i} />)}
+            {Array.from({ length: 4 }).map((_, i) => (
+              <PostCardSkeleton key={i} />
+            ))}
           </div>
         )}
 
@@ -142,7 +175,7 @@ export default function BlogHome() {
           </div>
         )}
 
-        <div className="mt-12">
+        <div id="assinar" className="mt-12">
           <SubscribeForm />
         </div>
       </main>
