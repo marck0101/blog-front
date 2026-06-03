@@ -1,11 +1,11 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { useEffect, useRef, useState } from "react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
 import { BlogPostSchema } from "../../components/StructuredData";
 import Breadcrumb from "../../components/Breadcrumb";
 import BackButton from "../../components/BackButton";
+import Lightbox from "../../components/Lightbox";
 import PostsService from "../../services/posts.service";
 import SubscribeForm from "../../components/SubscribeForm";
 
@@ -13,7 +13,8 @@ export default function Post() {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
+  const contentRef = useRef(null);
 
   useEffect(() => {
     if (!slug) {
@@ -26,15 +27,21 @@ export default function Post() {
     PostsService.getBySlug(slug)
       .then((postData) => {
         if (postData) return postData;
-        // Fallback: tenta por ID (posts antigos sem slug limpo)
         return PostsService.getPublicById(slug);
       })
-      .then((postData) => {
-        setPost(postData || null);
-      })
+      .then((postData) => setPost(postData || null))
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  // Aplica cursor-pointer e lightbox em todas as imagens do conteúdo
+  useEffect(() => {
+    const imgs = contentRef.current?.querySelectorAll("img");
+    imgs?.forEach((img) => {
+      img.style.cursor = "pointer";
+      img.onclick = () => setLightbox({ open: true, src: img.src, alt: img.alt });
+    });
+  }, [post?.content]);
 
   if (loading) {
     return (
@@ -69,6 +76,15 @@ export default function Post() {
         publishedAt={post.publishedAt}
       />
       <BlogPostSchema post={post} />
+
+      {lightbox.open && (
+        <Lightbox
+          src={lightbox.src}
+          alt={lightbox.alt}
+          onClose={() => setLightbox({ open: false, src: "", alt: "" })}
+        />
+      )}
+
       <main className="max-w-3xl mx-auto px-6 py-10">
         <BackButton />
         <Breadcrumb title={post.title} />
@@ -81,9 +97,11 @@ export default function Post() {
           {post.category} • {new Date(post.publishedAt).toLocaleDateString()}
         </p>
 
-        <article className="prose prose-lg max-w-none mt-8 dark:prose-invert">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
-        </article>
+        <div
+          ref={contentRef}
+          className="prose prose-lg max-w-none mt-8 dark:prose-invert"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
 
         <div className="mt-12">
           <SubscribeForm />

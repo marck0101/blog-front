@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
-import MarkdownEditor from "../../components/MarkdownEditor";
+import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
 import FilterChips from "../../components/FilterChips";
@@ -196,7 +196,7 @@ export default function EditPost() {
         />
 
         {/* CONTEÚDO */}
-        <MarkdownEditor
+        <RichTextEditor
           value={form.content}
           onChange={(content) => setForm({ ...form, content })}
         />
