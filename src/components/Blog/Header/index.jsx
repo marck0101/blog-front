@@ -14,7 +14,10 @@ export default function BlogHeader() {
   const dropdownRef = useRef(null);
 
   const [searchParams] = useSearchParams();
-  const activeCategory = searchParams.get("categoria") || "";
+  // Suporta múltiplas categorias: /blog?categoria=a&categoria=b
+  const activeCategories = searchParams.getAll("categoria");
+  // Destaque no header apenas quando exatamente 1 categoria está ativa
+  const singleActive = activeCategories.length === 1 ? activeCategories[0] : "";
 
   useEffect(() => {
     SubscriberService.getCategories()
@@ -52,14 +55,18 @@ export default function BlogHeader() {
 
   const visibleCats = categories.slice(0, MAX_VISIBLE);
   const hiddenCats = categories.slice(MAX_VISIBLE);
-  const hiddenHasActive = hiddenCats.some((c) => c.slug === activeCategory);
+  const hiddenHasActive = hiddenCats.some((c) => c.slug === singleActive);
 
-  const navLinkClass = (isActive) =>
-    `px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap ${
+  const navLinkClass = (slug) => {
+    const isActive = slug === ""
+      ? activeCategories.length === 0          // "Todos" ativo quando sem filtro
+      : slug === singleActive;                  // categoria ativa só se for a única
+    return `px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap ${
       isActive
         ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
         : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
     }`;
+  };
 
   return (
     <header
@@ -84,7 +91,7 @@ export default function BlogHeader() {
             {/* Todos */}
             <Link
               to="/blog"
-              className={navLinkClass(!activeCategory)}
+              className={navLinkClass("")}
             >
               Todos
             </Link>
@@ -93,7 +100,7 @@ export default function BlogHeader() {
               <Link
                 key={cat.slug}
                 to={`/blog?categoria=${cat.slug}`}
-                className={navLinkClass(activeCategory === cat.slug)}
+                className={navLinkClass(cat.slug)}
               >
                 {cat.label}
               </Link>
@@ -121,7 +128,7 @@ export default function BlogHeader() {
                         to={`/blog?categoria=${cat.slug}`}
                         onClick={() => setDropdownOpen(false)}
                         className={`block px-4 py-2 text-sm transition ${
-                          activeCategory === cat.slug
+                          cat.slug === singleActive
                             ? "font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         }`}
@@ -174,7 +181,7 @@ export default function BlogHeader() {
             to="/blog"
             onClick={() => setMenuOpen(false)}
             className={`text-sm py-2.5 px-2 rounded-md transition ${
-              !activeCategory
+              activeCategories.length === 0
                 ? "font-semibold text-blue-600 dark:text-blue-400"
                 : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
@@ -188,7 +195,7 @@ export default function BlogHeader() {
               to={`/blog?categoria=${cat.slug}`}
               onClick={() => setMenuOpen(false)}
               className={`text-sm py-2.5 px-2 rounded-md transition ${
-                activeCategory === cat.slug
+                cat.slug === singleActive
                   ? "font-semibold text-blue-600 dark:text-blue-400"
                   : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
