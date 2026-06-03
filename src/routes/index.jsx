@@ -11,6 +11,7 @@ import Subscribers from "../pages/Admin/Subscribers";
 
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
+import PrivacyPolicy from "../pages/Blog/PrivacyPolicy";
 
 export default function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function AppRoutes() {
         <Route path="/" element={<Navigate to="/blog" />} />
         <Route path="/blog" element={<BlogHome />} />
         <Route path="/blog/:slug" element={<Post />} />
+        <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/admin/login" element={<Login />} />
 
         {/* ADMIN */}

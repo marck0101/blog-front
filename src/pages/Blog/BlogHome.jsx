@@ -1,20 +1,40 @@
 import BlogLayout from "../../layouts/BlogLayout";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
-import Filters from "../../components/Filters";
+import FilterChips from "../../components/FilterChips";
+import FilterBar from "../../components/FilterBar";
 import useSEO from "../../hooks/useSEO";
 import PostsService from "../../services/posts.service";
+import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
 import SubscribeForm from "../../components/SubscribeForm";
 
 export default function BlogHome() {
-  const [category, setCategory] = useState("");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
-  /* ================= NORMALIZAÇÃO ================= */
+  // filtros
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  useSEO({
+    title: "Blog | marck0101",
+    description: "Artigos sobre marketing, tecnologia e desenvolvimento",
+  });
+
+  /* --- categorias via API --- */
+  useEffect(() => {
+    SubscriberService.getCategories().then(setCategories).catch(() => {});
+  }, []);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const normalizePost = (post) => ({
     id: post._id,
     title: post.title,
@@ -26,24 +46,15 @@ export default function BlogHome() {
     publishedAt: post.publishedAt || post.createdAt,
   });
 
-  /* ================= TOAST ================= */
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  useSEO({
-    title: "Blog | marck0101",
-    description: "Artigos sobre marketing, tecnologia e desenvolvimento",
-  });
-
-  useEffect(() => {
+  /* --- fetch posts com filtros --- */
+  const load = useCallback(() => {
     let mounted = true;
+    setLoading(true);
 
-    PostsService.getPublished()
-      .then(({ posts }) => {
+    PostsService.getPublished(1, 20, { categories: selectedCategories, search })
+      .then(({ posts: data }) => {
         if (!mounted) return;
-        setPosts(posts.map(normalizePost));
+        setPosts(data.map(normalizePost));
       })
       .catch(() => {
         if (mounted) {
@@ -53,23 +64,27 @@ export default function BlogHome() {
       })
       .finally(() => mounted && setLoading(false));
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    return () => { mounted = false; };
+  }, [selectedCategories, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredPosts = category
-    ? posts.filter((post) => post.category === category)
-    : posts;
+  useEffect(() => {
+    const cleanup = load();
+    return cleanup;
+  }, [load]);
+
+  const changeFilter = (setter) => (val) => setter(val);
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSearch("");
+  };
 
   return (
     <BlogLayout>
       {toast && (
         <div
           className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success"
-              ? "bg-green-600 text-white"
-              : "bg-red-600 text-white"
+            toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
           }`}
         >
           {toast.message}
@@ -77,28 +92,48 @@ export default function BlogHome() {
       )}
 
       <main className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-bold mb-4">Blog</h1>
+        <h1 className="text-3xl font-bold mb-6">Blog</h1>
 
-        <Filters category={category} onChange={setCategory} />
-
-        {loading && (
-          <div className="grid gap-6 mt-6">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <PostCardSkeleton key={index} />
-            ))}
+        {/* Categoria chips */}
+        {categories.length > 0 && (
+          <div className="mb-4">
+            <FilterChips
+              options={categories}
+              selected={selectedCategories}
+              onChange={changeFilter(setSelectedCategories)}
+              allLabel="Todas as categorias"
+              multiSelect
+            />
           </div>
         )}
 
-        {!loading && filteredPosts.length === 0 && (
+        {/* Busca por título */}
+        <div className="mb-6">
+          <FilterBar
+            onSearch={changeFilter(setSearch)}
+            showDateRange={false}
+            onClear={clearFilters}
+            searchPlaceholder="Buscar artigo..."
+          />
+        </div>
+
+        {/* Posts */}
+        {loading && (
+          <div className="grid gap-6">
+            {Array.from({ length: 4 }).map((_, i) => <PostCardSkeleton key={i} />)}
+          </div>
+        )}
+
+        {!loading && posts.length === 0 && (
           <EmptyState
-            title="Nenhum post publicado ainda"
-            description="Estamos preparando conteúdos incríveis. Volte em breve."
+            title="Nenhum post encontrado"
+            description="Tente outros filtros ou aguarde novos artigos."
           />
         )}
 
-        {!loading && (
-          <div className="grid gap-6 mt-6">
-            {filteredPosts.map((post) => (
+        {!loading && posts.length > 0 && (
+          <div className="grid gap-6">
+            {posts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>
@@ -111,72 +146,3 @@ export default function BlogHome() {
     </BlogLayout>
   );
 }
-
-// import BlogLayout from "../../layouts/BlogLayout";
-// import { useEffect, useState } from "react";
-// import PostCard from "../../components/PostCard";
-// import PostCardSkeleton from "../../components/PostCardSkeleton";
-// import Filters from "../../components/Filters";
-// import useSEO from "../../hooks/useSEO";
-// import PostsService from "../../services/posts.service";
-// import EmptyState from "../../components/EmptyState";
-
-// export default function BlogHome() {
-//   const [category, setCategory] = useState("");
-//   const [posts, setPosts] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useSEO({
-//     title: "Blog | marck0101",
-//     description: "Artigos sobre marketing, tecnologia e desenvolvimento",
-//   });
-
-//   useEffect(() => {
-//     PostsService.getPublished()
-//       .then((res) => setPosts(res.data))
-//       .catch(() => setPosts([]))
-//       .finally(() => setLoading(false));
-//   }, []);
-
-//   const filteredPosts = category
-//     ? posts?.filter((post) => post?.category === category)
-//     : posts;
-
-//   return (
-//     <BlogLayout>
-//       <main className="max-w-5xl mx-auto px-6 py-10">
-//         <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-//           Blog
-//         </h1>
-
-//         <Filters category={category} onChange={setCategory} />
-
-//         {/* Skeleton */}
-//         {loading && (
-//           <div className="grid gap-6 mt-6">
-//             {Array.from({ length: 4 }).map((_, index) => (
-//               <PostCardSkeleton key={index} />
-//             ))}
-//           </div>
-//         )}
-
-//         {/* Estado vazio */}
-//         {!loading && filteredPosts.length === 0 && (
-//           <EmptyState
-//             title="Nenhum post publicado ainda"
-//             description="Estamos preparando conteúdos incríveis sobre marketing, tecnologia e crescimento. Volte em breve."
-//           />
-//         )}
-
-//         {/* Posts */}
-//         {!loading && (
-//           <div className="grid gap-6 mt-6">
-//             {filteredPosts?.map((post) => (
-//               <PostCard key={post._id} post={post} />
-//             ))}
-//           </div>
-//         )}
-//       </main>
-//     </BlogLayout>
-//   );
-// }

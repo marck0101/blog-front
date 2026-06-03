@@ -1,17 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { Trash2, RefreshCw, Users, AlertCircle } from "lucide-react";
 import Header from "../../components/Header";
+import FilterChips from "../../components/FilterChips";
+import FilterBar from "../../components/FilterBar";
 import SubscriberService from "../../services/subscriber.service";
 
-const CATEGORY_LABELS = {
-  tecnologia: "Tecnologia",
-  design: "Design",
-  carreira: "Carreira",
-  negocios: "Negócios",
-  marketing: "Marketing",
-  trafego: "Tráfego",
-  growth: "Growth",
-};
+const STATUS_OPTIONS = [
+  { value: "active", label: "Ativos" },
+  { value: "unsubscribed", label: "Cancelados" },
+];
 
 function StatusBadge({ status }) {
   return status === "active" ? (
@@ -41,29 +38,49 @@ export default function Subscribers() {
   const [data, setData] = useState({ subscribers: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
-  const [page, setPage] = useState(1);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+
+  // filtros
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
+  const [categories, setCategories] = useState([]);
+
+  /* --- categorias via API --- */
+  useEffect(() => {
+    SubscriberService.getCategories().then(setCategories).catch(() => {});
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
     const params = { page, limit: 20 };
-    if (filterStatus) params.status = filterStatus;
-    if (filterCategory) params.category = filterCategory;
+    if (statusFilter !== "all") params.status = statusFilter;
+    if (selectedCategories.length) params.categories = selectedCategories.join(",");
+    if (search) params.search = search;
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
 
     SubscriberService.getAll(params)
       .then(setData)
       .catch(() => setError("Não foi possível carregar os assinantes."))
       .finally(() => setLoading(false));
-  }, [page, filterStatus, filterCategory]);
+  }, [page, statusFilter, selectedCategories, search, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleFilterChange = (setter) => (e) => {
-    setter(e.target.value);
+  const changeFilter = (setter) => (val) => { setter(val); setPage(1); };
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setSelectedCategories([]);
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
   };
 
@@ -93,7 +110,8 @@ export default function Subscribers() {
     }
   };
 
-  const categories = Object.entries(CATEGORY_LABELS);
+  const categoryLabel = (slug) =>
+    categories.find((c) => c.slug === slug)?.label ?? slug;
 
   return (
     <>
@@ -105,7 +123,7 @@ export default function Subscribers() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Assinantes</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {data.total} assinante{data.total !== 1 ? "s" : ""} encontrado{data.total !== 1 ? "s" : ""}
+              {data.total} assinante{data.total !== 1 ? "s" : ""}
             </p>
           </div>
           <button
@@ -117,28 +135,42 @@ export default function Subscribers() {
           </button>
         </div>
 
-        {/* Filtros */}
-        <div className="flex gap-3 flex-wrap mb-4">
-          <select
-            value={filterStatus}
-            onChange={handleFilterChange(setFilterStatus)}
-            className="input py-1.5 text-sm w-auto"
-          >
-            <option value="">Todos os status</option>
-            <option value="active">Ativos</option>
-            <option value="unsubscribed">Cancelados</option>
-          </select>
+        {/* Status chips */}
+        <div className="mb-3">
+          <FilterChips
+            options={STATUS_OPTIONS}
+            selected={statusFilter}
+            onChange={changeFilter(setStatusFilter)}
+            allLabel="Todos"
+            multiSelect={false}
+          />
+        </div>
 
-          <select
-            value={filterCategory}
-            onChange={handleFilterChange(setFilterCategory)}
-            className="input py-1.5 text-sm w-auto"
-          >
-            <option value="">Todas as categorias</option>
-            {categories.map(([slug, label]) => (
-              <option key={slug} value={slug}>{label}</option>
-            ))}
-          </select>
+        {/* Category chips */}
+        {categories.length > 0 && (
+          <div className="mb-3">
+            <FilterChips
+              options={categories}
+              selected={selectedCategories}
+              onChange={changeFilter(setSelectedCategories)}
+              allLabel="Todas as categorias"
+              multiSelect
+            />
+          </div>
+        )}
+
+        {/* Search + date range */}
+        <div className="mb-6">
+          <FilterBar
+            onSearch={changeFilter(setSearch)}
+            showDateRange
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={changeFilter(setDateFrom)}
+            onDateToChange={changeFilter(setDateTo)}
+            onClear={clearFilters}
+            searchPlaceholder="Buscar por nome ou email..."
+          />
         </div>
 
         {/* Erro */}
@@ -163,8 +195,7 @@ export default function Subscribers() {
               </tr>
             </thead>
             <tbody>
-              {loading &&
-                Array.from({ length: 6 }).map((_, i) => <RowSkeleton key={i} />)}
+              {loading && Array.from({ length: 6 }).map((_, i) => <RowSkeleton key={i} />)}
 
               {!loading && data.subscribers.length === 0 && (
                 <tr>
@@ -175,82 +206,75 @@ export default function Subscribers() {
                 </tr>
               )}
 
-              {!loading &&
-                data.subscribers.map((sub) => (
-                  <tr
-                    key={sub._id}
-                    className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
-                  >
-                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">
-                      {sub.name || <span className="text-gray-400 italic">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                      {sub.email}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {sub.categories?.length > 0 ? (
-                          sub.categories.map((slug) => (
-                            <span
-                              key={slug}
-                              className="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                            >
-                              {CATEGORY_LABELS[slug] || slug}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-gray-400 italic text-xs">—</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={sub.status} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {new Date(sub.createdAt).toLocaleDateString("pt-BR")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {/* Toggle status */}
-                        <button
-                          onClick={() => handleToggleStatus(sub)}
-                          disabled={actionLoading === sub._id}
-                          title={sub.status === "active" ? "Cancelar inscrição" : "Reativar inscrição"}
-                          className="p-1.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-40 transition"
-                        >
-                          <RefreshCw size={14} />
-                        </button>
-
-                        {/* Delete */}
-                        {confirmDeleteId === sub._id ? (
-                          <span className="flex items-center gap-1 text-xs">
-                            <button
-                              onClick={() => handleDelete(sub._id)}
-                              disabled={actionLoading === sub._id}
-                              className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition"
-                            >
-                              Confirmar
-                            </button>
-                            <button
-                              onClick={() => setConfirmDeleteId(null)}
-                              className="px-2 py-1 rounded border text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                            >
-                              Cancelar
-                            </button>
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => setConfirmDeleteId(sub._id)}
-                            title="Remover assinante"
-                            className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+              {!loading && data.subscribers.map((sub) => (
+                <tr
+                  key={sub._id}
+                  className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
+                >
+                  <td className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">
+                    {sub.name || <span className="text-gray-400 italic">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{sub.email}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {sub.categories?.length > 0 ? (
+                        sub.categories.map((slug) => (
+                          <span
+                            key={slug}
+                            className="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                           >
-                            <Trash2 size={14} />
+                            {categoryLabel(slug)}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">—</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3"><StatusBadge status={sub.status} /></td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {new Date(sub.createdAt).toLocaleDateString("pt-BR")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleToggleStatus(sub)}
+                        disabled={actionLoading === sub._id}
+                        title={sub.status === "active" ? "Cancelar inscrição" : "Reativar inscrição"}
+                        className="p-1.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-40 transition"
+                      >
+                        <RefreshCw size={14} />
+                      </button>
+
+                      {confirmDeleteId === sub._id ? (
+                        <span className="flex items-center gap-1 text-xs">
+                          <button
+                            onClick={() => handleDelete(sub._id)}
+                            disabled={actionLoading === sub._id}
+                            className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition"
+                          >
+                            Confirmar
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-2 py-1 rounded border text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                          >
+                            Cancelar
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(sub._id)}
+                          title="Tem certeza que deseja remover este assinante?"
+                          className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -258,9 +282,7 @@ export default function Subscribers() {
         {/* Paginação */}
         {data.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-400">
-            <span>
-              Página {data.page} de {data.totalPages}
-            </span>
+            <span>Página {data.page} de {data.totalPages}</span>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}

@@ -8,8 +8,14 @@ const PostsService = {
   /* ================= BLOG PÚBLICO ================= */
 
   // Retorna { posts, total, page, totalPages }
-  async getPublished(page = 1, limit = 20) {
-    const { data } = await api.get("/posts/published", { params: { page, limit } });
+  async getPublished(page = 1, limit = 20, filters = {}) {
+    const params = { page, limit };
+    const { categories = [], search = "", dateFrom = "", dateTo = "" } = filters;
+    if (categories.length) params.categories = categories.join(",");
+    if (search) params.search = search;
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    const { data } = await api.get("/posts/published", { params });
     return data;
   },
 
@@ -26,10 +32,21 @@ const PostsService = {
   /* ================= ADMIN ================= */
 
   // Retorna { posts, total, page, totalPages }
-  async getAll(page = 1, limit = 10, statusFilter = "all") {
+  async getAll(page = 1, limit = 10, filters = {}) {
+    const {
+      statusFilter = "all",
+      categories = [],
+      search = "",
+      dateFrom = "",
+      dateTo = "",
+    } = filters;
     const params = { page, limit };
     if (statusFilter === "published") params.published = "true";
     if (statusFilter === "draft") params.published = "false";
+    if (categories.length) params.categories = categories.join(",");
+    if (search) params.search = search;
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
     const { data } = await api.get("/posts", { params });
     return data;
   },

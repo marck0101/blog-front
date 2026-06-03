@@ -1,71 +1,94 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import PostsService from "../../services/posts.service";
+import SubscriberService from "../../services/subscriber.service";
 import PublishToggle from "../../components/PublishToggle";
 import Header from "../../components/Header";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import Select from "../../components/Select";
+import FilterChips from "../../components/FilterChips";
+import FilterBar from "../../components/FilterBar";
 import { Pencil, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 
 const POSTS_PER_PAGE = 10;
 
+const STATUS_OPTIONS = [
+  { value: "published", label: "Publicados" },
+  { value: "draft", label: "Rascunhos" },
+];
+
 export default function PostsList() {
+  const navigate = useNavigate();
+
+  // dados
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingId, setLoadingId] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
   const [toast, setToast] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [previewPost, setPreviewPost] = useState(null);
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const navigate = useNavigate();
+  // filtros
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [categories, setCategories] = useState([]);
 
-  /* ---------------- TOAST ---------------- */
+  /* --- categorias via API --- */
+  useEffect(() => {
+    SubscriberService.getCategories()
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
+  /* --- ESC fecha preview --- */
+  useEffect(() => {
+    if (!previewPost) return;
+    const onKey = (e) => { if (e.key === "Escape") setPreviewPost(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewPost]);
+
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  /* ---------------- LOAD ---------------- */
-  useEffect(() => {
-    let mounted = true;
+  /* --- load posts --- */
+  const load = useCallback(() => {
     setLoading(true);
-
-    PostsService.getAll(page, POSTS_PER_PAGE, statusFilter)
+    PostsService.getAll(page, POSTS_PER_PAGE, {
+      statusFilter,
+      categories: selectedCategories,
+      search,
+      dateFrom,
+      dateTo,
+    })
       .then(({ posts: data, total: t, totalPages: tp }) => {
-        if (!mounted) return;
         setPosts(Array.isArray(data) ? data : []);
         setTotal(t);
         setTotalPages(tp);
       })
       .catch(() => {
-        if (!mounted) return;
         setPosts([]);
         showToast("Erro ao carregar posts", "error");
       })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+      .finally(() => setLoading(false));
+  }, [page, statusFilter, selectedCategories, search, dateFrom, dateTo]);
 
-    return () => { mounted = false; };
-  }, [page, statusFilter]);
+  useEffect(() => { load(); }, [load]);
 
-  /* ---------------- ESC PREVIEW ---------------- */
-  useEffect(() => {
-    if (!previewPost) return;
-    const onKeyDown = (e) => { if (e.key === "Escape") setPreviewPost(null); };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [previewPost]);
+  /* --- helpers para resetar página ao mudar filtro --- */
+  const changeFilter = (setter) => (val) => { setter(val); setPage(1); };
 
-  /* ---------------- ACTIONS ---------------- */
+  /* --- actions --- */
   const handleToggle = async (post) => {
     try {
       setLoadingId(post?._id);
@@ -93,7 +116,6 @@ export default function PostsList() {
     }
   };
 
-  /* ---------------- CONFIRM REQUESTS ---------------- */
   const handleToggleRequest = (post) => {
     setConfirmAction({
       title: post?.published ? "Mover para rascunho?" : "Publicar post?",
@@ -114,10 +136,16 @@ export default function PostsList() {
     });
   };
 
-  // Filtro aplicado no servidor; posts já vem filtrados da API
-  const filteredPosts = posts;
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setStatusFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSearch("");
+    setPage(1);
+  };
 
-  /* ---------------- LOADING ---------------- */
+  /* --- render --- */
   if (loading) {
     return (
       <>
@@ -130,12 +158,10 @@ export default function PostsList() {
     );
   }
 
-  /* ---------------- RENDER ---------------- */
   return (
     <>
       <Header />
 
-      {/* Toast */}
       {toast && (
         <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
           toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
@@ -145,59 +171,70 @@ export default function PostsList() {
       )}
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Posts</h1>
-          <span className="text-sm text-gray-500">{total} post{total !== 1 ? "s" : ""} no total</span>
+          <span className="text-sm text-gray-500">{total} post{total !== 1 ? "s" : ""}</span>
         </div>
 
-        {/* Filtros */}
-        <div className="mb-6">
-          <div className="sm:hidden">
-            <Select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              options={[
-                { label: "Todos", value: "all" },
-                { label: "Publicados", value: "published" },
-                { label: "Rascunhos", value: "draft" },
-              ]}
+        {/* Status chips */}
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <FilterChips
+            options={STATUS_OPTIONS}
+            selected={statusFilter}
+            onChange={changeFilter(setStatusFilter)}
+            allLabel="Todos"
+            multiSelect={false}
+          />
+          <Link
+            to="/admin/trash"
+            className="px-3 py-1.5 rounded-full border text-sm font-medium whitespace-nowrap
+              bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300
+              border-gray-300 dark:border-gray-600 hover:border-red-400 hover:text-red-600 transition"
+          >
+            Lixeira
+          </Link>
+        </div>
+
+        {/* Category chips */}
+        {categories.length > 0 && (
+          <div className="mb-3">
+            <FilterChips
+              options={categories}
+              selected={selectedCategories}
+              onChange={changeFilter(setSelectedCategories)}
+              allLabel="Todas as categorias"
+              multiSelect
             />
           </div>
-          <div className="hidden sm:flex gap-2">
-            {[
-              { label: "Todos", value: "all" },
-              { label: "Publicados", value: "published" },
-              { label: "Rascunhos", value: "draft" },
-            ].map((item) => (
-              <button
-                key={item.value}
-                onClick={() => { setStatusFilter(item.value); setPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  statusFilter === item.value
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-800"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+        )}
+
+        {/* Search + date range */}
+        <div className="mb-6">
+          <FilterBar
+            onSearch={changeFilter(setSearch)}
+            showDateRange
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={changeFilter(setDateFrom)}
+            onDateToChange={changeFilter(setDateTo)}
+            onClear={clearFilters}
+            searchPlaceholder="Buscar por título..."
+          />
         </div>
 
-        {filteredPosts.length === 0 && (
+        {posts.length === 0 && (
           <EmptyState
             title="Nenhum post encontrado"
-            description="Não há posts para o filtro selecionado."
+            description="Não há posts para os filtros selecionados."
             actionLabel="Criar novo post"
             onAction={() => navigate("/admin/create-post")}
           />
         )}
 
         <div className="space-y-4">
-          {filteredPosts.map((post) => (
+          {posts.map((post) => (
             <article key={post?._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                {/* Imagem */}
                 <div
                   onClick={() => setPreviewPost(post)}
                   className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer flex items-center justify-center"
@@ -209,7 +246,6 @@ export default function PostsList() {
                   )}
                 </div>
 
-                {/* Conteúdo */}
                 <div onClick={() => setPreviewPost(post)} className="flex-1 cursor-pointer">
                   <h2 className="text-lg font-semibold">{post?.title}</h2>
                   <p className="text-sm text-gray-500">
@@ -220,7 +256,6 @@ export default function PostsList() {
                   )}
                 </div>
 
-                {/* Ações desktop */}
                 <div className="hidden sm:flex gap-4">
                   <PublishToggle
                     checked={post?.published}
@@ -236,7 +271,6 @@ export default function PostsList() {
                 </div>
               </div>
 
-              {/* Ações mobile */}
               <div className="flex sm:hidden justify-between mt-4 pt-4 border-t">
                 <PublishToggle
                   checked={post?.published}
@@ -268,11 +302,9 @@ export default function PostsList() {
             >
               <ChevronLeft size={16} /> Anterior
             </button>
-
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Página {page} de {totalPages}
             </span>
-
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={page === totalPages}
@@ -286,7 +318,7 @@ export default function PostsList() {
         )}
       </main>
 
-      {/* PREVIEW MODAL */}
+      {/* Preview modal */}
       {previewPost && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
           <div className="bg-white dark:bg-gray-900 max-w-4xl w-full rounded-xl flex flex-col max-h-[90vh]">
@@ -314,7 +346,6 @@ export default function PostsList() {
         </div>
       )}
 
-      {/* Confirm Dialog */}
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}
