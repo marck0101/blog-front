@@ -4,7 +4,8 @@ import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
-import useSEO from "../../hooks/useSEO";
+import SEO from "../../components/SEO";
+import { BlogSchema } from "../../components/StructuredData";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
@@ -20,10 +21,6 @@ export default function BlogHome() {
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
 
-  useSEO({
-    title: "Blog | marck0101",
-    description: "Artigos sobre marketing, tecnologia e desenvolvimento",
-  });
 
   /* --- categorias via API --- */
   useEffect(() => {
@@ -81,6 +78,12 @@ export default function BlogHome() {
 
   return (
     <BlogLayout>
+      <SEO
+        title="Blog | marck0101"
+        description="Artigos sobre marketing digital, tráfego pago e growth."
+        url="/blog"
+      />
+      <BlogSchema />
       {toast && (
         <div
           className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${

@@ -2,7 +2,8 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import BlogLayout from "../../layouts/BlogLayout";
-import useSEO from "../../hooks/useSEO";
+import SEO from "../../components/SEO";
+import { BlogPostSchema } from "../../components/StructuredData";
 import Breadcrumb from "../../components/Breadcrumb";
 import BackButton from "../../components/BackButton";
 import PostsService from "../../services/posts.service";
@@ -13,11 +14,6 @@ export default function Post() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useSEO({
-    title: post ? `${post.title} | Blog marck0101` : "Carregando...",
-    description: post?.excerpt,
-    image: post?.coverImage || "/og-default.png",
-  });
 
   useEffect(() => {
     if (!slug) {
@@ -64,6 +60,15 @@ export default function Post() {
 
   return (
     <BlogLayout>
+      <SEO
+        title={`${post.title} | Blog marck0101`}
+        description={post.excerpt}
+        image={post.coverImage}
+        url={`/blog/${post.slug}`}
+        type="article"
+        publishedAt={post.publishedAt}
+      />
+      <BlogPostSchema post={post} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <BackButton />
         <Breadcrumb title={post.title} />

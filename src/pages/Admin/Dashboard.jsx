@@ -11,6 +11,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import Header from "../../components/Header";
+import SEO from "../../components/SEO";
 import DashboardService from "../../services/dashboard.service";
 
 function StatCardSkeleton() {
@@ -51,6 +52,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <SEO robots="noindex, nofollow" />
       <Header />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">

@@ -5,6 +5,7 @@ import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import PublishToggle from "../../components/PublishToggle";
 import Header from "../../components/Header";
+import SEO from "../../components/SEO";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
 import ConfirmDialog from "../../components/ConfirmDialog";
@@ -160,6 +161,7 @@ export default function PostsList() {
 
   return (
     <>
+      <SEO robots="noindex, nofollow" />
       <Header />
 
       {toast && (

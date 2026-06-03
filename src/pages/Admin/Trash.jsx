@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import PostsService from "../../services/posts.service";
 import Header from "../../components/Header";
+import SEO from "../../components/SEO";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
 import ConfirmDialog from "../../components/ConfirmDialog";
@@ -121,6 +122,7 @@ export default function Trash() {
   /* ---------------- RENDER ---------------- */
   return (
     <>
+      <SEO robots="noindex, nofollow" />
       <Header />
 
       {/* Toast */}

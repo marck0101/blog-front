@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header";
+import SEO from "../../components/SEO";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
@@ -111,6 +112,7 @@ export default function EditPost() {
 
   return (
     <>
+      <SEO robots="noindex, nofollow" />
       <Header />
 
       {toast && (

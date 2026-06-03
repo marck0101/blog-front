@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Trash2, RefreshCw, Users, AlertCircle } from "lucide-react";
 import Header from "../../components/Header";
+import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import SubscriberService from "../../services/subscriber.service";
@@ -115,6 +116,7 @@ export default function Subscribers() {
 
   return (
     <>
+      <SEO robots="noindex, nofollow" />
       <Header />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">

@@ -1,14 +1,16 @@
 import BlogLayout from "../../layouts/BlogLayout";
-import useSEO from "../../hooks/useSEO";
+import SEO from "../../components/SEO";
 
 export default function PrivacyPolicy() {
-  useSEO({
-    title: "Política de Privacidade | marck0101",
-    description: "Como coletamos, usamos e protegemos seus dados pessoais.",
-  });
 
   return (
     <BlogLayout>
+      <SEO
+        title="Política de Privacidade | marck0101"
+        description="Como coletamos, usamos e protegemos seus dados pessoais."
+        url="/privacidade"
+        robots="noindex"
+      />
       <main className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Política de Privacidade

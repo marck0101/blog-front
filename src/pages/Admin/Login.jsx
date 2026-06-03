@@ -3,6 +3,7 @@ import { AuthContext } from "../../context/AuthContext";
 import AuthService from "../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import SEO from "../../components/SEO";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -33,7 +34,9 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-20">
+    <>
+      <SEO robots="noindex, nofollow" />
+      <div className="max-w-sm mx-auto mt-20">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <h1 className="text-xl font-bold text-center">Login Admin</h1>
 
@@ -69,5 +72,6 @@ export default function Login() {
         <button className="bg-black text-white p-2 rounded">Entrar</button>
       </form>
     </div>
+    </>
   );
 }
