@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
@@ -23,12 +22,12 @@ export default function CookieBanner() {
         <p className="flex-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
           Usamos cookies para melhorar sua experiência. Ao continuar navegando,
           você concorda com nossa{" "}
-          <Link
-            to="/privacidade"
+          <a
+            href="/privacidade"
             className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
           >
             Política de Privacidade
-          </Link>
+          </a>
           .
         </p>
         <div className="flex gap-2 shrink-0">
