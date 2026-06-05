@@ -17,7 +17,7 @@ function StatusBadge({ status }) {
       Ativo
     </span>
   ) : (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
       Cancelado
     </span>
   );
@@ -124,7 +124,7 @@ export default function Subscribers() {
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Assinantes</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
               {data.total} assinante{data.total !== 1 ? "s" : ""}
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function Subscribers() {
         <div className="rounded-xl border bg-white dark:bg-gray-900 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+              <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
                 <th className="px-4 py-3 font-semibold">Nome</th>
                 <th className="px-4 py-3 font-semibold">Email</th>
                 <th className="px-4 py-3 font-semibold">Categorias</th>
@@ -202,7 +202,7 @@ export default function Subscribers() {
 
               {!loading && data.subscribers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Users size={32} className="mx-auto mb-3 opacity-30" />
                     Nenhum assinante encontrado.
                   </td>
@@ -235,7 +235,7 @@ export default function Subscribers() {
                     </div>
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={sub.status} /></td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-300 whitespace-nowrap">
                     {new Date(sub.createdAt).toLocaleDateString("pt-BR")}
                   </td>
                   <td className="px-4 py-3">
@@ -284,7 +284,7 @@ export default function Subscribers() {
 
         {/* Paginação */}
         {data.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-300">
             <span>Página {data.page} de {data.totalPages}</span>
             <div className="flex gap-2">
               <button

@@ -56,7 +56,7 @@ export default function CoverImageUpload({ existingUrl, onFileSelect }) {
           type="button"
           onClick={() => inputRef.current?.click()}
           className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed
-            border-gray-400 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-400
+            border-gray-400 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300
             hover:border-blue-500 hover:text-blue-500 transition"
         >
           <ImagePlus size={16} />

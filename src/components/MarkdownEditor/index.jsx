@@ -33,7 +33,7 @@ export default function MarkdownEditor({ value, onChange }) {
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition
                 ${mode === key
                   ? "bg-blue-600 text-white"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
             >
               <Icon size={13} />
@@ -90,7 +90,7 @@ export default function MarkdownEditor({ value, onChange }) {
                   </ReactMarkdown>
                 </article>
               ) : (
-                <p className="text-gray-400 dark:text-gray-500 text-sm">
+                <p className="text-gray-400 dark:text-gray-300 text-sm">
                   A pré-visualização aparecerá aqui enquanto você escreve.
                 </p>
               )}

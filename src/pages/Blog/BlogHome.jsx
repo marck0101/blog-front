@@ -133,7 +133,7 @@ export default function BlogHome() {
               <br />
               Conteúdo que cresce.
             </h1>
-            <p className="mt-4 text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl">
+            <p className="mt-4 text-base text-gray-500 dark:text-gray-300 leading-relaxed max-w-xl">
               Estratégias de tráfego pago, growth e marketing digital para quem
               quer resultados reais.
             </p>

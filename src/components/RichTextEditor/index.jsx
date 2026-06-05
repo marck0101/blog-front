@@ -252,7 +252,7 @@ export default function RichTextEditor({ value, onChange }) {
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Fazer upload de nova imagem
                 </p>
-                <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 transition">
+                <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:border-blue-500 hover:text-blue-600 transition">
                   {uploading ? "Enviando..." : "Escolher arquivo"}
                   <input type="file" accept="image/*" className="sr-only" onChange={handleUpload} disabled={uploading} />
                 </label>
@@ -323,7 +323,7 @@ export default function RichTextEditor({ value, onChange }) {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
               >
                 Cancelar
               </button>

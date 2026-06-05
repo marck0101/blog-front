@@ -23,7 +23,7 @@ export default function EmptyState({
         {title}
       </h2>
 
-      <p className="mt-2 max-w-md text-gray-600 dark:text-gray-400">
+      <p className="mt-2 max-w-md text-gray-600 dark:text-gray-300">
         {description}
       </p>
 

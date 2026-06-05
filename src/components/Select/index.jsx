@@ -47,7 +47,7 @@ export default function Select({
         </select>
 
         {/* Ícone custom (evita caret feio no mobile) */}
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300">
           ▾
         </span>
       </div>

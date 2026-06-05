@@ -77,19 +77,19 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => onYearChange(year - 1)}
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+            className="text-sm text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
           >
             ← {year - 1}
           </button>
           <span className="font-semibold text-gray-900 dark:text-gray-100">{year}</span>
           <button
             onClick={() => onYearChange(year + 1)}
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+            className="text-sm text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
           >
             {year + 1} →
           </button>
         </div>
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+        <span className="text-xs text-gray-400 dark:text-gray-300">
           {totalPosts} {totalPosts === 1 ? "publicação" : "publicações"} em {year}
         </span>
       </div>
@@ -100,7 +100,7 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
           {DAYS_PT.map((d, i) => (
             <div
               key={i}
-              className="h-3 w-3 text-[9px] text-gray-400 dark:text-gray-600 leading-3 flex items-center justify-center"
+              className="h-3 w-3 text-[9px] text-gray-400 dark:text-gray-300 leading-3 flex items-center justify-center"
             >
               {i % 2 === 0 ? d : ""}
             </div>
@@ -112,7 +112,7 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
           {weeks.map((week, wi) => (
             <div key={wi} className="flex flex-col gap-0.5">
               {/* Label de mês */}
-              <div className="h-4 text-[9px] text-gray-400 dark:text-gray-600 leading-4 whitespace-nowrap">
+              <div className="h-4 text-[9px] text-gray-400 dark:text-gray-300 leading-4 whitespace-nowrap">
                 {monthLabels[wi] || ""}
               </div>
 
@@ -150,7 +150,7 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
 
       {/* Legenda */}
       <div className="flex items-center gap-1.5 mt-2 justify-end">
-        <span className="text-[10px] text-gray-400 dark:text-gray-600">Menos</span>
+        <span className="text-[10px] text-gray-400 dark:text-gray-300">Menos</span>
         {[0, 1, 2, 3].map((v) => (
           <div
             key={v}
@@ -158,7 +158,7 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
             style={{ backgroundColor: getColor(v) }}
           />
         ))}
-        <span className="text-[10px] text-gray-400 dark:text-gray-600">Mais</span>
+        <span className="text-[10px] text-gray-400 dark:text-gray-300">Mais</span>
       </div>
     </div>
   );

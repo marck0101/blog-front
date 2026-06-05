@@ -50,7 +50,7 @@ export default function BlogFooter() {
               marck0101
             </Link>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-gray-300 mt-3 leading-relaxed">
             Blog do Marcos Henrique sobre marketing digital, tráfego pago e
             growth. Estratégias práticas para quem quer resultados reais.
           </p>
@@ -58,7 +58,7 @@ export default function BlogFooter() {
 
         {/* Coluna central — links rápidos */}
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-300 mb-4">
             Navegação
           </h3>
           <ul className="space-y-2">
@@ -66,7 +66,7 @@ export default function BlogFooter() {
               <li key={link.label}>
                 <Link
                   to={link.to}
-                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+                  className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
                 >
                   {link.label}
                 </Link>
@@ -75,7 +75,7 @@ export default function BlogFooter() {
             <li>
               <a
                 href="#assinar"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+                className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
               >
                 Assinar newsletter
               </a>
@@ -85,7 +85,7 @@ export default function BlogFooter() {
 
         {/* Coluna direita — redes sociais */}
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-300 mb-4">
             Redes sociais
           </h3>
           <ul className="space-y-3">
@@ -95,7 +95,7 @@ export default function BlogFooter() {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 ${hoverColor} transition`}
+                  className={`flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300 ${hoverColor} transition`}
                 >
                   <Icon size={20} />
                   {label}
@@ -108,7 +108,7 @@ export default function BlogFooter() {
 
       {/* Copyright */}
       <div className="border-t border-gray-200 dark:border-gray-800">
-        <div className="max-w-5xl mx-auto px-6 py-4 text-center text-xs text-gray-400 dark:text-gray-600">
+        <div className="max-w-5xl mx-auto px-6 py-4 text-center text-xs text-gray-400 dark:text-gray-300">
           © {year} marck0101 · Todos os direitos reservados
         </div>
       </div>

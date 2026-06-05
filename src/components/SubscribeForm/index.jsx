@@ -67,7 +67,7 @@ export default function SubscribeForm() {
         <p className="font-semibold text-gray-900 dark:text-gray-100">
           Inscrição realizada! Obrigado por assinar.
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
           Você receberá os próximos artigos no seu email.
         </p>
       </section>
@@ -79,7 +79,7 @@ export default function SubscribeForm() {
       <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
         Receba novidades no seu email
       </h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <p className="text-sm text-gray-500 dark:text-gray-300 mb-6">
         Escolha os temas que te interessam e fique por dentro dos últimos artigos.
       </p>
 

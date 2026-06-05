@@ -47,7 +47,7 @@ export default function Post() {
     return (
       <BlogLayout>
         <main className="max-w-5xl mx-auto px-6 py-16">
-          <p className="text-gray-600 dark:text-gray-400">Carregando...</p>
+          <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
         </main>
       </BlogLayout>
     );
@@ -93,7 +93,7 @@ export default function Post() {
           {post.title}
         </h1>
 
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-gray-500 dark:text-gray-300 mt-2">
           {post.category} • {new Date(post.publishedAt).toLocaleDateString()}
         </p>
 

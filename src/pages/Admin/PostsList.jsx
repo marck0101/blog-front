@@ -304,7 +304,7 @@ export default function PostsList() {
             >
               <ChevronLeft size={16} /> Anterior
             </button>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-gray-600 dark:text-gray-300">
               Página {page} de {totalPages}
             </span>
             <button

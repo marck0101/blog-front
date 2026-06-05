@@ -33,7 +33,7 @@ export default function PostCard({ post }) {
             </p>
 
             {post.excerpt && (
-              <p className="mt-3 text-gray-600 dark:text-gray-400 line-clamp-3">
+              <p className="mt-3 text-gray-600 dark:text-gray-300 line-clamp-3">
                 {post.excerpt}
               </p>
             )}

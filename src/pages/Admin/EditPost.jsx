@@ -152,7 +152,7 @@ export default function EditPost() {
             onChange={(e) => setForm({ ...form, slug: e.target.value })}
           />
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Categoria</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">Categoria</p>
             <FilterChips
               options={categories}
               selected={form.category}
@@ -237,7 +237,7 @@ export default function EditPost() {
 
           {form.status === "planned" && (
             <div>
-              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Data planejada</label>
+              <label className="text-xs text-gray-500 dark:text-gray-300 block mb-1">Data planejada</label>
               <input
                 type="date"
                 value={form.plannedAt}

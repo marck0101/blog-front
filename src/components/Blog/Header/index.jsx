@@ -43,7 +43,7 @@ export default function BlogHeader() {
     return `px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap ${
       isActive
         ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
-        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
     }`;
   };
 
@@ -101,7 +101,7 @@ export default function BlogHeader() {
           <Link
             to="/admin/login"
             title="Área restrita"
-            className="hidden md:flex p-2 rounded-md text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            className="hidden md:flex p-2 rounded-md text-gray-300 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
           >
             <Lock size={14} />
           </Link>
@@ -158,7 +158,7 @@ export default function BlogHeader() {
             <Link
               to="/admin/login"
               onClick={() => setMenuOpen(false)}
-              className="text-center text-sm text-gray-400 dark:text-gray-500 py-2 hover:text-gray-600 dark:hover:text-gray-400 transition"
+              className="text-center text-sm text-gray-400 dark:text-gray-300 py-2 hover:text-gray-800 dark:hover:text-gray-100 transition"
             >
               Entrar
             </Link>

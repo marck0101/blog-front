@@ -15,7 +15,7 @@ export default function PrivacyPolicy() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Política de Privacidade
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
+        <p className="text-sm text-gray-500 dark:text-gray-300 mb-10">
           Última atualização: junho de 2026
         </p>
 

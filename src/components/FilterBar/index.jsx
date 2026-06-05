@@ -70,7 +70,7 @@ export default function FilterBar({
       <button
         type="button"
         onClick={handleClear}
-        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 underline whitespace-nowrap"
+        className="text-sm text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 underline whitespace-nowrap"
       >
         Limpar filtros
       </button>

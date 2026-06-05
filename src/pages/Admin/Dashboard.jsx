@@ -35,7 +35,7 @@ function StatCard({ icon: Icon, value, label, colorClass, to }) {
         <Icon size={20} className="text-white" />
       </div>
       <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{label}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">{label}</p>
     </div>
   );
 
@@ -118,7 +118,7 @@ export default function Dashboard() {
 
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Visão geral do blog</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Visão geral do blog</p>
         </div>
 
         {error && (
@@ -156,7 +156,7 @@ export default function Dashboard() {
 
         {/* Último post */}
         <div className="rounded-xl border bg-white dark:bg-gray-900 p-6 mb-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-4">
             Último post publicado
           </h2>
           {loading ? (
@@ -170,7 +170,7 @@ export default function Dashboard() {
                 <p className="font-medium text-gray-900 dark:text-gray-100 leading-snug">
                   {stats.lastPost.title}
                 </p>
-                <p className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-300 mt-1">
                   <CalendarDays size={13} />
                   {new Date(stats.lastPost.publishedAt).toLocaleDateString("pt-BR", {
                     day: "2-digit", month: "long", year: "numeric",
@@ -186,13 +186,13 @@ export default function Dashboard() {
               </Link>
             </div>
           ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum post publicado ainda.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-300">Nenhum post publicado ainda.</p>
           )}
         </div>
 
         {/* Heatmap */}
         <div className="rounded-xl border bg-white dark:bg-gray-900 p-6 mb-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-4">
             Histórico de publicações
           </h2>
           {heatmapLoading ? (

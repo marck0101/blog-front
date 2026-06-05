@@ -14,7 +14,7 @@ const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const STATUS_STYLE = {
   published: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
   planned:   "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  draft:     "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  draft:     "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300",
 };
 
 function toDateKey(date) {
@@ -189,7 +189,7 @@ export default function Calendar() {
         </div>
 
         {/* Legenda */}
-        <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-300">
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.published}`}>Publicado</span>
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.planned}`}>Planejado</span>
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.draft}`}>Rascunho</span>
@@ -201,7 +201,7 @@ export default function Calendar() {
           {/* Cabeçalho dos dias da semana */}
           <div className="grid grid-cols-7 border-b dark:border-gray-800">
             {WEEKDAYS.map((d) => (
-              <div key={d} className="py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-400">
+              <div key={d} className="py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-300">
                 {d}
               </div>
             ))}
@@ -241,7 +241,7 @@ export default function Calendar() {
                             <PostBadge key={p._id} post={p} onPublish={handlePublish} />
                           ))}
                           {dayPosts.length > 3 && (
-                            <p className="text-[10px] text-gray-400 dark:text-gray-500 pl-1">
+                            <p className="text-[10px] text-gray-400 dark:text-gray-300 pl-1">
                               +{dayPosts.length - 3}
                             </p>
                           )}

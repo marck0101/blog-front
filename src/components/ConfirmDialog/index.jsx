@@ -22,7 +22,7 @@ export default function ConfirmDialog({
         <div className="p-5 border-b dark:border-gray-800">
           <h2 className="text-lg font-semibold">{title}</h2>
           {description && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-500 dark:text-gray-300 mt-2">
               {description}
             </p>
           )}
