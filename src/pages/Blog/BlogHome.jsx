@@ -172,7 +172,6 @@ export default function BlogHome() {
               onChange={handleCategoryChange}
               allLabel="Todas as categorias"
               multiSelect={true}
-              showSelectAll
             />
           </div>
         )}

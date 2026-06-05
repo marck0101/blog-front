@@ -7,15 +7,6 @@ function chip(active) {
   );
 }
 
-function chipSelectAll(active) {
-  return (
-    "px-3 py-1.5 rounded-full border text-sm font-medium transition select-none whitespace-nowrap " +
-    (active
-      ? "bg-blue-800 text-white border-blue-800 ring-2 ring-blue-300 dark:ring-blue-500"
-      : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500")
-  );
-}
-
 /**
  * FilterChips — grupo de chips clicáveis.
  *
@@ -29,17 +20,10 @@ export default function FilterChips({
   allLabel = "Todas",
   multiSelect = true,
   showAll = true,
-  showSelectAll = false,
-  selectAllLabel = "Selecionar todas",
 }) {
   const isAll = multiSelect
     ? selected.length === 0
     : !selected || selected === "all";
-
-  const isAllSelected =
-    multiSelect && options.length > 0 && selected.length === options.length;
-
-  const allValues = options.map((o) => o.slug ?? o.value);
 
   const toggle = (val) => {
     if (multiSelect) {
@@ -62,16 +46,6 @@ export default function FilterChips({
           onClick={() => onChange(multiSelect ? [] : "all")}
         >
           {allLabel}
-        </button>
-      )}
-
-      {multiSelect && showSelectAll && options.length > 0 && (
-        <button
-          type="button"
-          className={chipSelectAll(isAllSelected)}
-          onClick={() => onChange(isAllSelected ? [] : allValues)}
-        >
-          {selectAllLabel}
         </button>
       )}
 

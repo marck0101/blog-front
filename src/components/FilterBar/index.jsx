@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import DateRangePicker from "../DateRangePicker";
 
 /**
  * FilterBar — busca com debounce + date range opcional.
  * Props:
  *   onSearch(value)         — chamado após 400ms de pausa na digitação
- *   showDateRange           — exibe os inputs de data (default true)
+ *   showDateRange           — exibe o date range picker (default true)
  *   dateFrom / dateTo       — strings "YYYY-MM-DD" controladas pelo pai
  *   onDateFromChange(val)
  *   onDateToChange(val)
@@ -50,21 +51,14 @@ export default function FilterBar({
       />
 
       {showDateRange && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => onDateFromChange?.(e.target.value)}
-            className="input py-1.5 text-sm"
-          />
-          <span className="text-xs text-gray-400">até</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => onDateToChange?.(e.target.value)}
-            className="input py-1.5 text-sm"
-          />
-        </div>
+        <DateRangePicker
+          from={dateFrom}
+          to={dateTo}
+          onChange={(from, to) => {
+            onDateFromChange?.(from);
+            onDateToChange?.(to);
+          }}
+        />
       )}
 
       <button

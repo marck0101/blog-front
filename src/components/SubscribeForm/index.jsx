@@ -13,18 +13,13 @@ export default function SubscribeForm() {
 
   useEffect(() => {
     SubscriberService.getCategories()
-      .then(setCategories)
+      .then((cats) => {
+        setCategories(cats);
+        setSelected(cats.map((c) => c.slug));
+      })
       .catch(() => setCatError(true))
       .finally(() => setCatLoading(false));
   }, []);
-
-  const allSelected =
-    categories.length > 0 && selected.length === categories.length;
-
-  const toggleAll = () =>
-    allSelected
-      ? setSelected([])
-      : setSelected(categories.map((c) => c.slug));
 
   const toggleCategory = (slug) => {
     setSelected((prev) =>
@@ -80,7 +75,7 @@ export default function SubscribeForm() {
         Receba novidades no seu email
       </h2>
       <p className="text-sm text-gray-500 dark:text-gray-300 mb-6">
-        Escolha os temas que te interessam e fique por dentro dos últimos artigos.
+        Todos os temas estão selecionados. Desmarque os que não quer receber.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -121,23 +116,6 @@ export default function SubscribeForm() {
 
           {!catLoading && !catError && (
             <div className="flex flex-wrap gap-2">
-              <label
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer text-sm font-medium transition select-none
-                  ${
-                    allSelected
-                      ? "bg-blue-800 text-white border-blue-800 ring-2 ring-blue-300 dark:ring-blue-500"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-400 dark:hover:border-blue-500"
-                  }`}
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={allSelected}
-                  onChange={toggleAll}
-                />
-                Todos os temas
-              </label>
-
               {categories.map((cat) => {
                 const checked = selected.includes(cat.slug);
                 return (
