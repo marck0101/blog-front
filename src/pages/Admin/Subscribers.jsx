@@ -157,6 +157,7 @@ export default function Subscribers() {
               onChange={changeFilter(setSelectedCategories)}
               allLabel="Todas as categorias"
               multiSelect
+              showSelectAll
             />
           </div>
         )}
