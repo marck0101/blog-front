@@ -1,13 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Menu, X, Lock } from "lucide-react";
+import { Menu, X, Lock, ChevronDown } from "lucide-react";
 import SubscriberService from "../../../services/subscriber.service";
 import ThemeToggle from "../../ThemeToggle";
+
+const VISIBLE_CATEGORIES_COUNT = 3;
 
 export default function BlogHeader() {
   const [categories, setCategories] = useState([]);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
+
+  const visibleCategories = categories.slice(0, VISIBLE_CATEGORIES_COUNT);
+  const moreCategories = categories.slice(VISIBLE_CATEGORIES_COUNT);
 
   const [searchParams] = useSearchParams();
   // Suporta múltiplas categorias: /blog?categoria=a&categoria=b
@@ -34,6 +41,17 @@ export default function BlogHeader() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Fecha dropdown "Mais" ao clicar fora
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
   const navLinkClass = (slug) => {
@@ -74,7 +92,7 @@ export default function BlogHeader() {
               Todos
             </Link>
 
-            {categories.map((cat) => (
+            {visibleCategories.map((cat) => (
               <Link
                 key={cat.slug}
                 to={`/blog?categoria=${cat.slug}`}
@@ -83,6 +101,40 @@ export default function BlogHeader() {
                 {cat.label}
               </Link>
             ))}
+
+            {moreCategories.length > 0 && (
+              <div className="relative" ref={moreRef}>
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen((v) => !v)}
+                  className="px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-haspopup="true"
+                  aria-expanded={moreOpen}
+                >
+                  Mais
+                  <ChevronDown size={14} />
+                </button>
+
+                <div
+                  className={`absolute left-0 top-full mt-1 min-w-40 rounded-md border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg py-1 transition-all duration-150 ${
+                    moreOpen
+                      ? "opacity-100 translate-y-0 visible"
+                      : "opacity-0 -translate-y-1 invisible pointer-events-none"
+                  }`}
+                >
+                  {moreCategories.map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      to={`/blog?categoria=${cat.slug}`}
+                      onClick={() => setMoreOpen(false)}
+                      className="block px-3 py-1.5 text-sm transition whitespace-nowrap text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      {cat.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </nav>
 
