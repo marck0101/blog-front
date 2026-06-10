@@ -21,6 +21,8 @@ export default function BlogHeader() {
   const activeCategories = searchParams.getAll("categoria");
   // Destaque no header apenas quando exatamente 1 categoria está ativa
   const singleActive = activeCategories.length === 1 ? activeCategories[0] : "";
+  // "Mais ▾" recebe estilo ativo quando a categoria ativa está dentro do dropdown
+  const isMoreActive = moreCategories.some((cat) => cat.slug === singleActive);
 
   useEffect(() => {
     SubscriberService.getCategories()
@@ -107,7 +109,11 @@ export default function BlogHeader() {
                 <button
                   type="button"
                   onClick={() => setMoreOpen((v) => !v)}
-                  className="px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className={`px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap inline-flex items-center gap-1 ${
+                    isMoreActive
+                      ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
                   aria-haspopup="true"
                   aria-expanded={moreOpen}
                 >
@@ -127,7 +133,11 @@ export default function BlogHeader() {
                       key={cat.slug}
                       to={`/blog?categoria=${cat.slug}`}
                       onClick={() => setMoreOpen(false)}
-                      className="block px-3 py-1.5 text-sm transition whitespace-nowrap text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className={`block px-3 py-1.5 text-sm transition whitespace-nowrap ${
+                        cat.slug === singleActive
+                          ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
+                          : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
                     >
                       {cat.label}
                     </Link>
