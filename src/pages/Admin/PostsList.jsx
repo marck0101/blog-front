@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import PublishToggle from "../../components/PublishToggle";
@@ -329,9 +328,10 @@ export default function PostsList() {
               <button onClick={() => setPreviewPost(null)}>✕</button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
-              <article className="prose dark:prose-invert max-w-none">
-                <ReactMarkdown>{previewPost?.content}</ReactMarkdown>
-              </article>
+              <div
+                className="post-content prose prose-sm max-w-none dark:prose-invert text-sm text-gray-700 dark:text-gray-300 max-h-48 overflow-y-auto"
+                dangerouslySetInnerHTML={{ __html: previewPost?.content }}
+              />
             </div>
             <div className="border-t p-4 flex justify-end gap-3">
               <button onClick={() => setPreviewPost(null)} className="px-4 py-2 rounded border">
