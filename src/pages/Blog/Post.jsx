@@ -89,11 +89,11 @@ export default function Post() {
         <BackButton />
         <Breadcrumb title={post.title} />
 
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
           {post.title}
         </h1>
 
-        <p className="text-gray-500 dark:text-gray-300 mt-2">
+        <p className="text-gray-500 dark:text-gray-400 mt-2">
           {post.category} • {new Date(post.publishedAt).toLocaleDateString()}
         </p>
 

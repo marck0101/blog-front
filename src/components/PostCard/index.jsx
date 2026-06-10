@@ -39,12 +39,12 @@ export default function PostCard({ post }) {
         {/* CONTEÚDO abaixo da imagem */}
         <div className="pt-3">
           {post.excerpt && (
-            <p className="text-sm text-gray-600 line-clamp-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
               {post.excerpt}
             </p>
           )}
 
-          <div className="mt-2 text-sm font-medium text-blue-600">
+          <div className="mt-2 text-sm font-medium text-blue-600 dark:text-blue-400">
             Ler artigo →
           </div>
         </div>
