@@ -23,6 +23,23 @@ body {
   max-width: 100%;
 }
 
+/* Imagens do post-content respeitam o tamanho inline definido no TipTap */
+.post-content img[style] {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+  border-radius: 0.75rem;
+}
+
+.post-content img:not([style]) {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 0.75rem;
+}
+
 /* Dark mode para conteúdo do post gerado pelo TipTap */
 .dark .post-content p,
 .dark .post-content li,
