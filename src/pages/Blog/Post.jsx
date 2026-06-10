@@ -99,7 +99,7 @@ export default function Post() {
 
         <div
           ref={contentRef}
-          className="prose prose-lg max-w-none mt-8 dark:prose-invert"
+          className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
