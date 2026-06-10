@@ -25,34 +25,29 @@ export default function PostCard({ post }) {
             </div>
           )}
 
-          {/* Overlay mobile: data, autor e título sobre a imagem */}
-          <div className="md:hidden absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4">
-            <p className="text-xs text-gray-200">
+          {/* Gradiente de legibilidade */}
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+          {/* Texto sobreposto: data, autor e título */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <p className="text-xs text-white/80 mb-1">
               {date} • {AUTHOR_NAME}
             </p>
-            <h2 className="mt-1 text-lg font-semibold leading-snug text-white">
+            <h2 className="text-white font-semibold text-base md:text-lg leading-snug drop-shadow-sm transition-colors duration-150 group-hover:text-blue-300">
               {post.title}
             </h2>
           </div>
         </div>
 
-        {/* CONTEÚDO (desktop/tablet) */}
-        <div className="hidden md:block pt-3">
-          <p className="text-sm text-gray-500">
-            {post.category} • {date}
-          </p>
-
-          <h2 className="mt-1 text-lg font-semibold text-gray-900 transition-colors duration-150 group-hover:text-blue-600">
-            {post.title}
-          </h2>
-
+        {/* CONTEÚDO abaixo da imagem */}
+        <div className="pt-3">
           {post.excerpt && (
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+            <p className="text-sm text-gray-600 line-clamp-2">
               {post.excerpt}
             </p>
           )}
 
-          <div className="mt-4 text-sm font-medium text-blue-600">
+          <div className="mt-2 text-sm font-medium text-blue-600">
             Ler artigo →
           </div>
         </div>
