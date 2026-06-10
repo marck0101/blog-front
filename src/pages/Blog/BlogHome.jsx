@@ -7,7 +7,7 @@ import PostCardSkeleton from "../../components/PostCardSkeleton";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import SEO from "../../components/SEO";
-import { BlogSchema } from "../../components/StructuredData";
+import { BlogSchema, SiteSearchSchema, CategoriesBreadcrumbSchema } from "../../components/StructuredData";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
@@ -113,6 +113,8 @@ export default function BlogHome() {
         url="/blog"
       />
       <BlogSchema />
+      <SiteSearchSchema />
+      <CategoriesBreadcrumbSchema />
 
       {toast && (
         <div

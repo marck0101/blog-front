@@ -25,6 +25,58 @@ export function BlogSchema() {
   );
 }
 
+export function SiteSearchSchema() {
+  const siteUrl = import.meta.env.VITE_SITE_URL ?? "/";
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
+  );
+}
+
+const BLOG_CATEGORIES = [
+  { slug: "tecnologia", label: "Tecnologia" },
+  { slug: "design", label: "Design" },
+  { slug: "carreira", label: "Carreira" },
+  { slug: "negocios", label: "Negócios" },
+  { slug: "marketing", label: "Marketing" },
+  { slug: "trafego", label: "Tráfego" },
+  { slug: "growth", label: "Growth" },
+];
+
+export function CategoriesBreadcrumbSchema() {
+  const siteUrl = import.meta.env.VITE_SITE_URL ?? "/";
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: BLOG_CATEGORIES.map((cat, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: cat.label,
+      item: `${siteUrl}/blog?categoria=${cat.slug}`,
+    })),
+  };
+
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
+  );
+}
+
 export function BlogPostSchema({ post }) {
   if (!post) return null;
 
