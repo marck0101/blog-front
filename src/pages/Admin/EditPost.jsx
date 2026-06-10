@@ -161,12 +161,31 @@ export default function EditPost() {
               showAll={false}
             />
           </div>
-          <textarea
-            className="input"
-            placeholder="Resumo (excerpt)"
-            value={form.excerpt}
-            onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-          />
+          <div className="relative">
+            <textarea
+              className="input"
+              placeholder="Resumo do post (máx. 160 caracteres)..."
+              value={form.excerpt}
+              maxLength={160}
+              rows={3}
+              onChange={(e) => {
+                if (e.target.value.length <= 160) {
+                  setForm({ ...form, excerpt: e.target.value });
+                }
+              }}
+            />
+            <span
+              className={`absolute bottom-2 right-3 text-xs ${
+                form.excerpt.length === 160
+                  ? "text-red-500"
+                  : form.excerpt.length > 140
+                  ? "text-orange-500"
+                  : "text-gray-400"
+              }`}
+            >
+              {form.excerpt.length}/160
+            </span>
+          </div>
         </section>
 
         {/* SEO */}
