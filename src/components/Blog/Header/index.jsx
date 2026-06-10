@@ -103,50 +103,51 @@ export default function BlogHeader() {
                 {cat.label}
               </Link>
             ))}
+          </div>
+        </nav>
 
-            {moreCategories.length > 0 && (
-              <div className="relative" ref={moreRef}>
-                <button
-                  type="button"
-                  onClick={() => setMoreOpen((v) => !v)}
-                  className={`px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap inline-flex items-center gap-1 ${
-                    isMoreActive
+        {/* Dropdown "Mais" — fora do <nav> com overflow-x-auto para o menu não ser cortado */}
+        {moreCategories.length > 0 && (
+          <div className="hidden md:block relative shrink-0" ref={moreRef}>
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              className={`px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap inline-flex items-center gap-1 ${
+                isMoreActive
+                  ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
+                  : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+              aria-haspopup="true"
+              aria-expanded={moreOpen}
+            >
+              Mais
+              <ChevronDown size={14} />
+            </button>
+
+            <div
+              className={`absolute left-0 top-full mt-1 min-w-40 rounded-md border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg py-1 transition-all duration-150 ${
+                moreOpen
+                  ? "opacity-100 translate-y-0 visible"
+                  : "opacity-0 -translate-y-1 invisible pointer-events-none"
+              }`}
+            >
+              {moreCategories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/blog?categoria=${cat.slug}`}
+                  onClick={() => setMoreOpen(false)}
+                  className={`block px-3 py-1.5 text-sm transition whitespace-nowrap ${
+                    cat.slug === singleActive
                       ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
-                  aria-haspopup="true"
-                  aria-expanded={moreOpen}
                 >
-                  Mais
-                  <ChevronDown size={14} />
-                </button>
-
-                <div
-                  className={`absolute left-0 top-full mt-1 min-w-40 rounded-md border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg py-1 transition-all duration-150 ${
-                    moreOpen
-                      ? "opacity-100 translate-y-0 visible"
-                      : "opacity-0 -translate-y-1 invisible pointer-events-none"
-                  }`}
-                >
-                  {moreCategories.map((cat) => (
-                    <Link
-                      key={cat.slug}
-                      to={`/blog?categoria=${cat.slug}`}
-                      onClick={() => setMoreOpen(false)}
-                      className={`block px-3 py-1.5 text-sm transition whitespace-nowrap ${
-                        cat.slug === singleActive
-                          ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
-                          : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                    >
-                      {cat.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
           </div>
-        </nav>
+        )}
 
         {/* Direita: theme toggle + assinar + cadeado + hamburger */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
