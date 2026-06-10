@@ -78,7 +78,7 @@ export default function CreatePost() {
     return (
       <>
         <Header />
-        <main className="max-w-6xl mx-auto px-6 py-10 space-y-4">
+        <main className="admin-content max-w-6xl mx-auto px-6 py-10 space-y-4">
           <h1 className="text-2xl font-bold mb-6">Criando post...</h1>
           {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
         </main>
@@ -99,7 +99,7 @@ export default function CreatePost() {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+      <main className="admin-content max-w-5xl mx-auto px-6 py-10 space-y-6">
         <h1 className="text-2xl font-bold">Criar publicação</h1>
 
         {/* DADOS BÁSICOS */}

@@ -109,7 +109,7 @@ export default function Trash() {
     return (
       <>
         <Header />
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-4">
+        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-4">
           <h1 className="text-2xl font-bold">Lixeira</h1>
           {Array.from({ length: 5 }).map((_, index) => (
             <PostSkeleton key={index} />
@@ -138,7 +138,7 @@ export default function Trash() {
         </div>
       )}
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
+      <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
         <h1 className="text-2xl font-bold mb-6">Lixeira</h1>
 
         {posts.length === 0 && (

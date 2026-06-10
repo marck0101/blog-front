@@ -119,7 +119,7 @@ export default function Subscribers() {
       <SEO robots="noindex, nofollow" />
       <Header />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10">
         {/* Heading */}
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>

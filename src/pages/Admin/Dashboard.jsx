@@ -87,7 +87,7 @@ export default function Dashboard() {
       <SEO robots="noindex, nofollow" />
       <Header />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10">
 
         {/* Banner de lembrete */}
         {!bannerDismissed && todayPlanned.length > 0 && (

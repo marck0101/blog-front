@@ -157,7 +157,7 @@ export default function Calendar() {
         </div>
       )}
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
           <div className="flex items-center gap-3">
