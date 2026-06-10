@@ -25,15 +25,12 @@ export default function PostCard({ post }) {
             </div>
           )}
 
-          {/* Gradiente de legibilidade */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-          {/* Texto sobreposto: data, autor e título */}
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <p className="text-xs text-white/80 mb-1">
+          {/* Scrim sólido na área do texto, com efeito fosco */}
+          <div className="absolute bottom-0 left-0 right-0 rounded-b-xl bg-black/60 backdrop-blur-[2px] px-4 py-3">
+            <p className="text-xs text-white/80 mb-0.5">
               {date} • {AUTHOR_NAME}
             </p>
-            <h2 className="text-white font-semibold text-base md:text-lg leading-snug drop-shadow-sm transition-colors duration-150 group-hover:text-blue-300">
+            <h2 className="text-white font-semibold text-base md:text-lg leading-snug transition-colors duration-150 group-hover:text-blue-300">
               {post.title}
             </h2>
           </div>
