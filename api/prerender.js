@@ -46,11 +46,22 @@ async function fetchJson(url) {
   return res.json();
 }
 
-async function getShell(origin) {
+// Busca o index.html pelo domínio público — o host interno da função (*.vercel.app)
+// fica atrás da Deployment Protection e devolveria a tela de login da Vercel.
+// SHELL_ORIGIN permite apontar previews para outro host, se necessário.
+const SHELL_ORIGIN = process.env.PRERENDER_SHELL_ORIGIN || SITE_URL;
+const SHELL_MARKER = "<!--prerender-head-->";
+
+async function getShell() {
   if (shellCache) return shellCache;
-  const res = await fetch(`${origin}/index.html`, { signal: AbortSignal.timeout(6000) });
+  const res = await fetch(`${SHELL_ORIGIN}/index.html`, { signal: AbortSignal.timeout(6000) });
   if (!res.ok) throw new Error(`index.html → ${res.status}`);
-  shellCache = await res.text();
+  const html = await res.text();
+  // Nunca servir (nem cachear) algo que não seja o shell do app.
+  if (!html.includes(SHELL_MARKER) || !html.includes('id="root"')) {
+    throw new Error("index.html inválido (sem marcador de prerender)");
+  }
+  shellCache = html;
   return shellCache;
 }
 
@@ -170,17 +181,15 @@ function notFoundPage(slug) {
 }
 
 export default async function handler(req, res) {
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const origin = `${proto}://${host}`;
   const slug = typeof req.query.slug === "string" ? req.query.slug : "";
 
   let shell;
   try {
-    shell = await getShell(origin);
+    shell = await getShell();
   } catch (err) {
     console.error("[prerender] shell", err);
-    res.status(500).send("Erro ao carregar a página");
+    res.setHeader("Cache-Control", "no-store");
+    res.status(503).send("Página temporariamente indisponível. Tente novamente em instantes.");
     return;
   }
 
