@@ -146,18 +146,6 @@ export default function PostsList() {
   };
 
   /* --- render --- */
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-4">
-          <h1 className="text-2xl font-bold">Posts</h1>
-          {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
-        </main>
-      </>
-    );
-  }
-
   return (
     <>
       <SEO robots="noindex, nofollow" />
@@ -223,7 +211,7 @@ export default function PostsList() {
           />
         </div>
 
-        {posts.length === 0 && (
+        {!loading && posts.length === 0 && (
           <EmptyState
             title="Nenhum post encontrado"
             description="Não há posts para os filtros selecionados."
@@ -232,8 +220,14 @@ export default function PostsList() {
           />
         )}
 
+        {loading && (
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
+          </div>
+        )}
+
         <div className="space-y-4">
-          {posts.map((post) => (
+          {!loading && posts.map((post) => (
             <article key={post?._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                 <div
