@@ -110,9 +110,13 @@ export default function Post() {
           {post.title}
         </h1>
 
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-gray-500 dark:text-gray-300 mt-2">
           Por{" "}
-          <a href={PORTFOLIO_URL} rel="author" className="font-medium hover:underline">
+          <a
+            href={PORTFOLIO_URL}
+            rel="author"
+            className="font-medium hover:underline dark:text-gray-100"
+          >
             {AUTHOR_NAME}
           </a>{" "}
           • {post.category} •{" "}
