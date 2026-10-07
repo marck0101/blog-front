@@ -38,7 +38,7 @@ export default function PostCard({ post }) {
               {date} • {AUTHOR_NAME}
             </p>
             <h2
-              className="text-white font-semibold text-base md:text-lg leading-snug transition-colors duration-150 group-hover:text-blue-300"
+              className="text-white font-semibold text-base md:text-lg leading-snug line-clamp-2 transition-colors duration-150 group-hover:text-blue-300"
               style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
             >
               {post.title}
