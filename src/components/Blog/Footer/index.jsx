@@ -89,6 +89,14 @@ export default function BlogFooter() {
                 Assinar newsletter
               </a>
             </li>
+            <li>
+              <a
+                href="mailto:marck.mhc@gmail.com"
+                className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
+              >
+                Contato
+              </a>
+            </li>
           </ul>
         </div>
 
