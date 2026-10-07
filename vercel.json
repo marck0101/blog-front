@@ -1,3 +1,12 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "redirects": [
+    { "source": "/", "destination": "/blog", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://api.blog.marck0101.com.br/sitemap.xml" },
+    { "source": "/rss.xml", "destination": "https://api.blog.marck0101.com.br/rss.xml" },
+    { "source": "/blog", "destination": "/api/prerender" },
+    { "source": "/blog/:slug", "destination": "/api/prerender?slug=:slug" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

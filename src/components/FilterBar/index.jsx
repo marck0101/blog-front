@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import DateRangePicker from "../DateRangePicker";
+import { lazy, Suspense, useEffect, useState } from "react";
+
+// react-datepicker + date-fns só são baixados quando o date range é exibido (admin).
+const DateRangePicker = lazy(() => import("../DateRangePicker"));
 
 /**
  * FilterBar — busca com debounce + date range opcional.
@@ -51,6 +53,7 @@ export default function FilterBar({
       />
 
       {showDateRange && (
+        <Suspense fallback={null}>
         <DateRangePicker
           from={dateFrom}
           to={dateTo}
@@ -59,6 +62,7 @@ export default function FilterBar({
             onDateToChange?.(to);
           }}
         />
+        </Suspense>
       )}
 
       <button

@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
-
-const AUTHOR_NAME = "Marcos Henrique";
+import { AUTHOR_NAME } from "../../seo/site";
 
 export default function PostCard({ post }) {
   const coverSrc = normalizeImageUrl(post.coverImage);
@@ -17,6 +16,10 @@ export default function PostCard({ post }) {
             <img
               src={coverSrc}
               alt={post.title}
+              width={640}
+              height={360}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           ) : (

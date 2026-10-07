@@ -1,22 +1,26 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 
-import Login from "../pages/Admin/Login";
-import Dashboard from "../pages/Admin/Dashboard";
-import PostsList from "../pages/Admin/PostsList";
-import CreatePost from "../pages/Admin/CreatePost";
-import EditPost from "../pages/Admin/EditPost";
-import Trash from "../pages/Admin/Trash";
-import Subscribers from "../pages/Admin/Subscribers";
-import Calendar from "../pages/Admin/Calendar";
-
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
-import PrivacyPolicy from "../pages/Blog/PrivacyPolicy";
+
+// Admin e páginas secundárias em chunks separados — o leitor do blog não baixa
+// editor (TipTap), Firebase, datepicker etc.
+const PrivacyPolicy = lazy(() => import("../pages/Blog/PrivacyPolicy"));
+const Login = lazy(() => import("../pages/Admin/Login"));
+const Dashboard = lazy(() => import("../pages/Admin/Dashboard"));
+const PostsList = lazy(() => import("../pages/Admin/PostsList"));
+const CreatePost = lazy(() => import("../pages/Admin/CreatePost"));
+const EditPost = lazy(() => import("../pages/Admin/EditPost"));
+const Trash = lazy(() => import("../pages/Admin/Trash"));
+const Subscribers = lazy(() => import("../pages/Admin/Subscribers"));
+const Calendar = lazy(() => import("../pages/Admin/Calendar"));
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<div className="min-h-screen" />}>
       <Routes>
         {/* PUBLIC */}
         <Route path="/" element={<Navigate to="/blog" />} />
@@ -91,6 +95,7 @@ export default function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/blog" />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

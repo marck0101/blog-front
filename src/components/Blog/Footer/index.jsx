@@ -5,7 +5,7 @@ import authorPhoto from "../../../assets/author.webp";
 const SOCIAL_LINKS = [
   {
     label: "LinkedIn",
-    url: "https://www.linkedin.com/in/marcos-henrique-corrêa-618392209/",
+    url: "https://www.linkedin.com/in/marcos-henrique-corr%C3%AAa-618392209/",
     icon: Linkedin,
     hoverColor: "hover:text-[#0077B5]",
   },
@@ -40,7 +40,9 @@ export default function BlogFooter() {
           <div className="flex items-center gap-3">
             <img
               src={authorPhoto}
-              alt="Marcos Henrique"
+              alt="Marcos Henrique Corrêa"
+              width={40}
+              height={40}
               className="w-10 h-10 rounded-full object-cover object-top shrink-0"
             />
             <Link
@@ -51,14 +53,21 @@ export default function BlogFooter() {
             </Link>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-300 mt-3 leading-relaxed">
-            Blog do Marcos Henrique sobre marketing digital, tráfego pago e
+            Blog do Marcos Henrique Corrêa sobre marketing digital, tráfego pago e
             growth. Estratégias práticas para quem quer resultados reais.
           </p>
+          <a
+            href="https://marck0101.com.br/"
+            rel="author"
+            className="inline-block mt-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Conheça o autor e o portfólio →
+          </a>
         </div>
 
         {/* Coluna central — links rápidos */}
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-300 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-4">
             Navegação
           </h3>
           <ul className="space-y-2">
@@ -85,7 +94,7 @@ export default function BlogFooter() {
 
         {/* Coluna direita — redes sociais */}
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-300 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-4">
             Redes sociais
           </h3>
           <ul className="space-y-3">
@@ -108,8 +117,8 @@ export default function BlogFooter() {
 
       {/* Copyright */}
       <div className="border-t border-gray-200 dark:border-gray-800">
-        <div className="max-w-5xl mx-auto px-6 py-4 text-center text-xs text-gray-400 dark:text-gray-300">
-          © {year} marck0101 · Todos os direitos reservados
+        <div className="max-w-5xl mx-auto px-6 py-4 text-center text-xs text-gray-500 dark:text-gray-300">
+          © {year} Marcos Henrique Corrêa (marck0101) · Todos os direitos reservados
         </div>
       </div>
     </footer>

@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /api/
 
-Sitemap: https://api.blog.marck0101.com.br/sitemap.xml
+Sitemap: https://blog.marck0101.com.br/sitemap.xml

@@ -8,11 +8,24 @@ import BackButton from "../../components/BackButton";
 import Lightbox from "../../components/Lightbox";
 import PostsService from "../../services/posts.service";
 import SubscribeForm from "../../components/SubscribeForm";
+import {
+  AUTHOR_NAME,
+  PORTFOLIO_URL,
+  postTitle,
+  postDescription,
+} from "../../seo/site";
+
+// Post injetado por api/prerender.js no primeiro carregamento — evita o fetch
+// duplicado e o "Carregando..." que causava layout shift.
+function getPrerenderedPost(slug) {
+  const data = window.__PRERENDERED_POST__;
+  return data && data.slug === slug ? data : null;
+}
 
 export default function Post() {
   const { slug } = useParams();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [post, setPost] = useState(() => getPrerenderedPost(slug));
+  const [loading, setLoading] = useState(() => !getPrerenderedPost(slug));
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
 
@@ -21,6 +34,8 @@ export default function Post() {
       setLoading(false);
       return;
     }
+
+    if (post?.slug === slug) return;
 
     setLoading(true);
 
@@ -32,7 +47,7 @@ export default function Post() {
       .then((postData) => setPost(postData || null))
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Aplica cursor-pointer e lightbox em todas as imagens do conteúdo
   useEffect(() => {
@@ -46,7 +61,7 @@ export default function Post() {
   if (loading) {
     return (
       <BlogLayout>
-        <main className="max-w-5xl mx-auto px-6 py-16">
+        <main className="max-w-3xl mx-auto px-6 py-10 min-h-screen">
           <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
         </main>
       </BlogLayout>
@@ -56,6 +71,7 @@ export default function Post() {
   if (!post) {
     return (
       <BlogLayout>
+        <SEO title="Post não encontrado" robots="noindex" url={`/blog/${slug}`} />
         <main className="max-w-3xl mx-auto px-6 py-16 text-center">
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
             Post não encontrado
@@ -68,12 +84,13 @@ export default function Post() {
   return (
     <BlogLayout>
       <SEO
-        title={`${post.title} | Blog marck0101`}
-        description={post.excerpt}
+        title={postTitle(post)}
+        description={postDescription(post)}
         image={post.coverImage}
         url={`/blog/${post.slug}`}
         type="article"
         publishedAt={post.publishedAt}
+        modifiedAt={post.updatedAt}
       />
       <BlogPostSchema post={post} />
 
@@ -94,7 +111,14 @@ export default function Post() {
         </h1>
 
         <p className="text-gray-500 dark:text-gray-400 mt-2">
-          {post.category} • {new Date(post.publishedAt).toLocaleDateString()}
+          Por{" "}
+          <a href={PORTFOLIO_URL} rel="author" className="font-medium hover:underline">
+            {AUTHOR_NAME}
+          </a>{" "}
+          • {post.category} •{" "}
+          <time dateTime={post.publishedAt}>
+            {new Date(post.publishedAt).toLocaleDateString("pt-BR")}
+          </time>
         </p>
 
         <div

@@ -7,7 +7,8 @@ import PostCardSkeleton from "../../components/PostCardSkeleton";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import SEO from "../../components/SEO";
-import { BlogSchema, SiteSearchSchema, CategoriesBreadcrumbSchema } from "../../components/StructuredData";
+import { BlogSchema } from "../../components/StructuredData";
+import { AUTHOR_NAME, PORTFOLIO_URL } from "../../seo/site";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
@@ -107,14 +108,8 @@ export default function BlogHome() {
 
   return (
     <BlogLayout>
-      <SEO
-        title="Blog | marck0101"
-        description="Artigos sobre marketing digital, tráfego pago e growth."
-        url="/blog"
-      />
-      <BlogSchema />
-      <SiteSearchSchema />
-      <CategoriesBreadcrumbSchema />
+      <SEO url="/blog" />
+      <BlogSchema posts={posts} />
 
       {toast && (
         <div
@@ -137,7 +132,15 @@ export default function BlogHome() {
             </h1>
             <p className="mt-4 text-base text-gray-500 dark:text-gray-300 leading-relaxed max-w-xl">
               Estratégias de tráfego pago, growth e marketing digital para quem
-              quer resultados reais.
+              quer resultados reais. Por{" "}
+              <a
+                href={PORTFOLIO_URL}
+                rel="author"
+                className="font-medium text-gray-700 dark:text-gray-200 hover:underline"
+              >
+                {AUTHOR_NAME}
+              </a>
+              .
             </p>
             <a
               href="#posts"
@@ -149,7 +152,9 @@ export default function BlogHome() {
 
           <img
             src={authorPhoto}
-            alt="Marcos Henrique"
+            alt={AUTHOR_NAME}
+            width={128}
+            height={128}
             className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full object-cover object-top shadow-lg"
           />
         </div>

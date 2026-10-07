@@ -1,13 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>blog-panel</title>
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://api.blog.marck0101.com.br" crossorigin />
+    <link rel="preconnect" href="https://storage.googleapis.com" />
+    <link rel="alternate" type="application/rss+xml" title="Blog do Marcos Henrique Corrêa" href="/rss.xml" />
+
+    <!--
+      Tags marcadas com data-prerender são substituídas por api/prerender.js nas
+      rotas /blog e /blog/:slug e removidas no boot (src/main.jsx) — a partir daí
+      o Helmet/React 19 gerencia os metadados, sem duplicar.
+    -->
+    <!--prerender-head-->
+    <title data-prerender>Marcos Henrique Corrêa | Blog de marketing, tráfego e dev</title>
+    <meta data-prerender name="description" content="Blog do Marcos Henrique Corrêa, desenvolvedor full stack e gestor de tráfego: artigos práticos sobre marketing digital, tráfego pago, growth e tecnologia." />
+    <meta data-prerender property="og:site_name" content="Blog do Marcos Henrique Corrêa" />
+    <meta data-prerender property="og:locale" content="pt_BR" />
+    <meta data-prerender property="og:type" content="website" />
+    <meta data-prerender property="og:title" content="Marcos Henrique Corrêa | Blog de marketing, tráfego e dev" />
+    <meta data-prerender property="og:image" content="https://blog.marck0101.com.br/og-default.png" />
+    <meta data-prerender name="twitter:card" content="summary_large_image" />
+    <!--/prerender-head-->
   </head>
   <body>
     <div id="root"></div>
+    <!--prerender-body-->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
