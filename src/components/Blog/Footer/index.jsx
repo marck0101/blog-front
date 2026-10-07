@@ -90,6 +90,14 @@ export default function BlogFooter() {
               </a>
             </li>
             <li>
+              <Link
+                to="/blog/perguntas-que-todo-mundo-faz-sobre-blogs-e-as-respostas-diretas"
+                className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
+              >
+                FAQ
+              </Link>
+            </li>
+            <li>
               <a
                 href="mailto:marck.mhc@gmail.com"
                 className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"

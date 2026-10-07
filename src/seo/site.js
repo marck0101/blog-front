@@ -95,35 +95,74 @@ export function blogHomeSchema(posts = []) {
   };
 }
 
+// Extrai pares pergunta/resposta de posts em formato FAQ: cada <h2> é uma
+// pergunta, os <p> seguintes (até o próximo <h2>) são a resposta.
+export function extractFaqPairs(html = "") {
+  const sections = String(html).split(/<h2[^>]*>/i).slice(1);
+  return sections
+    .map((section) => {
+      const [rawQuestion, ...rest] = section.split(/<\/h2>/i);
+      const question = stripHtml(rawQuestion).trim();
+      const answer = stripHtml(rest.join("</h2>")).trim();
+      if (!question || !answer) return null;
+      return { question, answer };
+    })
+    .filter(Boolean);
+}
+
+function faqPageSchema(post) {
+  const pairs = extractFaqPairs(post.content);
+  if (pairs.length === 0) return null;
+
+  return {
+    "@type": "FAQPage",
+    mainEntity: pairs.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: answer,
+      },
+    })),
+  };
+}
+
 export function postSchema(post) {
   const url = postUrl(post);
+  const graph = [
+    {
+      "@type": "BlogPosting",
+      "@id": `${url}#article`,
+      headline: truncate(post.title, 110),
+      description: postDescription(post),
+      image: post.coverImage ? [post.coverImage] : [DEFAULT_IMAGE],
+      datePublished: post.publishedAt,
+      dateModified: post.updatedAt || post.publishedAt,
+      inLanguage: "pt-BR",
+      articleSection: post.category,
+      mainEntityOfPage: url,
+      url,
+      isPartOf: { "@id": WEBSITE_ID },
+      author: { "@id": PERSON_ID },
+      publisher: { "@id": PERSON_ID },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Blog", item: `${SITE_URL}/blog` },
+        { "@type": "ListItem", position: 2, name: post.title, item: url },
+      ],
+    },
+    PERSON,
+  ];
+
+  if (post.seo?.faqSchema) {
+    const faq = faqPageSchema(post);
+    if (faq) graph.push(faq);
+  }
+
   return {
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BlogPosting",
-        "@id": `${url}#article`,
-        headline: truncate(post.title, 110),
-        description: postDescription(post),
-        image: post.coverImage ? [post.coverImage] : [DEFAULT_IMAGE],
-        datePublished: post.publishedAt,
-        dateModified: post.updatedAt || post.publishedAt,
-        inLanguage: "pt-BR",
-        articleSection: post.category,
-        mainEntityOfPage: url,
-        url,
-        isPartOf: { "@id": WEBSITE_ID },
-        author: { "@id": PERSON_ID },
-        publisher: { "@id": PERSON_ID },
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Blog", item: `${SITE_URL}/blog` },
-          { "@type": "ListItem", position: 2, name: post.title, item: url },
-        ],
-      },
-      PERSON,
-    ],
+    "@graph": graph,
   };
 }
