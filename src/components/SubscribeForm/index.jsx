@@ -40,6 +40,13 @@ export default function SubscribeForm() {
         name: name.trim() || undefined,
         categories: selected,
       });
+
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "newsletter_subscribe",
+        subscribe_categories: selected,
+      });
+
       setStatus("success");
       setName("");
       setEmail("");
