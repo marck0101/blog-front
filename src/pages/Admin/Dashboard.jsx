@@ -11,6 +11,9 @@ import {
   UserCheck,
   X,
   Calendar,
+  Eye,
+  Search,
+  TrendingUp,
 } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
@@ -58,11 +61,19 @@ export default function Dashboard() {
   const [heatmapYear, setHeatmapYear] = useState(new Date().getFullYear());
   const [heatmapLoading, setHeatmapLoading] = useState(true);
 
+  const [performance, setPerformance] = useState(null);
+  const [performanceLoading, setPerformanceLoading] = useState(true);
+
   useEffect(() => {
     DashboardService.getStats()
       .then(setStats)
       .catch(() => setError("Não foi possível carregar as métricas. Tente novamente."))
       .finally(() => setLoading(false));
+
+    DashboardService.getContentPerformance(30)
+      .then(setPerformance)
+      .catch(() => {})
+      .finally(() => setPerformanceLoading(false));
 
     PostsService.getTodayPlanned()
       .then(setTodayPlanned)
@@ -188,6 +199,82 @@ export default function Dashboard() {
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-300">Nenhum post publicado ainda.</p>
           )}
+        </div>
+
+        {/* Desempenho de conteúdo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-4">
+              <Eye size={14} />
+              Posts mais visitados
+            </h2>
+            {performanceLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-5 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : performance?.topPosts?.length ? (
+              <ul className="space-y-3">
+                {performance.topPosts.map((post) => (
+                  <li key={post.slug} className="flex items-center justify-between gap-3">
+                    <Link
+                      to={`/blog/${post.slug}`}
+                      target="_blank"
+                      className="text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:underline truncate"
+                    >
+                      {post.title}
+                    </Link>
+                    <span className="shrink-0 text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
+                      {post.views}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                Ainda sem visualizações registradas. O contador soma a cada acesso a um post publicado.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-1">
+              <Search size={14} />
+              O que estão buscando no blog
+            </h2>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+              Últimos {performance?.days ?? 30} dias — termos digitados na busca do blog
+            </p>
+            {performanceLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-5 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : performance?.topSearchTerms?.length ? (
+              <ul className="space-y-2">
+                {performance.topSearchTerms.map(({ term, count }) => (
+                  <li key={term} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+                      <TrendingUp size={13} className="text-gray-400 dark:text-gray-500 shrink-0" />
+                      {term}
+                    </span>
+                    <span className="shrink-0 font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
+                      {count}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                Ninguém usou a busca do blog nesse período ainda.
+              </p>
+            )}
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 pt-4 border-t dark:border-gray-800">
+              Para dados de comportamento (scroll, tempo na página, origem do tráfego), use Clarity e Search Console — esse painel mostra só o que o próprio blog sabe sobre si.
+            </p>
+          </div>
         </div>
 
         {/* Heatmap */}
