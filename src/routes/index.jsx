@@ -9,6 +9,8 @@ import Post from "../pages/Blog/Post";
 // editor (TipTap), Firebase, datepicker etc.
 const PrivacyPolicy = lazy(() => import("../pages/Blog/PrivacyPolicy"));
 const Login = lazy(() => import("../pages/Admin/Login"));
+const ForgotPassword = lazy(() => import("../pages/Admin/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/Admin/ResetPassword"));
 const Dashboard = lazy(() => import("../pages/Admin/Dashboard"));
 const PostsList = lazy(() => import("../pages/Admin/PostsList"));
 const CreatePost = lazy(() => import("../pages/Admin/CreatePost"));
@@ -28,6 +30,8 @@ export default function AppRoutes() {
         <Route path="/blog/:slug" element={<Post />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/admin/login" element={<Login />} />
+        <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+        <Route path="/admin/reset-password" element={<ResetPassword />} />
 
         {/* ADMIN */}
         <Route

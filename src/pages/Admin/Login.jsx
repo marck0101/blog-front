@@ -70,6 +70,13 @@ export default function Login() {
         </div>
 
         <button className="bg-black text-white p-2 rounded">Entrar</button>
+
+        <Link
+          to="/admin/forgot-password"
+          className="text-sm text-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+        >
+          Esqueci a senha
+        </Link>
       </form>
 
       <Link
