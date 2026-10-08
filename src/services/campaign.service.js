@@ -1,8 +1,14 @@
 import api from "./api";
 
 const CampaignService = {
-  async getAll() {
-    const { data } = await api.get("/campaigns");
+  // params.email: só envios que tiveram esse destinatário
+  async getAll(params = {}) {
+    const { data } = await api.get("/campaigns", { params });
+    return data;
+  },
+
+  async getCalendar(year, month) {
+    const { data } = await api.get("/campaigns/calendar", { params: { year, month } });
     return data;
   },
 
@@ -26,9 +32,16 @@ const CampaignService = {
     return data;
   },
 
-  async audienceCount(audience) {
+  // { count, sample: [{ name, email, tier }] }
+  async audiencePreview(audience) {
     const { data } = await api.post("/campaigns/audience-count", { audience });
-    return data.count;
+    return data;
+  },
+
+  // Teste do email preparado no editor de post (antes de salvar/publicar)
+  async sendPostTest(post, email) {
+    const { data } = await api.post("/campaigns/test-post", { post, email });
+    return data;
   },
 
   async sendTest(id, email) {

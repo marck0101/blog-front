@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Plus, AlertCircle } from "lucide-react";
+import { Mail, Plus, AlertCircle, Search } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
+import RecipientStatus from "../../components/RecipientStatus";
 import CampaignService from "../../services/campaign.service";
 import { audienceLabel } from "../../utils/campaignAudience";
 
@@ -25,13 +26,26 @@ export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [emailSearch, setEmailSearch] = useState("");
+  const [appliedEmail, setAppliedEmail] = useState("");
 
   useEffect(() => {
-    CampaignService.getAll()
-      .then(setCampaigns)
+    const t = setTimeout(() => setAppliedEmail(emailSearch.trim()), 400);
+    return () => clearTimeout(t);
+  }, [emailSearch]);
+
+  useEffect(() => {
+    CampaignService.getAll(appliedEmail ? { email: appliedEmail } : {})
+      .then((data) => {
+        setCampaigns(data);
+        setError(null);
+      })
       .catch(() => setError("Não foi possível carregar os envios."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [appliedEmail]);
+
+  const byEmail = Boolean(appliedEmail);
+  const columns = byEmail ? 6 : 5;
 
   return (
     <>
@@ -54,6 +68,22 @@ export default function Campaigns() {
           </Link>
         </div>
 
+        <div className="mb-6 relative max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={emailSearch}
+            onChange={(e) => setEmailSearch(e.target.value)}
+            placeholder="Buscar por email do destinatário..."
+            className="input w-full pl-9"
+          />
+          {byEmail && (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-300">
+              {campaigns.length} envio{campaigns.length !== 1 ? "s" : ""} para emails contendo "{appliedEmail}"
+            </p>
+          )}
+        </div>
+
         {error && (
           <div className="flex items-center gap-3 p-4 mb-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
             <AlertCircle size={16} className="shrink-0" />
@@ -70,20 +100,21 @@ export default function Campaigns() {
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">Entregues</th>
                 <th className="px-4 py-3 font-semibold">Data</th>
+                {byEmail && <th className="px-4 py-3 font-semibold">Para este email</th>}
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">Carregando...</td>
+                  <td colSpan={columns} className="px-4 py-8 text-center text-gray-400">Carregando...</td>
                 </tr>
               )}
 
               {!loading && campaigns.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
+                  <td colSpan={columns} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Mail size={32} className="mx-auto mb-3 opacity-30" />
-                    Nenhum envio ainda.
+                    {byEmail ? "Nenhum envio foi para este email." : "Nenhum envio ainda."}
                   </td>
                 </tr>
               )}
@@ -100,9 +131,17 @@ export default function Campaigns() {
                     >
                       {c.subject}
                     </Link>
+                    {c.kind === "post-notification" && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 whitespace-nowrap">
+                        Aviso automático
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                     {audienceLabel(c.audience)}
+                    {c.audience?.type === "selected" && (
+                      <span className="text-gray-400"> · {c.audienceSize}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
@@ -114,6 +153,23 @@ export default function Campaigns() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-300 whitespace-nowrap">
                     {new Date(c.sentAt || c.updatedAt).toLocaleDateString("pt-BR")}
                   </td>
+                  {byEmail && (
+                    <td className="px-4 py-3">
+                      <ul className="space-y-1">
+                        {c.matches?.map((m) => (
+                          <li key={m.email} className="flex items-center gap-2 whitespace-nowrap">
+                            <RecipientStatus status={m.status} />
+                            <span className="text-xs text-gray-600 dark:text-gray-300">{m.email}</span>
+                            {m.sentAt && (
+                              <span className="text-xs text-gray-400">
+                                {new Date(m.sentAt).toLocaleString("pt-BR")}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

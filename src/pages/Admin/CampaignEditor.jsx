@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { AlertCircle, Send, FlaskConical, Save, Trash2, X, Crown, Copy, RotateCcw, UserPlus, FileText } from "lucide-react";
+import { AlertCircle, Send, FlaskConical, Save, Trash2, X, Crown, Copy, RotateCcw, UserPlus, FileText, Download } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import RichTextEditor from "../../components/RichTextEditor";
 import FilterChips from "../../components/FilterChips";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import RecipientStatus from "../../components/RecipientStatus";
 import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostsService from "../../services/posts.service";
-import { AUDIENCE_LABELS, audienceLabel } from "../../utils/campaignAudience";
+import AudiencePicker from "../../components/AudiencePicker";
+import {
+  RECIPIENT_STATUS_LABELS,
+  audienceLabel,
+  audienceToApi,
+  emptyAudience,
+} from "../../utils/campaignAudience";
 
-const AUDIENCE_HINTS = {
-  members: "Só assinantes ativos marcados como membro.",
-  all: "Todos os assinantes ativos, membros ou não.",
-  categories: "Assinantes ativos que seguem ao menos uma das categorias.",
-  selected: "Apenas as pessoas que você escolher abaixo.",
-};
 
 const POST_STATUS_LABELS = { published: "Publicado", draft: "Rascunho", planned: "Planejado" };
 
@@ -34,15 +35,35 @@ function PostStatusBadge({ post }) {
   );
 }
 
-// Monta o HTML do email a partir do post: capa + conteúdo
-function postToEmailContent(post) {
-  const cover = post.coverImage
-    ? `<p><img src="${post.coverImage}" alt="" style="width: 100%; height: auto; display: block;"></p>`
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const coverHtml = (post) =>
+  post.coverImage
+    ? `<p><img src="${escapeHtml(post.coverImage)}" alt="" style="width: 100%; height: auto; display: block;"></p>`
     : "";
-  return cover + (post.content || "");
+
+// Chamada do post (mesmo formato do aviso automático no backend): capa, título
+// e a chamada do email — o botão "Continuar lendo no blog" vem do template.
+function postTeaserContent(post) {
+  const teaser = (post.emailTeaser || "").trim() || post.excerpt || "";
+  const paragraphs = teaser
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+  return `${coverHtml(post)}<h2>${escapeHtml(post.title)}</h2>${paragraphs}`;
 }
 
-function PostPicker({ linkedPost, onPick, onUnlink }) {
+// Artigo inteiro no email (ex.: rascunho exclusivo para membros)
+const postFullContent = (post) => coverHtml(post) + (post.content || "");
+
+function PostPicker({ linkedPost, onPick, onUnlink, onUseFull }) {
   const [search, setSearch] = useState("");
   const [posts, setPosts] = useState([]);
   const [open, setOpen] = useState(false);
@@ -66,9 +87,17 @@ function PostPicker({ linkedPost, onPick, onUnlink }) {
         <PostStatusBadge post={linkedPost} />
         <span className="text-xs text-gray-500 dark:text-gray-300">
           {linkedPost.published
-            ? "O email terá o botão \"Ler no blog\"."
-            : "Ainda não publicado: o conteúdo vai só no email."}
+            ? "O email terá o botão \"Continuar lendo no blog\"."
+            : "Ainda não publicado: sem botão para o blog até ele ser publicado."}
         </span>
+        <button
+          type="button"
+          onClick={onUseFull}
+          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+          title="Coloca o artigo inteiro no email, em vez da chamada"
+        >
+          Usar texto completo
+        </button>
         <button
           type="button"
           onClick={onUnlink}
@@ -119,121 +148,115 @@ function PostPicker({ linkedPost, onPick, onUnlink }) {
 
 const errorMessage = (err, fallback) => err?.response?.data?.error || fallback;
 
-function SubscriberPicker({ selected, onChange }) {
+const formatDateTime = (date) => (date ? new Date(date).toLocaleString("pt-BR") : "");
+
+function exportRecipientsCsv(campaign) {
+  const escape = (v = "") => `"${String(v).replace(/"/g, '""')}"`;
+  const rows = [
+    ["email", "nome", "membro", "status", "enviado_em", "erro"],
+    ...campaign.recipients.map((r) => [
+      r.email,
+      r.subscriber?.name || "",
+      r.subscriber?.tier === "member" ? "sim" : "não",
+      RECIPIENT_STATUS_LABELS[r.status],
+      formatDateTime(r.sentAt),
+      r.error || "",
+    ]),
+  ];
+  const csv = "\uFEFF" + rows.map((row) => row.map(escape).join(";")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `envio-${campaign._id}-destinatarios.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+const STATUS_FILTERS = Object.entries(RECIPIENT_STATUS_LABELS).map(([value, label]) => ({ value, label }));
+
+function RecipientsTable({ campaign }) {
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState([]);
-  const [members, setMembers] = useState([]);
+  const [status, setStatus] = useState("all");
+  const recipients = campaign.recipients || [];
 
-  useEffect(() => {
-    SubscriberService.getAll({ tier: "member", status: "active", limit: 100 })
-      .then((data) => setMembers(data.subscribers))
-      .catch(() => setMembers([]));
-  }, []);
+  const term = search.trim().toLowerCase();
+  const visible = recipients.filter(
+    (r) =>
+      (status === "all" || r.status === status) &&
+      (!term || r.email.includes(term) || r.subscriber?.name?.toLowerCase().includes(term))
+  );
 
-  const isSelected = (sub) => selected.some((s) => s._id === sub._id);
-  const toggle = (sub) =>
-    onChange(isSelected(sub) ? selected.filter((s) => s._id !== sub._id) : [...selected, sub]);
-  const allMembersSelected = members.length > 0 && members.every(isSelected);
-  const toggleAllMembers = () =>
-    onChange(
-      allMembersSelected
-        ? selected.filter((s) => !members.some((m) => m._id === s._id))
-        : [...selected, ...members.filter((m) => !isSelected(m))]
-    );
-
-  const searching = search.trim().length >= 2;
-
-  useEffect(() => {
-    if (!searching) return;
-    const t = setTimeout(() => {
-      SubscriberService.getAll({ search, status: "active", limit: 8 })
-        .then((data) => setResults(data.subscribers))
-        .catch(() => setResults([]));
-    }, 300);
-    return () => clearTimeout(t);
-  }, [search, searching]);
-
-  const add = (sub) => {
-    if (!selected.some((s) => s._id === sub._id)) onChange([...selected, sub]);
-    setSearch("");
-  };
+  if (recipients.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      {members.length > 0 && (
-        <div className="rounded-lg border dark:border-gray-700">
-          <div className="flex items-center justify-between px-3 py-2 border-b dark:border-gray-700">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Membros ({members.length})
-            </span>
-            <button
-              type="button"
-              onClick={toggleAllMembers}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              {allMembersSelected ? "Desmarcar todos" : "Marcar todos"}
-            </button>
-          </div>
-          <ul className="max-h-56 overflow-auto divide-y dark:divide-gray-800">
-            {members.map((m) => (
-              <li key={m._id}>
-                <label className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <input type="checkbox" checked={isSelected(m)} onChange={() => toggle(m)} />
-                  <span className="text-gray-900 dark:text-gray-100">{m.name || "—"}</span>
-                  <span className="text-gray-500 truncate">{m.email}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
+    <div className="rounded-xl border bg-white dark:bg-gray-900">
+      <div className="p-4 space-y-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            Destinatários ({recipients.length})
+          </p>
+          <button
+            type="button"
+            onClick={() => exportRecipientsCsv(campaign)}
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            <Download size={14} /> Exportar CSV
+          </button>
         </div>
-      )}
-
-      <p className="text-xs text-gray-500 dark:text-gray-300">
-        Para incluir alguém que não é membro, busque abaixo.
-      </p>
-
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selected.map((s) => (
-            <span
-              key={s._id}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs"
-            >
-              {s.tier === "member" && <Crown size={12} />}
-              {s.name ? `${s.name} <${s.email}>` : s.email}
-              <button type="button" onClick={() => onChange(selected.filter((x) => x._id !== s._id))}>
-                <X size={12} />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="relative">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar assinante por nome ou email..."
+          placeholder="Buscar por email ou nome..."
           className="input w-full"
         />
-        {searching && results.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full rounded-lg border bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg max-h-64 overflow-auto">
-            {results.map((sub) => (
-              <li key={sub._id}>
-                <button
-                  type="button"
-                  onClick={() => add(sub)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-                >
-                  {sub.tier === "member" && <Crown size={14} className="text-amber-500" />}
-                  <span className="text-gray-900 dark:text-gray-100">{sub.name || "—"}</span>
-                  <span className="text-gray-500">{sub.email}</span>
-                </button>
-              </li>
+        <FilterChips
+          options={STATUS_FILTERS}
+          selected={status}
+          onChange={setStatus}
+          allLabel="Todos"
+          multiSelect={false}
+        />
+      </div>
+
+      <div className="overflow-x-auto max-h-96 overflow-y-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
+              <th className="px-4 py-2 font-semibold">Email</th>
+              <th className="px-4 py-2 font-semibold">Nome</th>
+              <th className="px-4 py-2 font-semibold">Status</th>
+              <th className="px-4 py-2 font-semibold">Enviado em</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((r) => (
+              <tr key={r.email} className="border-t border-gray-100 dark:border-gray-800">
+                <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{r.email}</td>
+                <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
+                  <span className="inline-flex items-center gap-1">
+                    {r.subscriber?.tier === "member" && <Crown size={12} className="text-amber-500" />}
+                    {r.subscriber?.name || (r.subscriber ? "—" : <span className="italic text-gray-400">removido</span>)}
+                  </span>
+                </td>
+                <td className="px-4 py-2">
+                  <RecipientStatus status={r.status} />
+                  {r.error && <p className="text-xs text-red-500 mt-1">{r.error}</p>}
+                </td>
+                <td className="px-4 py-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  {formatDateTime(r.sentAt) || "—"}
+                </td>
+              </tr>
             ))}
-          </ul>
-        )}
+            {visible.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                  Nenhum destinatário encontrado.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -241,7 +264,6 @@ function SubscriberPicker({ selected, onChange }) {
 
 function SendReport({ campaign, busy, onResume, onRetryFailed, onDuplicate }) {
   const { stats } = campaign;
-  const failed = (campaign.recipients || []).filter((r) => r.status === "failed");
   const btn =
     "inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 transition";
 
@@ -293,18 +315,7 @@ function SendReport({ campaign, busy, onResume, onRetryFailed, onDuplicate }) {
         </div>
       )}
 
-      {failed.length > 0 && (
-        <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
-          <p className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Falhas</p>
-          <ul className="text-sm space-y-1">
-            {failed.map((r) => (
-              <li key={r.email} className="text-gray-600 dark:text-gray-300">
-                {r.email} <span className="text-xs text-red-500">— {r.error}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <RecipientsTable campaign={campaign} />
     </div>
   );
 }
@@ -322,10 +333,9 @@ export default function CampaignEditor() {
     subject: "",
     preheader: "",
     content: "",
-    audienceType: preselected ? "selected" : "members",
-    categories: [],
-    subscribers: preselected ? [preselected] : [],
-    excludeMembers: false,
+    audience: preselected
+      ? { ...emptyAudience("selected"), subscribers: [preselected] }
+      : emptyAudience("members"),
     post: null,
   });
   const [pendingPost, setPendingPost] = useState(null); // post aguardando confirmação para substituir o texto
@@ -355,10 +365,12 @@ export default function CampaignEditor() {
           subject: c.subject,
           preheader: c.preheader || "",
           content: c.content || "",
-          audienceType: c.audience?.type || "members",
-          categories: c.audience?.categories || [],
-          subscribers: c.audience?.subscribers || [],
-          excludeMembers: Boolean(c.audience?.excludeMembers),
+          audience: {
+            type: c.audience?.type || "members",
+            categories: c.audience?.categories || [],
+            subscribers: c.audience?.subscribers || [],
+            excludeMembers: Boolean(c.audience?.excludeMembers),
+          },
           post: c.post || null,
         });
       })
@@ -366,23 +378,7 @@ export default function CampaignEditor() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const audience = {
-    type: form.audienceType,
-    categories: form.categories,
-    subscribers: form.subscribers.map((s) => s._id),
-    excludeMembers: ["all", "categories"].includes(form.audienceType) && form.excludeMembers,
-  };
-  const audienceKey = JSON.stringify(audience);
-
-  useEffect(() => {
-    if (!isDraft) return;
-    const t = setTimeout(() => {
-      CampaignService.audienceCount(JSON.parse(audienceKey))
-        .then(setAudienceCount)
-        .catch(() => setAudienceCount(null));
-    }, 300);
-    return () => clearTimeout(t);
-  }, [audienceKey, isDraft]);
+  const audience = audienceToApi(form.audience);
 
   const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -454,27 +450,37 @@ export default function CampaignEditor() {
     });
   };
 
-  const applyPost = (post) => {
+  // mode "teaser" troca assunto + texto pela chamada; "full" troca só o texto pelo artigo inteiro
+  const applyPost = ({ post, mode }) => {
     setPendingPost(null);
+    if (mode === "full") {
+      setForm((f) => ({ ...f, post, content: postFullContent(post) }));
+      return;
+    }
     setForm((f) => ({
       ...f,
       post,
       subject: post.title,
       preheader: post.excerpt || "",
-      content: postToEmailContent(post),
+      content: postTeaserContent(post),
     }));
   };
 
-  const handlePickPost = async (summary) => {
+  const loadPost = async (postId, mode, mustConfirm) => {
     setError(null);
     try {
-      const post = await PostsService.getById(summary._id);
-      if (form.content.trim() || form.subject.trim()) setPendingPost(post);
-      else applyPost(post);
+      const post = await PostsService.getById(postId);
+      if (mustConfirm) setPendingPost({ post, mode });
+      else applyPost({ post, mode });
     } catch {
       setError("Não foi possível carregar o post.");
     }
   };
+
+  const handlePickPost = (summary) =>
+    loadPost(summary._id, "teaser", Boolean(form.content.trim() || form.subject.trim()));
+
+  const handleUseFullPost = () => loadPost(form.post._id, "full", Boolean(form.content.trim()));
 
   const handleResume = () => run("send", () => sendAll(campaign._id));
 
@@ -523,6 +529,7 @@ export default function CampaignEditor() {
           </h1>
           {!isDraft && (
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+              {campaign.kind === "post-notification" && "Aviso automático de post novo · "}
               {audienceLabel(campaign.audience)}
               {campaign.sentAt && ` · enviado em ${new Date(campaign.sentAt).toLocaleString("pt-BR")}`}
             </p>
@@ -565,45 +572,12 @@ export default function CampaignEditor() {
             <section className="rounded-xl border bg-white dark:bg-gray-900 p-6 space-y-4">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Para quem?</h2>
 
-              <FilterChips
-                options={Object.entries(AUDIENCE_LABELS).map(([slug, label]) => ({ slug, label }))}
-                selected={form.audienceType}
-                onChange={set("audienceType")}
-                multiSelect={false}
-                showAll={false}
+              <AudiencePicker
+                value={form.audience}
+                onChange={set("audience")}
+                categories={categories}
+                onPreview={(p) => setAudienceCount(p.count)}
               />
-              <p className="text-sm text-gray-500 dark:text-gray-300">{AUDIENCE_HINTS[form.audienceType]}</p>
-
-              {form.audienceType === "categories" && (
-                <FilterChips
-                  options={categories}
-                  selected={form.categories}
-                  onChange={set("categories")}
-                  multiSelect
-                  showAll={false}
-                />
-              )}
-
-              {["all", "categories"].includes(form.audienceType) && (
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={form.excludeMembers}
-                    onChange={(e) => set("excludeMembers")(e.target.checked)}
-                  />
-                  Exceto membros (ex.: assunto que os membros já dominam)
-                </label>
-              )}
-
-              {form.audienceType === "selected" && (
-                <SubscriberPicker selected={form.subscribers} onChange={set("subscribers")} />
-              )}
-
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {audienceCount === null
-                  ? "Calculando destinatários..."
-                  : `${audienceCount} destinatário${audienceCount !== 1 ? "s" : ""}`}
-              </p>
             </section>
 
             {/* Conteúdo */}
@@ -612,6 +586,7 @@ export default function CampaignEditor() {
                 linkedPost={form.post}
                 onPick={handlePickPost}
                 onUnlink={() => set("post")(null)}
+                onUseFull={handleUseFullPost}
               />
               <input
                 type="text"
@@ -691,7 +666,11 @@ export default function CampaignEditor() {
       <ConfirmDialog
         open={Boolean(pendingPost)}
         title="Substituir o conteúdo atual?"
-        description={`O assunto, a pré-visualização e o texto serão trocados pelos do post "${pendingPost?.title}".`}
+        description={
+          pendingPost?.mode === "full"
+            ? `O texto atual será trocado pelo artigo completo "${pendingPost?.post.title}".`
+            : `O assunto, a pré-visualização e o texto serão trocados pela chamada do post "${pendingPost?.post.title}".`
+        }
         confirmText="Substituir"
         type="warning"
         onConfirm={() => applyPost(pendingPost)}

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, RefreshCw, Users, AlertCircle, Crown, Send, UserPlus } from "lucide-react";
+import { Trash2, RefreshCw, Users, AlertCircle, Crown, Send, UserPlus, Pencil } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
@@ -26,11 +26,17 @@ function MemberBadge() {
   );
 }
 
-function AddSubscriberForm({ onCreated, onCancel }) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [isMember, setIsMember] = useState(true);
-  const [notes, setNotes] = useState("");
+// Cadastro manual (sem `subscriber`) ou edição de um assinante existente
+function SubscriberForm({ subscriber, categories, onSaved, onCancel }) {
+  const isEdit = Boolean(subscriber);
+  const [email, setEmail] = useState(subscriber?.email ?? "");
+  const [name, setName] = useState(subscriber?.name ?? "");
+  const [isMember, setIsMember] = useState(isEdit ? subscriber.tier === "member" : true);
+  const [notes, setNotes] = useState(subscriber?.notes ?? "");
+  // Novo cadastro: todas as categorias marcadas, igual ao formulário do blog
+  const [selected, setSelected] = useState(
+    isEdit ? subscriber.categories ?? [] : categories.map((c) => c.slug)
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -39,15 +45,27 @@ function AddSubscriberForm({ onCreated, onCancel }) {
     setSaving(true);
     setError(null);
     try {
-      await SubscriberService.createManual({
-        email,
-        name: name.trim() || undefined,
-        tier: isMember ? "member" : "free",
-        notes,
-      });
-      onCreated();
+      const tier = isMember ? "member" : "free";
+      if (isEdit) {
+        await SubscriberService.update(subscriber._id, {
+          name: name.trim(),
+          notes,
+          categories: selected,
+          // Só manda o plano se mudou (mudar reinicia o "membro desde")
+          ...(tier !== subscriber.tier && { tier }),
+        });
+      } else {
+        await SubscriberService.createManual({
+          email,
+          name: name.trim() || undefined,
+          tier,
+          notes,
+          categories: selected,
+        });
+      }
+      onSaved();
     } catch (err) {
-      setError(err?.response?.data?.error || "Erro ao adicionar assinante.");
+      setError(err?.response?.data?.error || "Erro ao salvar assinante.");
     } finally {
       setSaving(false);
     }
@@ -55,8 +73,19 @@ function AddSubscriberForm({ onCreated, onCancel }) {
 
   return (
     <form onSubmit={submit} className="mb-6 rounded-xl border bg-white dark:bg-gray-900 p-4 space-y-3">
+      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        {isEdit ? `Editar ${subscriber.email}` : "Adicionar assinante"}
+      </p>
       <div className="grid sm:grid-cols-2 gap-3">
-        <input type="email" required placeholder="email@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="input w-full" />
+        <input
+          type="email"
+          required
+          placeholder="email@exemplo.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isEdit}
+          className="input w-full disabled:opacity-60"
+        />
         <input type="text" placeholder="Nome (opcional)" value={name} onChange={(e) => setName(e.target.value)} className="input w-full" />
       </div>
       <input type="text" placeholder="Anotação interna (ex.: pagou via Pix)" value={notes} onChange={(e) => setNotes(e.target.value)} className="input w-full" />
@@ -64,13 +93,38 @@ function AddSubscriberForm({ onCreated, onCancel }) {
         <input type="checkbox" checked={isMember} onChange={(e) => setIsMember(e.target.checked)} />
         Membro (recebe conteúdos exclusivos)
       </label>
+
+      <div>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Categorias <span className="font-normal text-gray-400">(avisos de posts novos dessas categorias)</span>
+        </p>
+        <FilterChips
+          options={categories}
+          selected={selected}
+          onChange={setSelected}
+          multiSelect
+          showAll={false}
+        />
+        <div className="flex gap-3 mt-1.5 text-xs">
+          <button type="button" onClick={() => setSelected(categories.map((c) => c.slug))} className="text-blue-600 dark:text-blue-400 hover:underline">
+            Marcar todas
+          </button>
+          <button type="button" onClick={() => setSelected([])} className="text-gray-500 hover:underline">
+            Nenhuma
+          </button>
+          {selected.length === 0 && (
+            <span className="text-amber-600 dark:text-amber-400">Sem categorias, não recebe avisos de posts novos.</span>
+          )}
+        </div>
+      </div>
+
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
           Cancelar
         </button>
         <button type="submit" disabled={saving} className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition">
-          {saving ? "Salvando..." : "Adicionar"}
+          {saving ? "Salvando..." : isEdit ? "Salvar" : "Adicionar"}
         </button>
       </div>
     </form>
@@ -112,7 +166,8 @@ export default function Subscribers() {
   // filtros
   const [statusFilter, setStatusFilter] = useState("all");
   const [tierFilter, setTierFilter] = useState("all");
-  const [showAddForm, setShowAddForm] = useState(false);
+  // null = fechado | "new" = cadastro | objeto = editando esse assinante
+  const [formTarget, setFormTarget] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -220,7 +275,7 @@ export default function Subscribers() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowAddForm((v) => !v)}
+              onClick={() => setFormTarget((t) => (t === "new" ? null : "new"))}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
             >
               <UserPlus size={16} /> Adicionar
@@ -235,10 +290,13 @@ export default function Subscribers() {
           </div>
         </div>
 
-        {showAddForm && (
-          <AddSubscriberForm
-            onCreated={() => { setShowAddForm(false); load(); }}
-            onCancel={() => setShowAddForm(false)}
+        {formTarget && (
+          <SubscriberForm
+            key={formTarget === "new" ? `new-${categories.length}` : formTarget._id}
+            subscriber={formTarget === "new" ? null : formTarget}
+            categories={categories}
+            onSaved={() => { setFormTarget(null); load(); }}
+            onCancel={() => setFormTarget(null)}
           />
         )}
 
@@ -372,6 +430,17 @@ export default function Subscribers() {
                         }`}
                       >
                         <Crown size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setFormTarget(sub);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        title="Editar nome, categorias e anotação"
+                        className="p-1.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+                      >
+                        <Pencil size={14} />
                       </button>
 
                       <button

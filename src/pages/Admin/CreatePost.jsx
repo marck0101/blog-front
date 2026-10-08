@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
+import PostEmailSection from "../../components/PostEmailSection";
 import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
@@ -10,6 +11,7 @@ import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostSkeleton from "../../components/PostSkeleton";
+import { audienceToApi, emptyAudience } from "../../utils/campaignAudience";
 
 export default function CreatePost() {
   const navigate = useNavigate();
@@ -27,12 +29,22 @@ export default function CreatePost() {
     category: "marketing",
     status: urlPlannedAt ? "planned" : "draft",
     plannedAt: urlPlannedAt || "",
+    emailNotify: true,
+    emailTeaser: "",
+    emailSubject: "",
+    emailPreheader: "",
+    emailAudience: emptyAudience("post-category"),
     seo: { title: "", description: "" },
   });
 
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
   const [coverFile, setCoverFile] = useState(null);
+  // Capa para a prévia do email (arquivo ainda não enviado vira URL local)
+  const coverPreview = useMemo(
+    () => (coverFile ? URL.createObjectURL(coverFile) : coverImage),
+    [coverFile, coverImage]
+  );
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -56,6 +68,7 @@ export default function CreatePost() {
 
       await PostsService.create({
         ...form,
+        emailAudience: audienceToApi(form.emailAudience),
         published: form.status === "published",
         plannedAt: form.status === "planned" ? form.plannedAt || null : null,
         gallery: gallery.filter(Boolean),
@@ -233,6 +246,21 @@ export default function CreatePost() {
             </div>
           )}
         </section>
+
+        <PostEmailSection
+          value={form}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+          post={{
+            _id: undefined,
+            title: form.title,
+            slug: form.slug,
+            excerpt: form.excerpt,
+            category: form.category,
+            coverUrl: coverImage,
+            coverPreview,
+          }}
+          categories={categories}
+        />
 
         {/* AÇÃO */}
         <button

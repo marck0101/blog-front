@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostsService from "../../services/posts.service";
+import CampaignService from "../../services/campaign.service";
 
 const MONTHS_PT = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -40,6 +41,39 @@ function buildCalendarGrid(year, month) {
   return cells;
 }
 
+// Envios de email: contorno colorido para diferenciar dos posts
+const EMAIL_STYLE = {
+  sent:    "border-emerald-500 text-emerald-700 dark:text-emerald-300",
+  failed:  "border-red-500 text-red-700 dark:text-red-300",
+  sending: "border-amber-500 text-amber-700 dark:text-amber-300",
+  draft:   "border-dashed border-gray-400 text-gray-500 dark:text-gray-300",
+};
+
+function emailStyleKey(email) {
+  if (email.status === "sent" && email.stats.failed > 0) return "failed";
+  return email.status;
+}
+
+function EmailBadge({ email }) {
+  const auto = email.kind === "post-notification";
+  const subject = auto ? email.subject.replace(/^Novo artigo: /, "").replace(/ \| marck0101$/, "") : email.subject;
+  const label = subject.length > 20 ? subject.slice(0, 20) + "…" : subject;
+  const detail =
+    email.status === "draft"
+      ? "rascunho"
+      : `${email.stats.sent}/${email.stats.total} entregues${email.stats.failed ? `, ${email.stats.failed} falha(s)` : ""}`;
+
+  return (
+    <Link
+      to={`/admin/campaigns/${email._id}`}
+      title={`${auto ? "Aviso automático: " : "Envio: "}${subject} (${detail})`}
+      className={`block text-[10px] leading-tight px-1.5 py-0.5 rounded border bg-white dark:bg-gray-900 truncate ${EMAIL_STYLE[emailStyleKey(email)]}`}
+    >
+      ✉️ {label}
+    </Link>
+  );
+}
+
 function PostBadge({ post, onPublish }) {
   const label = post.title.length > 22 ? post.title.slice(0, 22) + "…" : post.title;
 
@@ -72,6 +106,7 @@ export default function Calendar() {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [posts, setPosts] = useState([]);
+  const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
@@ -80,7 +115,8 @@ export default function Calendar() {
   const postsByDay = useMemo(() => {
     const map = {};
     posts.forEach((p) => {
-      const ref = p.plannedAt || p.publishedAt;
+      // Rascunho sem data planejada aparece no dia em que foi criado
+      const ref = p.plannedAt || p.publishedAt || p.createdAt;
       if (!ref) return;
       const key = toDateKey(new Date(ref));
       if (!map[key]) map[key] = [];
@@ -89,11 +125,25 @@ export default function Calendar() {
     return map;
   }, [posts]);
 
+  const emailsByDay = useMemo(() => {
+    const map = {};
+    emails.forEach((e) => {
+      const key = toDateKey(new Date(e.date));
+      (map[key] ||= []).push(e);
+    });
+    return map;
+  }, [emails]);
+
   const load = () => {
     setLoading(true);
-    PostsService.getCalendar(year, month)
-      .then(setPosts)
-      .catch(() => setPosts([]))
+    Promise.all([
+      PostsService.getCalendar(year, month).catch(() => []),
+      CampaignService.getCalendar(year, month).catch(() => []),
+    ])
+      .then(([postsData, emailsData]) => {
+        setPosts(postsData);
+        setEmails(emailsData);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -189,10 +239,13 @@ export default function Calendar() {
         </div>
 
         {/* Legenda */}
-        <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-300">
+        <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mb-4 text-xs text-gray-500 dark:text-gray-300">
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.published}`}>Publicado</span>
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.planned}`}>Planejado</span>
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.draft}`}>Rascunho</span>
+          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.sent}`}>✉️ Email enviado</span>
+          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.failed}`}>✉️ Com falhas</span>
+          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.draft}`}>✉️ Rascunho</span>
           <span className="text-gray-400">Clique num dia vazio para criar post planejado</span>
         </div>
 
@@ -214,13 +267,14 @@ export default function Calendar() {
               {cells.map((day, idx) => {
                 const key = day ? toDateKey(day) : null;
                 const dayPosts = key ? (postsByDay[key] || []) : [];
+                const dayEmails = key ? (emailsByDay[key] || []) : [];
                 const isToday = key === todayKey;
                 const isCurrentMonth = day?.getMonth() === month - 1;
 
                 return (
                   <div
                     key={idx}
-                    onClick={() => day && dayPosts.length === 0 && handleDayClick(day)}
+                    onClick={() => day && dayPosts.length === 0 && dayEmails.length === 0 && handleDayClick(day)}
                     className={`min-h-[100px] p-1.5 border-r border-b dark:border-gray-800 last:border-r-0 transition
                       ${day ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50" : "bg-gray-50 dark:bg-gray-800/30"}
                       ${!isCurrentMonth ? "opacity-40" : ""}
@@ -244,6 +298,17 @@ export default function Calendar() {
                             <p className="text-[10px] text-gray-400 dark:text-gray-300 pl-1">
                               +{dayPosts.length - 3}
                             </p>
+                          )}
+                          {dayEmails.slice(0, 2).map((e) => (
+                            <EmailBadge key={e._id} email={e} />
+                          ))}
+                          {dayEmails.length > 2 && (
+                            <Link
+                              to="/admin/campaigns"
+                              className="block text-[10px] text-gray-400 dark:text-gray-300 pl-1 hover:underline"
+                            >
+                              +{dayEmails.length - 2} envio(s)
+                            </Link>
                           )}
                         </div>
                       </>

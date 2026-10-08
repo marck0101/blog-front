@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
+import PostEmailSection from "../../components/PostEmailSection";
 import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
@@ -10,6 +11,7 @@ import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostSkeleton from "../../components/PostSkeleton";
+import { audienceToApi, emptyAudience } from "../../utils/campaignAudience";
 
 export default function EditPost() {
   const { id } = useParams();
@@ -27,12 +29,24 @@ export default function EditPost() {
     category: "marketing",
     status: "draft",
     plannedAt: "",
+    emailNotify: true,
+    emailTeaser: "",
+    emailSubject: "",
+    emailPreheader: "",
+    emailAudience: emptyAudience("post-category"),
     seo: { title: "", description: "" },
   });
+  // Já estava publicado ao abrir: o aviso automático não sai de novo
+  const [wasPublished, setWasPublished] = useState(false);
 
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
   const [coverFile, setCoverFile] = useState(null);
+  // Capa para a prévia do email (arquivo ainda não enviado vira URL local)
+  const coverPreview = useMemo(
+    () => (coverFile ? URL.createObjectURL(coverFile) : coverImage),
+    [coverFile, coverImage]
+  );
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -63,11 +77,21 @@ export default function EditPost() {
           category: post.category || "marketing",
           status: derivedStatus,
           plannedAt: plannedAtVal,
+          emailNotify: post.emailNotify !== false,
+          emailTeaser: post.emailTeaser || "",
+          emailSubject: post.emailSubject || "",
+          emailPreheader: post.emailPreheader || "",
+          emailAudience: {
+            ...emptyAudience("post-category"),
+            ...post.emailAudience,
+            subscribers: post.emailAudience?.subscribers || [],
+          },
           seo: {
             title: post.seo?.title || "",
             description: post.seo?.description || "",
           },
         });
+        setWasPublished(derivedStatus === "published");
         setGallery(post.gallery || []);
         setCoverImage(post.coverImage || "");
       })
@@ -91,6 +115,7 @@ export default function EditPost() {
 
       await PostsService.update(id, {
         ...form,
+        emailAudience: audienceToApi(form.emailAudience),
         published: form.status === "published",
         plannedAt: form.status === "planned" ? form.plannedAt || null : null,
         gallery,
@@ -266,6 +291,22 @@ export default function EditPost() {
             </div>
           )}
         </section>
+
+        <PostEmailSection
+          value={form}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+          post={{
+            _id: id,
+            title: form.title,
+            slug: form.slug,
+            excerpt: form.excerpt,
+            category: form.category,
+            coverUrl: coverImage,
+            coverPreview,
+          }}
+          categories={categories}
+          alreadyPublished={wasPublished}
+        />
 
         {/* AÇÃO */}
         <button
