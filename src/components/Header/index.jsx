@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
+  Mail,
 } from "lucide-react";
 
 export default function Header() {
@@ -85,6 +86,11 @@ export default function Header() {
                 <Link to="/admin/subscribers" className={navItemClass(isActive("/admin/subscribers"))}>
                   <Users size={18} />
                   <span className={tooltipClass} style={{ top: 64 }}>Assinantes</span>
+                </Link>
+
+                <Link to="/admin/campaigns" className={navItemClass(location.pathname.startsWith("/admin/campaigns"))}>
+                  <Mail size={18} />
+                  <span className={tooltipClass} style={{ top: 64 }}>Envios</span>
                 </Link>
 
                 <Link to="/admin/calendar" className={navItemClass(isActive("/admin/calendar"))}>

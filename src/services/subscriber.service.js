@@ -16,6 +16,11 @@ const SubscriberService = {
     return data;
   },
 
+  async createManual(payload) {
+    const { data } = await api.post("/subscribers/manual", payload);
+    return data;
+  },
+
   async remove(id) {
     const { data } = await api.delete(`/subscribers/${id}`);
     return data;

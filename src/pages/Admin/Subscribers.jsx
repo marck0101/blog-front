@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Trash2, RefreshCw, Users, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Trash2, RefreshCw, Users, AlertCircle, Crown, Send, UserPlus } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
@@ -10,6 +11,70 @@ const STATUS_OPTIONS = [
   { value: "active", label: "Ativos" },
   { value: "unsubscribed", label: "Cancelados" },
 ];
+
+const TIER_OPTIONS = [
+  { value: "member", label: "Membros" },
+  { value: "free", label: "Não membros" },
+];
+
+function MemberBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+      <Crown size={12} /> Membro
+    </span>
+  );
+}
+
+function AddSubscriberForm({ onCreated, onCancel }) {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [isMember, setIsMember] = useState(true);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      await SubscriberService.createManual({
+        email,
+        name: name.trim() || undefined,
+        tier: isMember ? "member" : "free",
+        notes,
+      });
+      onCreated();
+    } catch (err) {
+      setError(err?.response?.data?.error || "Erro ao adicionar assinante.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="mb-6 rounded-xl border bg-white dark:bg-gray-900 p-4 space-y-3">
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input type="email" required placeholder="email@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="input w-full" />
+        <input type="text" placeholder="Nome (opcional)" value={name} onChange={(e) => setName(e.target.value)} className="input w-full" />
+      </div>
+      <input type="text" placeholder="Anotação interna (ex.: pagou via Pix)" value={notes} onChange={(e) => setNotes(e.target.value)} className="input w-full" />
+      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <input type="checkbox" checked={isMember} onChange={(e) => setIsMember(e.target.checked)} />
+        Membro (recebe conteúdos exclusivos)
+      </label>
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <div className="flex gap-2 justify-end">
+        <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          Cancelar
+        </button>
+        <button type="submit" disabled={saving} className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition">
+          {saving ? "Salvando..." : "Adicionar"}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 function StatusBadge({ status }) {
   return status === "active" ? (
@@ -26,7 +91,7 @@ function StatusBadge({ status }) {
 function RowSkeleton() {
   return (
     <tr className="border-t border-gray-100 dark:border-gray-800">
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 7 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
         </td>
@@ -36,6 +101,7 @@ function RowSkeleton() {
 }
 
 export default function Subscribers() {
+  const navigate = useNavigate();
   const [data, setData] = useState({ subscribers: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,6 +110,8 @@ export default function Subscribers() {
 
   // filtros
   const [statusFilter, setStatusFilter] = useState("all");
+  const [tierFilter, setTierFilter] = useState("all");
+  const [showAddForm, setShowAddForm] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -61,6 +129,7 @@ export default function Subscribers() {
     setError(null);
     const params = { page, limit: 20 };
     if (statusFilter !== "all") params.status = statusFilter;
+    if (tierFilter !== "all") params.tier = tierFilter;
     if (selectedCategories.length) params.categories = selectedCategories.join(",");
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
@@ -70,7 +139,7 @@ export default function Subscribers() {
       .then(setData)
       .catch(() => setError("Não foi possível carregar os assinantes."))
       .finally(() => setLoading(false));
-  }, [page, statusFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, statusFilter, tierFilter, selectedCategories, search, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -78,6 +147,7 @@ export default function Subscribers() {
 
   const clearFilters = () => {
     setStatusFilter("all");
+    setTierFilter("all");
     setSelectedCategories([]);
     setSearch("");
     setDateFrom("");
@@ -111,6 +181,25 @@ export default function Subscribers() {
     }
   };
 
+  const handleToggleMember = async (sub) => {
+    setActionLoading(sub._id);
+    try {
+      await SubscriberService.update(sub._id, {
+        tier: sub.tier === "member" ? "free" : "member",
+      });
+      load();
+    } catch {
+      alert("Erro ao atualizar plano.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const sendTo = (sub) =>
+    navigate("/admin/campaigns/new", {
+      state: { subscriber: { _id: sub._id, name: sub.name, email: sub.email, tier: sub.tier } },
+    });
+
   const categoryLabel = (slug) =>
     categories.find((c) => c.slug === slug)?.label ?? slug;
 
@@ -128,14 +217,29 @@ export default function Subscribers() {
               {data.total} assinante{data.total !== 1 ? "s" : ""}
             </p>
           </div>
-          <button
-            onClick={load}
-            className="p-2 rounded-lg border text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            title="Recarregar"
-          >
-            <RefreshCw size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAddForm((v) => !v)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+            >
+              <UserPlus size={16} /> Adicionar
+            </button>
+            <button
+              onClick={load}
+              className="p-2 rounded-lg border text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              title="Recarregar"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </div>
         </div>
+
+        {showAddForm && (
+          <AddSubscriberForm
+            onCreated={() => { setShowAddForm(false); load(); }}
+            onCancel={() => setShowAddForm(false)}
+          />
+        )}
 
         {/* Status chips */}
         <div className="mb-3">
@@ -144,6 +248,17 @@ export default function Subscribers() {
             selected={statusFilter}
             onChange={changeFilter(setStatusFilter)}
             allLabel="Todos"
+            multiSelect={false}
+          />
+        </div>
+
+        {/* Tier chips */}
+        <div className="mb-3">
+          <FilterChips
+            options={TIER_OPTIONS}
+            selected={tierFilter}
+            onChange={changeFilter(setTierFilter)}
+            allLabel="Membros e não membros"
             multiSelect={false}
           />
         </div>
@@ -190,6 +305,7 @@ export default function Subscribers() {
               <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
                 <th className="px-4 py-3 font-semibold">Nome</th>
                 <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Plano</th>
                 <th className="px-4 py-3 font-semibold">Categorias</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">Cadastrado em</th>
@@ -201,7 +317,7 @@ export default function Subscribers() {
 
               {!loading && data.subscribers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Users size={32} className="mx-auto mb-3 opacity-30" />
                     Nenhum assinante encontrado.
                   </td>
@@ -217,6 +333,9 @@ export default function Subscribers() {
                     {sub.name || <span className="text-gray-400 italic">—</span>}
                   </td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{sub.email}</td>
+                  <td className="px-4 py-3" title={sub.notes || undefined}>
+                    {sub.tier === "member" ? <MemberBadge /> : <span className="text-gray-400 text-xs">Gratuito</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {sub.categories?.length > 0 ? (
@@ -239,6 +358,26 @@ export default function Subscribers() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleToggleMember(sub)}
+                        disabled={actionLoading === sub._id}
+                        title={sub.tier === "member" ? "Remover de membros" : "Tornar membro"}
+                        className={`p-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 disabled:opacity-40 transition ${
+                          sub.tier === "member" ? "text-amber-500" : "text-gray-400 hover:text-amber-500"
+                        }`}
+                      >
+                        <Crown size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => sendTo(sub)}
+                        disabled={sub.status !== "active"}
+                        title="Enviar conteúdo para este assinante"
+                        className="p-1.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-40 transition"
+                      >
+                        <Send size={14} />
+                      </button>
+
                       <button
                         onClick={() => handleToggleStatus(sub)}
                         disabled={actionLoading === sub._id}

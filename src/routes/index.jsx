@@ -17,6 +17,8 @@ const CreatePost = lazy(() => import("../pages/Admin/CreatePost"));
 const EditPost = lazy(() => import("../pages/Admin/EditPost"));
 const Trash = lazy(() => import("../pages/Admin/Trash"));
 const Subscribers = lazy(() => import("../pages/Admin/Subscribers"));
+const Campaigns = lazy(() => import("../pages/Admin/Campaigns"));
+const CampaignEditor = lazy(() => import("../pages/Admin/CampaignEditor"));
 const Calendar = lazy(() => import("../pages/Admin/Calendar"));
 
 export default function AppRoutes() {
@@ -84,6 +86,33 @@ export default function AppRoutes() {
           element={
             <PrivateRoute>
               <Subscribers />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/campaigns"
+          element={
+            <PrivateRoute>
+              <Campaigns />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/campaigns/new"
+          element={
+            <PrivateRoute>
+              <CampaignEditor />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/campaigns/:id"
+          element={
+            <PrivateRoute>
+              <CampaignEditor />
             </PrivateRoute>
           }
         />
