@@ -12,11 +12,6 @@ export default {
   theme: {
     extend: {
       typography: {
-        DEFAULT: {
-          css: {
-            color: "#374151", // gray-700
-          },
-        },
         dark: {
           css: {
             color: "#e5e7eb", // gray-200

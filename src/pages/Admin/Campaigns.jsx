@@ -1,33 +1,84 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Mail, Plus, AlertCircle, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Mail, Plus, AlertCircle, Search, Users } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
+import FilterChips from "../../components/FilterChips";
 import RecipientStatus from "../../components/RecipientStatus";
+import CampaignAudienceModal from "../../components/CampaignAudienceModal";
 import CampaignService from "../../services/campaign.service";
-import { audienceLabel } from "../../utils/campaignAudience";
+import { CAMPAIGN_STATUS, audienceLabel, campaignStatusKey } from "../../utils/campaignAudience";
 
-function StatusBadge({ status }) {
-  const styles = {
-    draft: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
-    sending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    sent: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  };
-  const labels = { draft: "Rascunho", sending: "Enviando", sent: "Enviado" };
+const STATUS_FILTERS = [
+  { value: "sent", label: "Enviados" },
+  { value: "partial", label: "Parciais" },
+  { value: "failed", label: "Falharam" },
+  { value: "sending", label: "Enviando" },
+  { value: "draft", label: "Rascunhos" },
+];
 
+const KIND_FILTERS = [
+  { value: "custom", label: "Envios manuais" },
+  { value: "post-notification", label: "Avisos automáticos" },
+];
+
+function StatusBadge({ campaign }) {
+  const { label, style } = CAMPAIGN_STATUS[campaignStatusKey(campaign)];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
-      {labels[status]}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${style}`}>
+      {label}
     </span>
   );
 }
 
+function Delivery({ campaign }) {
+  if (campaign.status === "draft") return <span className="text-gray-400">—</span>;
+  const { sent, failed, pending, total } = campaign.stats;
+
+  return (
+    <div className="space-y-0.5 whitespace-nowrap">
+      <p className="text-gray-900 dark:text-gray-100">
+        {sent}/{total} <span className="text-xs text-gray-500 dark:text-gray-300">entregue{sent !== 1 ? "s" : ""}</span>
+      </p>
+      {failed > 0 && (
+        <p className="text-xs text-red-600 dark:text-red-400">
+          {failed} não enviado{failed !== 1 ? "s" : ""}
+        </p>
+      )}
+      {pending > 0 && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          {pending} pendente{pending !== 1 ? "s" : ""}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function formatDate(c) {
+  const date = new Date(c.sentAt || c.startedAt || c.updatedAt);
+  return {
+    day: date.toLocaleDateString("pt-BR"),
+    time: date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    label: c.sentAt ? "enviado" : c.startedAt ? "iniciado" : "editado",
+  };
+}
+
+function audienceSizeLabel(c) {
+  if (c.status !== "draft") return `${c.stats.total} pessoa${c.stats.total !== 1 ? "s" : ""}`;
+  if (c.audience?.type === "selected") return `${c.audienceSize} pessoa${c.audienceSize !== 1 ? "s" : ""}`;
+  return "ver público";
+}
+
 export default function Campaigns() {
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [emailSearch, setEmailSearch] = useState("");
   const [appliedEmail, setAppliedEmail] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [kindFilter, setKindFilter] = useState("all");
+  const [audienceOf, setAudienceOf] = useState(null); // id do envio aberto no modal
 
   useEffect(() => {
     const t = setTimeout(() => setAppliedEmail(emailSearch.trim()), 400);
@@ -44,8 +95,19 @@ export default function Campaigns() {
       .finally(() => setLoading(false));
   }, [appliedEmail]);
 
+  const visible = useMemo(
+    () =>
+      campaigns.filter(
+        (c) =>
+          (statusFilter === "all" || campaignStatusKey(c) === statusFilter) &&
+          (kindFilter === "all" || (c.kind || "custom") === kindFilter)
+      ),
+    [campaigns, statusFilter, kindFilter]
+  );
+
   const byEmail = Boolean(appliedEmail);
   const columns = byEmail ? 6 : 5;
+  const hasFilters = statusFilter !== "all" || kindFilter !== "all" || emailSearch;
 
   return (
     <>
@@ -57,7 +119,7 @@ export default function Campaigns() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Envios</h1>
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
-              Conteúdos exclusivos e newsletters enviados por email
+              Conteúdos exclusivos, newsletters e avisos de posts novos
             </p>
           </div>
           <Link
@@ -68,20 +130,50 @@ export default function Campaigns() {
           </Link>
         </div>
 
-        <div className="mb-6 relative max-w-md">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={emailSearch}
-            onChange={(e) => setEmailSearch(e.target.value)}
-            placeholder="Buscar por email do destinatário..."
-            className="input w-full pl-9"
+        {/* Filtros */}
+        <div className="mb-6 space-y-3">
+          <div className="relative max-w-md">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={emailSearch}
+              onChange={(e) => setEmailSearch(e.target.value)}
+              placeholder="Buscar por email do destinatário..."
+              className="input w-full !pl-9"
+            />
+          </div>
+          <FilterChips
+            options={STATUS_FILTERS}
+            selected={statusFilter}
+            onChange={setStatusFilter}
+            allLabel="Todos os status"
+            multiSelect={false}
           />
-          {byEmail && (
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-300">
-              {campaigns.length} envio{campaigns.length !== 1 ? "s" : ""} para emails contendo "{appliedEmail}"
-            </p>
-          )}
+          <FilterChips
+            options={KIND_FILTERS}
+            selected={kindFilter}
+            onChange={setKindFilter}
+            allLabel="Todos os tipos"
+            multiSelect={false}
+          />
+          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-300">
+            <span>
+              {visible.length} envio{visible.length !== 1 ? "s" : ""}
+              {byEmail && ` para emails contendo "${appliedEmail}"`}
+            </span>
+            {hasFilters && (
+              <button
+                onClick={() => {
+                  setStatusFilter("all");
+                  setKindFilter("all");
+                  setEmailSearch("");
+                }}
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -98,7 +190,7 @@ export default function Campaigns() {
                 <th className="px-4 py-3 font-semibold">Assunto</th>
                 <th className="px-4 py-3 font-semibold">Público</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Entregues</th>
+                <th className="px-4 py-3 font-semibold">Entrega</th>
                 <th className="px-4 py-3 font-semibold">Data</th>
                 {byEmail && <th className="px-4 py-3 font-semibold">Para este email</th>}
               </tr>
@@ -110,72 +202,80 @@ export default function Campaigns() {
                 </tr>
               )}
 
-              {!loading && campaigns.length === 0 && (
+              {!loading && visible.length === 0 && (
                 <tr>
                   <td colSpan={columns} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Mail size={32} className="mx-auto mb-3 opacity-30" />
-                    {byEmail ? "Nenhum envio foi para este email." : "Nenhum envio ainda."}
+                    {byEmail
+                      ? "Nenhum envio foi para este email."
+                      : campaigns.length === 0
+                        ? "Nenhum envio ainda."
+                        : "Nenhum envio com esses filtros."}
                   </td>
                 </tr>
               )}
 
-              {!loading && campaigns.map((c) => (
-                <tr
-                  key={c._id}
-                  className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/admin/campaigns/${c._id}`}
-                      className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600"
-                    >
-                      {c.subject}
-                    </Link>
-                    {c.kind === "post-notification" && (
-                      <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 whitespace-nowrap">
-                        Aviso automático
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {audienceLabel(c.audience)}
-                    {c.audience?.type === "selected" && (
-                      <span className="text-gray-400"> · {c.audienceSize}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {c.status === "draft" ? "—" : `${c.stats.sent}/${c.stats.total}`}
-                    {c.stats.failed > 0 && (
-                      <span className="ml-2 text-xs text-red-500">{c.stats.failed} falha(s)</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                    {new Date(c.sentAt || c.updatedAt).toLocaleDateString("pt-BR")}
-                  </td>
-                  {byEmail && (
+              {!loading && visible.map((c) => {
+                const date = formatDate(c);
+                return (
+                  <tr
+                    key={c._id}
+                    onClick={() => navigate(`/admin/campaigns/${c._id}`)}
+                    className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition cursor-pointer align-top"
+                  >
                     <td className="px-4 py-3">
-                      <ul className="space-y-1">
-                        {c.matches?.map((m) => (
-                          <li key={m.email} className="flex items-center gap-2 whitespace-nowrap">
-                            <RecipientStatus status={m.status} />
-                            <span className="text-xs text-gray-600 dark:text-gray-300">{m.email}</span>
-                            {m.sentAt && (
-                              <span className="text-xs text-gray-400">
-                                {new Date(m.sentAt).toLocaleString("pt-BR")}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{c.subject}</p>
+                      {c.kind === "post-notification" && (
+                        <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                          Aviso automático
+                        </span>
+                      )}
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAudienceOf(c._id);
+                        }}
+                        title="Ver quem estava neste envio"
+                        className="inline-flex items-start gap-1.5 text-left text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        <Users size={14} className="shrink-0 mt-0.5" />
+                        <span>
+                          {audienceLabel(c.audience)}
+                          <span className="block text-xs text-gray-500 dark:text-gray-300">{audienceSizeLabel(c)}</span>
+                        </span>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3"><StatusBadge campaign={c} /></td>
+                    <td className="px-4 py-3"><Delivery campaign={c} /></td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                      <p>{date.day}</p>
+                      <p className="text-xs">{date.label} às {date.time}</p>
+                    </td>
+                    {byEmail && (
+                      <td className="px-4 py-3">
+                        <ul className="space-y-1">
+                          {c.matches?.map((m) => (
+                            <li key={m.email} className="flex items-center gap-2 whitespace-nowrap">
+                              <RecipientStatus status={m.status} />
+                              <span className="text-xs text-gray-600 dark:text-gray-300">{m.email}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </main>
+
+      {audienceOf && (
+        <CampaignAudienceModal campaignId={audienceOf} onClose={() => setAudienceOf(null)} />
+      )}
     </>
   );
 }

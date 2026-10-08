@@ -6,14 +6,15 @@ import SEO from "../../components/SEO";
 import RichTextEditor from "../../components/RichTextEditor";
 import FilterChips from "../../components/FilterChips";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import RecipientStatus from "../../components/RecipientStatus";
+import RecipientsTable from "../../components/RecipientsTable";
 import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostsService from "../../services/posts.service";
 import AudiencePicker from "../../components/AudiencePicker";
 import {
-  RECIPIENT_STATUS_LABELS,
+  CAMPAIGN_STATUS,
   audienceLabel,
+  campaignStatusKey,
   audienceToApi,
   emptyAudience,
 } from "../../utils/campaignAudience";
@@ -147,120 +148,6 @@ function PostPicker({ linkedPost, onPick, onUnlink, onUseFull }) {
 }
 
 const errorMessage = (err, fallback) => err?.response?.data?.error || fallback;
-
-const formatDateTime = (date) => (date ? new Date(date).toLocaleString("pt-BR") : "");
-
-function exportRecipientsCsv(campaign) {
-  const escape = (v = "") => `"${String(v).replace(/"/g, '""')}"`;
-  const rows = [
-    ["email", "nome", "membro", "status", "enviado_em", "erro"],
-    ...campaign.recipients.map((r) => [
-      r.email,
-      r.subscriber?.name || "",
-      r.subscriber?.tier === "member" ? "sim" : "não",
-      RECIPIENT_STATUS_LABELS[r.status],
-      formatDateTime(r.sentAt),
-      r.error || "",
-    ]),
-  ];
-  const csv = "\uFEFF" + rows.map((row) => row.map(escape).join(";")).join("\n");
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `envio-${campaign._id}-destinatarios.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-const STATUS_FILTERS = Object.entries(RECIPIENT_STATUS_LABELS).map(([value, label]) => ({ value, label }));
-
-function RecipientsTable({ campaign }) {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const recipients = campaign.recipients || [];
-
-  const term = search.trim().toLowerCase();
-  const visible = recipients.filter(
-    (r) =>
-      (status === "all" || r.status === status) &&
-      (!term || r.email.includes(term) || r.subscriber?.name?.toLowerCase().includes(term))
-  );
-
-  if (recipients.length === 0) return null;
-
-  return (
-    <div className="rounded-xl border bg-white dark:bg-gray-900">
-      <div className="p-4 space-y-3 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Destinatários ({recipients.length})
-          </p>
-          <button
-            type="button"
-            onClick={() => exportRecipientsCsv(campaign)}
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            <Download size={14} /> Exportar CSV
-          </button>
-        </div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por email ou nome..."
-          className="input w-full"
-        />
-        <FilterChips
-          options={STATUS_FILTERS}
-          selected={status}
-          onChange={setStatus}
-          allLabel="Todos"
-          multiSelect={false}
-        />
-      </div>
-
-      <div className="overflow-x-auto max-h-96 overflow-y-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
-              <th className="px-4 py-2 font-semibold">Email</th>
-              <th className="px-4 py-2 font-semibold">Nome</th>
-              <th className="px-4 py-2 font-semibold">Status</th>
-              <th className="px-4 py-2 font-semibold">Enviado em</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((r) => (
-              <tr key={r.email} className="border-t border-gray-100 dark:border-gray-800">
-                <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{r.email}</td>
-                <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
-                  <span className="inline-flex items-center gap-1">
-                    {r.subscriber?.tier === "member" && <Crown size={12} className="text-amber-500" />}
-                    {r.subscriber?.name || (r.subscriber ? "—" : <span className="italic text-gray-400">removido</span>)}
-                  </span>
-                </td>
-                <td className="px-4 py-2">
-                  <RecipientStatus status={r.status} />
-                  {r.error && <p className="text-xs text-red-500 mt-1">{r.error}</p>}
-                </td>
-                <td className="px-4 py-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  {formatDateTime(r.sentAt) || "—"}
-                </td>
-              </tr>
-            ))}
-            {visible.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
-                  Nenhum destinatário encontrado.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 function SendReport({ campaign, busy, onResume, onRetryFailed, onDuplicate }) {
   const { stats } = campaign;
@@ -439,7 +326,16 @@ export default function CampaignEditor() {
     }
     const full = await CampaignService.getById(campaignId);
     setCampaign(full);
-    setNotice(`Envio concluído: ${full.stats.sent} de ${full.stats.total} entregues.`);
+    const { sent, failed, total } = full.stats;
+    if (failed > 0) {
+      setError(
+        sent === 0
+          ? `Nenhum email foi entregue (${failed} falha${failed !== 1 ? "s" : ""}). Veja o motivo na lista de destinatários.`
+          : `Envio parcial: ${sent} de ${total} entregues, ${failed} não enviado${failed !== 1 ? "s" : ""}.`
+      );
+    } else {
+      setNotice(`Envio concluído: ${sent} de ${total} entregues.`);
+    }
   };
 
   const handleSend = () => {
@@ -526,6 +422,13 @@ export default function CampaignEditor() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {isDraft ? (campaign ? "Editar envio" : "Novo envio") : campaign.subject}
+            {!isDraft && (
+              <span
+                className={`ml-3 align-middle inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CAMPAIGN_STATUS[campaignStatusKey(campaign)].style}`}
+              >
+                {CAMPAIGN_STATUS[campaignStatusKey(campaign)].label}
+              </span>
+            )}
           </h1>
           {!isDraft && (
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">

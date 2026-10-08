@@ -87,6 +87,41 @@ html.dark .post-content a {
   color: rgb(96 165 250) !important; /* blue-400 */
 }
 
+/* Editor de conteúdo (TipTap) no dark mode: texto claro e legível */
+html.dark .tiptap {
+  color: rgb(243 244 246); /* gray-100 */
+  caret-color: rgb(255 255 255);
+}
+
+html.dark .tiptap :is(h1, h2, h3, h4, strong) {
+  color: rgb(255 255 255);
+}
+
+html.dark .tiptap a {
+  color: rgb(96 165 250); /* blue-400 */
+}
+
+html.dark .tiptap blockquote {
+  color: rgb(209 213 219); /* gray-300 */
+  border-left-color: rgb(75 85 99); /* gray-600 */
+}
+
+html.dark .tiptap code {
+  color: rgb(243 244 246);
+  background-color: rgb(31 41 55); /* gray-800 */
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+}
+
+html.dark .tiptap pre {
+  background-color: rgb(3 7 18); /* gray-950 */
+  border: 1px solid rgb(55 65 81);
+}
+
+html.dark .tiptap ::selection {
+  background-color: rgb(37 99 235 / 0.5); /* blue-600 */
+}
+
 /* Admin dark mode */
 html.dark .admin-content {
   color: rgb(229 231 235); /* gray-200 */

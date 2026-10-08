@@ -49,3 +49,23 @@ export function audienceLabel(audience = {}) {
 }
 
 export const RECIPIENT_STATUS_LABELS = { sent: "Enviado", failed: "Falhou", pending: "Pendente" };
+
+/**
+ * Status do envio como deve aparecer na tela: "sent" só quando todos receberam.
+ * failed = ninguém recebeu | partial = parte falhou
+ */
+export const CAMPAIGN_STATUS = {
+  draft: { label: "Rascunho", style: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300" },
+  sending: { label: "Enviando", style: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  sent: { label: "Enviado", style: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  partial: { label: "Parcial", style: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  failed: { label: "Falhou", style: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+};
+
+export function campaignStatusKey(campaign) {
+  if (campaign.status !== "sent") return campaign.status;
+  const { sent = 0, failed = 0 } = campaign.stats || {};
+  if (failed > 0 && sent === 0) return "failed";
+  if (failed > 0) return "partial";
+  return "sent";
+}

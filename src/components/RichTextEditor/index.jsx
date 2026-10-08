@@ -218,9 +218,10 @@ export default function RichTextEditor({ value, onChange }) {
           [&_.tiptap]:prose
           [&_.tiptap]:prose-sm
           [&_.tiptap]:max-w-none
-          [&_.tiptap]:dark:prose-invert
+          dark:[&_.tiptap]:prose-invert
           [&_.tiptap_p.is-editor-empty:first-child_::before]:content-[attr(data-placeholder)]
           [&_.tiptap_p.is-editor-empty:first-child_::before]:text-gray-400
+          dark:[&_.tiptap_p.is-editor-empty:first-child_::before]:text-gray-500
           [&_.tiptap_p.is-editor-empty:first-child_::before]:float-left
           [&_.tiptap_p.is-editor-empty:first-child_::before]:pointer-events-none
           [&_.tiptap_p.is-editor-empty:first-child_::before]:h-0
