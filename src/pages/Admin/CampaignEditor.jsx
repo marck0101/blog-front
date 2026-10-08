@@ -266,6 +266,8 @@ export default function CampaignEditor() {
   }, [id]);
 
   const audience = audienceToApi(form.audience);
+  // Chamada de post sem página no blog: o email sai sem botão
+  const unpublishedPost = Boolean(form.post && !form.post.published);
 
   const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -510,6 +512,21 @@ export default function CampaignEditor() {
 
             {/* Ações */}
             <section className="rounded-xl border bg-white dark:bg-gray-900 p-6 space-y-4">
+              {unpublishedPost && (
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 text-sm text-amber-800 dark:text-amber-300">
+                  <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">
+                      O post "{form.post.title}" ainda não foi publicado.
+                    </p>
+                    <p className="mt-1">
+                      O email vai sair <strong>sem o botão "Continuar lendo no blog"</strong>, porque a página do
+                      post ainda não existe. Publique o post antes de enviar, ou use "Usar texto completo" para
+                      mandar o artigo inteiro no email.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="email"
@@ -560,7 +577,12 @@ export default function CampaignEditor() {
       <ConfirmDialog
         open={confirmSend}
         title="Enviar agora?"
-        description={`O email "${form.subject}" será enviado para ${audienceCount} destinatário(s). Não dá para desfazer.`}
+        description={
+          `O email "${form.subject}" será enviado para ${audienceCount} destinatário(s). Não dá para desfazer.` +
+          (unpublishedPost
+            ? ` Atenção: o post ainda não foi publicado, então o email vai SEM o botão para o blog.`
+            : "")
+        }
         confirmText="Enviar"
         type="info"
         onConfirm={handleSend}
