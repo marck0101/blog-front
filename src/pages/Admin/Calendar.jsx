@@ -5,6 +5,7 @@ import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostsService from "../../services/posts.service";
 import CampaignService from "../../services/campaign.service";
+import { POST_STATUS, isOverdue, postStatusKey } from "../../utils/postStatus";
 
 const MONTHS_PT = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -13,10 +14,26 @@ const MONTHS_PT = [
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const STATUS_STYLE = {
-  published: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  planned:   "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  draft:     "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300",
+  published: POST_STATUS.published.style,
+  planned:   POST_STATUS.planned.style,
+  draft:     POST_STATUS.draft.style,
+  // Rascunho sem data: aparece no dia em que foi criado
+  undated:   "border border-dashed border-gray-400 text-gray-500 dark:text-gray-400",
+  overdue:   "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
 };
+
+function postStyleKey(post) {
+  if (isOverdue(post)) return "overdue";
+  const key = postStatusKey(post);
+  if (key === "draft" && !post.plannedAt) return "undated";
+  return key;
+}
+
+// Dia do post no calendário: publicado → publicação; senão data planejada; senão criação
+function postDay(post) {
+  if (postStatusKey(post) === "published" && post.publishedAt) return post.publishedAt;
+  return post.plannedAt || post.createdAt;
+}
 
 function toDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -81,8 +98,8 @@ function PostBadge({ post, onPublish }) {
     <div className="flex items-center gap-1 group">
       <Link
         to={`/admin/posts/${post._id}`}
-        className={`flex-1 text-[10px] leading-tight px-1.5 py-0.5 rounded truncate ${STATUS_STYLE[post.status] ?? STATUS_STYLE.draft}`}
-        title={post.title}
+        className={`flex-1 text-[10px] leading-tight px-1.5 py-0.5 rounded truncate ${STATUS_STYLE[postStyleKey(post)]}`}
+        title={`${post.title} (${isOverdue(post) ? "Agendado, atrasado" : POST_STATUS[postStatusKey(post)].label})`}
       >
         {label}
       </Link>
@@ -116,7 +133,7 @@ export default function Calendar() {
     const map = {};
     posts.forEach((p) => {
       // Rascunho sem data planejada aparece no dia em que foi criado
-      const ref = p.plannedAt || p.publishedAt || p.createdAt;
+      const ref = postDay(p);
       if (!ref) return;
       const key = toDateKey(new Date(ref));
       if (!map[key]) map[key] = [];
@@ -167,8 +184,8 @@ export default function Calendar() {
         )
       );
       showToast("Post publicado com sucesso!");
-    } catch {
-      showToast("Erro ao publicar post", "error");
+    } catch (err) {
+      showToast(err?.response?.data?.error || "Erro ao publicar post", "error");
     }
   };
 
@@ -241,12 +258,14 @@ export default function Calendar() {
         {/* Legenda */}
         <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mb-4 text-xs text-gray-500 dark:text-gray-300">
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.published}`}>Publicado</span>
-          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.planned}`}>Planejado</span>
-          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.draft}`}>Rascunho</span>
+          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.planned}`}>Agendado (vai ao ar ~9h)</span>
+          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.draft}`}>Rascunho com data</span>
+          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.undated}`}>Rascunho sem data</span>
+          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.overdue}`}>Atrasado</span>
           <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.sent}`}>✉️ Email enviado</span>
           <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.failed}`}>✉️ Com falhas</span>
           <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.draft}`}>✉️ Rascunho</span>
-          <span className="text-gray-400">Clique num dia vazio para criar post planejado</span>
+          <span className="text-gray-400">Clique num dia vazio para criar um rascunho nessa data</span>
         </div>
 
         {/* Grid */}

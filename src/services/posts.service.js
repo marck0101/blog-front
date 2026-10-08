@@ -41,8 +41,9 @@ const PostsService = {
       dateTo = "",
     } = filters;
     const params = { page, limit };
-    if (statusFilter === "published") params.published = "true";
-    if (statusFilter === "draft") params.published = "false";
+    if (["published", "planned", "draft"].includes(statusFilter)) params.status = statusFilter;
+    // status exato do post: "draft" | "planned" | "published"
+    if (filters.status) params.status = filters.status;
     if (categories.length) params.categories = categories.join(",");
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;

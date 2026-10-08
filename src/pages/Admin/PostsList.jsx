@@ -7,6 +7,7 @@ import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
+import PostStatusBadge from "../../components/PostStatusBadge";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
@@ -16,6 +17,7 @@ const POSTS_PER_PAGE = 10;
 
 const STATUS_OPTIONS = [
   { value: "published", label: "Publicados" },
+  { value: "planned", label: "Agendados" },
   { value: "draft", label: "Rascunhos" },
 ];
 
@@ -93,13 +95,13 @@ export default function PostsList() {
     try {
       setLoadingId(post?._id);
       const newStatus = !post?.published;
-      await PostsService.togglePublish(post?._id, newStatus);
+      const updated = await PostsService.togglePublish(post?._id, newStatus);
       setPosts((prev) =>
-        prev.map((p) => p._id === post?._id ? { ...p, published: newStatus } : p)
+        prev.map((p) => p._id === post?._id ? { ...p, ...updated } : p)
       );
       showToast(newStatus ? "Post publicado com sucesso" : "Post movido para rascunho");
-    } catch {
-      showToast("Erro ao alterar status do post", "error");
+    } catch (err) {
+      showToast(err?.response?.data?.error || "Erro ao alterar status do post", "error");
     } finally {
       setLoadingId(null);
     }
@@ -242,7 +244,10 @@ export default function PostsList() {
                 </div>
 
                 <div onClick={() => setPreviewPost(post)} className="flex-1 cursor-pointer">
-                  <h2 className="text-lg font-semibold">{post?.title}</h2>
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <h2 className="text-lg font-semibold">{post?.title}</h2>
+                    <PostStatusBadge post={post} className="mt-1" />
+                  </div>
                   <p className="text-sm text-gray-500">
                     {post?.category} • {new Date(post?.createdAt).toLocaleDateString()}
                   </p>

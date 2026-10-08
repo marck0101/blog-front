@@ -107,8 +107,8 @@ export default function Dashboard() {
               <span>📅</span>
               <span>
                 Você tem <strong>{todayPlanned.length}</strong>{" "}
-                post{todayPlanned.length > 1 ? "s" : ""} planejado
-                {todayPlanned.length > 1 ? "s" : ""} para hoje!
+                post{todayPlanned.length > 1 ? "s" : ""} agendado
+                {todayPlanned.length > 1 ? "s" : ""} para hoje. Vão ao ar sozinhos por volta das 9h.
               </span>
               <Link
                 to="/admin/calendar"

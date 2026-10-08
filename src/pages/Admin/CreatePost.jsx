@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostEmailSection from "../../components/PostEmailSection";
+import PostStatusField from "../../components/PostStatusField";
 import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
@@ -27,7 +28,8 @@ export default function CreatePost() {
     excerpt: "",
     content: "",
     category: "marketing",
-    status: urlPlannedAt ? "planned" : "draft",
+    // Vindo do calendário: rascunho já com a data (só vira agendado quando pronto)
+    status: "draft",
     plannedAt: urlPlannedAt || "",
     emailNotify: true,
     emailTeaser: "",
@@ -57,6 +59,10 @@ export default function CreatePost() {
   };
 
   const handleSubmit = async () => {
+    if (form.status === "planned" && !form.plannedAt) {
+      showToast("Escolha a data de publicação do post agendado", "error");
+      return;
+    }
     try {
       setLoading(true);
 
@@ -70,18 +76,19 @@ export default function CreatePost() {
         ...form,
         emailAudience: audienceToApi(form.emailAudience),
         published: form.status === "published",
-        plannedAt: form.status === "planned" ? form.plannedAt || null : null,
+        // Rascunho guarda a data do calendário; agendado, a data de publicação
+        plannedAt: form.status === "published" ? null : form.plannedAt || null,
         gallery: gallery.filter(Boolean),
         coverImage: finalCoverUrl || "",
       });
 
       const msg =
         form.status === "published" ? "Post publicado com sucesso" :
-        form.status === "planned" ? "Post planejado salvo" : "Rascunho salvo";
+        form.status === "planned" ? "Post agendado" : "Rascunho salvo";
       showToast(msg);
       setTimeout(() => navigate("/admin/posts"), 800);
-    } catch {
-      showToast("Erro ao criar post", "error");
+    } catch (err) {
+      showToast(err?.response?.data?.error || "Erro ao criar post", "error");
     } finally {
       setLoading(false);
     }
@@ -210,42 +217,12 @@ export default function CreatePost() {
         />
 
         {/* STATUS */}
-        <section className="space-y-3">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: "draft",     label: "Rascunho" },
-              { value: "planned",   label: "Planejado" },
-              { value: "published", label: "Publicar agora" },
-            ].map(({ value, label }) => (
-              <label key={value} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  value={value}
-                  checked={form.status === value}
-                  onChange={() => setForm({ ...form, status: value })}
-                  className="accent-blue-600"
-                />
-                <span className="text-sm">{label}</span>
-              </label>
-            ))}
-          </div>
-
-          {form.status === "planned" && (
-            <div>
-              <label className="text-xs text-gray-500 dark:text-gray-300 block mb-1">
-                Data planejada
-              </label>
-              <input
-                type="date"
-                value={form.plannedAt}
-                onChange={(e) => setForm({ ...form, plannedAt: e.target.value })}
-                className="input w-48"
-              />
-            </div>
-          )}
-        </section>
+        <PostStatusField
+          status={form.status}
+          plannedAt={form.plannedAt}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+          publishLabel="Publicar agora"
+        />
 
         <PostEmailSection
           value={form}
@@ -273,7 +250,7 @@ export default function CreatePost() {
           } transition`}
         >
           {form.status === "published" ? "Publicar" :
-           form.status === "planned"   ? "Salvar como planejado" :
+           form.status === "planned"   ? "Agendar publicação" :
                                          "Salvar rascunho"}
         </button>
       </main>

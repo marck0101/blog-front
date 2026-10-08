@@ -7,6 +7,7 @@ import RichTextEditor from "../../components/RichTextEditor";
 import FilterChips from "../../components/FilterChips";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import RecipientsTable from "../../components/RecipientsTable";
+import PostStatusBadge from "../../components/PostStatusBadge";
 import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostsService from "../../services/posts.service";
@@ -19,22 +20,6 @@ import {
   emptyAudience,
 } from "../../utils/campaignAudience";
 
-
-const POST_STATUS_LABELS = { published: "Publicado", draft: "Rascunho", planned: "Planejado" };
-
-function PostStatusBadge({ post }) {
-  const status = post.published ? "published" : post.status || "draft";
-  const styles = {
-    published: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    draft: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
-    planned: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  };
-  return (
-    <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-medium ${styles[status]}`}>
-      {POST_STATUS_LABELS[status]}
-    </span>
-  );
-}
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -64,20 +49,31 @@ function postTeaserContent(post) {
 // Artigo inteiro no email (ex.: rascunho exclusivo para membros)
 const postFullContent = (post) => coverHtml(post) + (post.content || "");
 
+const POST_FILTERS = [
+  { value: "published", label: "Publicados" },
+  { value: "planned", label: "Agendados" },
+  { value: "draft", label: "Rascunhos" },
+];
+
 function PostPicker({ linkedPost, onPick, onUnlink, onUseFull }) {
-  const [search, setSearch] = useState("");
-  const [posts, setPosts] = useState([]);
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  // Publicados primeiro: são os que geram email com botão para o blog
+  const [status, setStatus] = useState("published");
+  const [result, setResult] = useState({ posts: [], total: 0 });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     const t = setTimeout(() => {
-      PostsService.getAll(1, 10, { search })
-        .then((data) => setPosts(data.posts))
-        .catch(() => setPosts([]));
-    }, 300);
+      setLoading(true);
+      PostsService.getAll(1, 50, { search, status: status === "all" ? undefined : status })
+        .then((data) => setResult({ posts: data.posts, total: data.total }))
+        .catch(() => setResult({ posts: [], total: 0 }))
+        .finally(() => setLoading(false));
+    }, 250);
     return () => clearTimeout(t);
-  }, [search, open]);
+  }, [search, status, open]);
 
   if (linkedPost) {
     return (
@@ -111,38 +107,74 @@ function PostPicker({ linkedPost, onPick, onUnlink, onUseFull }) {
     );
   }
 
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:border-blue-500 hover:text-blue-600 transition"
+      >
+        <FileText size={16} /> Usar um post do blog como base deste email
+      </button>
+    );
+  }
+
   return (
-    <div className="relative">
-      <input
-        type="text"
-        value={search}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Usar um post do blog (publicado ou rascunho)... busque pelo título"
-        className="input w-full"
-      />
-      {open && posts.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full rounded-lg border bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg max-h-72 overflow-auto">
-          {posts.map((post) => (
-            <li key={post._id}>
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  setOpen(false);
-                  setSearch("");
-                  onPick(post);
-                }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-              >
-                <PostStatusBadge post={post} />
-                <span className="text-gray-900 dark:text-gray-100 truncate">{post.title}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div className="p-3 space-y-3 border-b dark:border-gray-800">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar post pelo título..."
+            className="input w-full"
+          />
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="p-2 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="Fechar"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <FilterChips
+          options={POST_FILTERS}
+          selected={status}
+          onChange={setStatus}
+          allLabel="Todos"
+          multiSelect={false}
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-300">
+          {loading
+            ? "Buscando..."
+            : `${result.total} post${result.total !== 1 ? "s" : ""}${result.total > result.posts.length ? ` (mostrando ${result.posts.length})` : ""}`}
+        </p>
+      </div>
+
+      <ul className="max-h-80 overflow-auto divide-y divide-gray-100 dark:divide-gray-800">
+        {!loading && result.posts.length === 0 && (
+          <li className="px-3 py-6 text-center text-sm text-gray-400">Nenhum post encontrado.</li>
+        )}
+        {result.posts.map((post) => (
+          <li key={post._id}>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setSearch("");
+                onPick(post);
+              }}
+              className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
+            >
+              <PostStatusBadge post={post} />
+              <span className="text-gray-900 dark:text-gray-100 truncate">{post.title}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
