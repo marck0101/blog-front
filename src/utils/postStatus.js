@@ -53,3 +53,15 @@ export function postStatusDate(post) {
 
 // "YYYY-MM-DD" do date input → sem fuso (evita voltar um dia)
 export const toDateInput = (d) => (d ? new Date(d).toISOString().split("T")[0] : "");
+
+// "YYYY-MM-DD" no fuso local
+export const localDateKey = (date) => {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// Dia que o post ocupa no calendário (publicado → data de publicação; senão data planejada)
+export function postDayKey(post) {
+  if (postStatusKey(post) === "published" && post.publishedAt) return localDateKey(post.publishedAt);
+  return post.plannedAt ? localDateKey(post.plannedAt) : null;
+}

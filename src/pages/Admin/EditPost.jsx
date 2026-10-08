@@ -268,6 +268,8 @@ export default function EditPost() {
           plannedAt={form.plannedAt}
           onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
           publishLabel={wasPublished ? "Publicado" : "Publicar agora"}
+          postId={id}
+          alreadyPublished={wasPublished}
         />
 
         <PostEmailSection
