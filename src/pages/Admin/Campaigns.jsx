@@ -4,7 +4,7 @@ import { Mail, Plus, AlertCircle } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import CampaignService from "../../services/campaign.service";
-import { AUDIENCE_LABELS } from "../../utils/campaignAudience";
+import { audienceLabel } from "../../utils/campaignAudience";
 
 function StatusBadge({ status }) {
   const styles = {
@@ -102,7 +102,7 @@ export default function Campaigns() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {AUDIENCE_LABELS[c.audience?.type]}
+                    {audienceLabel(c.audience)}
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">

@@ -5,6 +5,7 @@ import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import SubscriberService from "../../services/subscriber.service";
 
 const STATUS_OPTIONS = [
@@ -105,7 +106,7 @@ export default function Subscribers() {
   const [data, setData] = useState({ subscribers: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirm, setConfirm] = useState(null); // { action: "delete" | "unmember", sub }
   const [actionLoading, setActionLoading] = useState(null);
 
   // filtros
@@ -159,7 +160,7 @@ export default function Subscribers() {
     setActionLoading(id);
     try {
       await SubscriberService.remove(id);
-      setConfirmDeleteId(null);
+      setConfirm(null);
       load();
     } catch {
       alert("Erro ao remover assinante.");
@@ -359,7 +360,11 @@ export default function Subscribers() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleToggleMember(sub)}
+                        onClick={() =>
+                          sub.tier === "member"
+                            ? setConfirm({ action: "unmember", sub })
+                            : handleToggleMember(sub)
+                        }
                         disabled={actionLoading === sub._id}
                         title={sub.tier === "member" ? "Remover de membros" : "Tornar membro"}
                         className={`p-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 disabled:opacity-40 transition ${
@@ -387,31 +392,14 @@ export default function Subscribers() {
                         <RefreshCw size={14} />
                       </button>
 
-                      {confirmDeleteId === sub._id ? (
-                        <span className="flex items-center gap-1 text-xs">
-                          <button
-                            onClick={() => handleDelete(sub._id)}
-                            disabled={actionLoading === sub._id}
-                            className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition"
-                          >
-                            Confirmar
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="px-2 py-1 rounded border text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                          >
-                            Cancelar
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDeleteId(sub._id)}
-                          title="Tem certeza que deseja remover este assinante?"
-                          className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => setConfirm({ action: "delete", sub })}
+                        disabled={actionLoading === sub._id}
+                        title="Excluir assinante"
+                        className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 transition"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -443,6 +431,35 @@ export default function Subscribers() {
           </div>
         )}
       </main>
+
+      <ConfirmDialog
+        open={confirm?.action === "delete"}
+        title="Excluir assinante?"
+        description={
+          confirm &&
+          `${confirm.sub.email}${confirm.sub.tier === "member" ? " é membro e" : ""} será removido definitivamente. Para só parar de enviar, use "Cancelar inscrição".`
+        }
+        confirmText="Excluir"
+        type="danger"
+        onConfirm={() => handleDelete(confirm.sub._id)}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm?.action === "unmember"}
+        title="Remover dos membros?"
+        description={
+          confirm &&
+          `${confirm.sub.name || confirm.sub.email} deixa de receber os conteúdos exclusivos, mas continua assinante do blog.`
+        }
+        confirmText="Remover dos membros"
+        type="warning"
+        onConfirm={() => {
+          const { sub } = confirm;
+          setConfirm(null);
+          handleToggleMember(sub);
+        }}
+        onCancel={() => setConfirm(null)}
+      />
     </>
   );
 }

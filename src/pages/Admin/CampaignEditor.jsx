@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { AlertCircle, Send, FlaskConical, Save, Trash2, X, Crown, Copy, RotateCcw, UserPlus } from "lucide-react";
+import { AlertCircle, Send, FlaskConical, Save, Trash2, X, Crown, Copy, RotateCcw, UserPlus, FileText } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import RichTextEditor from "../../components/RichTextEditor";
@@ -8,7 +8,8 @@ import FilterChips from "../../components/FilterChips";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
-import { AUDIENCE_LABELS } from "../../utils/campaignAudience";
+import PostsService from "../../services/posts.service";
+import { AUDIENCE_LABELS, audienceLabel } from "../../utils/campaignAudience";
 
 const AUDIENCE_HINTS = {
   members: "Só assinantes ativos marcados como membro.",
@@ -16,6 +17,105 @@ const AUDIENCE_HINTS = {
   categories: "Assinantes ativos que seguem ao menos uma das categorias.",
   selected: "Apenas as pessoas que você escolher abaixo.",
 };
+
+const POST_STATUS_LABELS = { published: "Publicado", draft: "Rascunho", planned: "Planejado" };
+
+function PostStatusBadge({ post }) {
+  const status = post.published ? "published" : post.status || "draft";
+  const styles = {
+    published: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    draft: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
+    planned: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  };
+  return (
+    <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-medium ${styles[status]}`}>
+      {POST_STATUS_LABELS[status]}
+    </span>
+  );
+}
+
+// Monta o HTML do email a partir do post: capa + conteúdo
+function postToEmailContent(post) {
+  const cover = post.coverImage
+    ? `<p><img src="${post.coverImage}" alt="" style="width: 100%; height: auto; display: block;"></p>`
+    : "";
+  return cover + (post.content || "");
+}
+
+function PostPicker({ linkedPost, onPick, onUnlink }) {
+  const [search, setSearch] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      PostsService.getAll(1, 10, { search })
+        .then((data) => setPosts(data.posts))
+        .catch(() => setPosts([]));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search, open]);
+
+  if (linkedPost) {
+    return (
+      <div className="flex items-center gap-2 flex-wrap rounded-lg border dark:border-gray-700 px-3 py-2 text-sm">
+        <FileText size={16} className="text-gray-400" />
+        <span className="text-gray-500 dark:text-gray-300">Baseado no post:</span>
+        <span className="font-medium text-gray-900 dark:text-gray-100">{linkedPost.title}</span>
+        <PostStatusBadge post={linkedPost} />
+        <span className="text-xs text-gray-500 dark:text-gray-300">
+          {linkedPost.published
+            ? "O email terá o botão \"Ler no blog\"."
+            : "Ainda não publicado: o conteúdo vai só no email."}
+        </span>
+        <button
+          type="button"
+          onClick={onUnlink}
+          className="ml-auto text-xs text-gray-500 hover:text-red-600"
+          title="Desvincular (mantém o texto)"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={search}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Usar um post do blog (publicado ou rascunho)... busque pelo título"
+        className="input w-full"
+      />
+      {open && posts.length > 0 && (
+        <ul className="absolute z-10 mt-1 w-full rounded-lg border bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg max-h-72 overflow-auto">
+          {posts.map((post) => (
+            <li key={post._id}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setOpen(false);
+                  setSearch("");
+                  onPick(post);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+              >
+                <PostStatusBadge post={post} />
+                <span className="text-gray-900 dark:text-gray-100 truncate">{post.title}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const errorMessage = (err, fallback) => err?.response?.data?.error || fallback;
 
@@ -225,7 +325,10 @@ export default function CampaignEditor() {
     audienceType: preselected ? "selected" : "members",
     categories: [],
     subscribers: preselected ? [preselected] : [],
+    excludeMembers: false,
+    post: null,
   });
+  const [pendingPost, setPendingPost] = useState(null); // post aguardando confirmação para substituir o texto
   const [categories, setCategories] = useState([]);
   const [audienceCount, setAudienceCount] = useState(null);
   const [testEmail, setTestEmail] = useState("");
@@ -255,6 +358,8 @@ export default function CampaignEditor() {
           audienceType: c.audience?.type || "members",
           categories: c.audience?.categories || [],
           subscribers: c.audience?.subscribers || [],
+          excludeMembers: Boolean(c.audience?.excludeMembers),
+          post: c.post || null,
         });
       })
       .catch(() => setError("Envio não encontrado."))
@@ -265,6 +370,7 @@ export default function CampaignEditor() {
     type: form.audienceType,
     categories: form.categories,
     subscribers: form.subscribers.map((s) => s._id),
+    excludeMembers: ["all", "categories"].includes(form.audienceType) && form.excludeMembers,
   };
   const audienceKey = JSON.stringify(audience);
 
@@ -287,6 +393,7 @@ export default function CampaignEditor() {
       preheader: form.preheader,
       content: form.content,
       audience,
+      post: form.post?._id ?? null,
     };
 
     if (campaign?._id) {
@@ -347,6 +454,28 @@ export default function CampaignEditor() {
     });
   };
 
+  const applyPost = (post) => {
+    setPendingPost(null);
+    setForm((f) => ({
+      ...f,
+      post,
+      subject: post.title,
+      preheader: post.excerpt || "",
+      content: postToEmailContent(post),
+    }));
+  };
+
+  const handlePickPost = async (summary) => {
+    setError(null);
+    try {
+      const post = await PostsService.getById(summary._id);
+      if (form.content.trim() || form.subject.trim()) setPendingPost(post);
+      else applyPost(post);
+    } catch {
+      setError("Não foi possível carregar o post.");
+    }
+  };
+
   const handleResume = () => run("send", () => sendAll(campaign._id));
 
   const handleRetryFailed = () =>
@@ -394,7 +523,7 @@ export default function CampaignEditor() {
           </h1>
           {!isDraft && (
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
-              {AUDIENCE_LABELS[campaign.audience?.type]}
+              {audienceLabel(campaign.audience)}
               {campaign.sentAt && ` · enviado em ${new Date(campaign.sentAt).toLocaleString("pt-BR")}`}
             </p>
           )}
@@ -455,6 +584,17 @@ export default function CampaignEditor() {
                 />
               )}
 
+              {["all", "categories"].includes(form.audienceType) && (
+                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={form.excludeMembers}
+                    onChange={(e) => set("excludeMembers")(e.target.checked)}
+                  />
+                  Exceto membros (ex.: assunto que os membros já dominam)
+                </label>
+              )}
+
               {form.audienceType === "selected" && (
                 <SubscriberPicker selected={form.subscribers} onChange={set("subscribers")} />
               )}
@@ -468,6 +608,11 @@ export default function CampaignEditor() {
 
             {/* Conteúdo */}
             <section className="space-y-4">
+              <PostPicker
+                linkedPost={form.post}
+                onPick={handlePickPost}
+                onUnlink={() => set("post")(null)}
+              />
               <input
                 type="text"
                 value={form.subject}
@@ -542,6 +687,15 @@ export default function CampaignEditor() {
         type="info"
         onConfirm={handleSend}
         onCancel={() => setConfirmSend(false)}
+      />
+      <ConfirmDialog
+        open={Boolean(pendingPost)}
+        title="Substituir o conteúdo atual?"
+        description={`O assunto, a pré-visualização e o texto serão trocados pelos do post "${pendingPost?.title}".`}
+        confirmText="Substituir"
+        type="warning"
+        onConfirm={() => applyPost(pendingPost)}
+        onCancel={() => setPendingPost(null)}
       />
       <ConfirmDialog
         open={confirmDelete}
