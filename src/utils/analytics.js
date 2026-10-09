@@ -115,9 +115,67 @@ export function syncAnalytics(pathname) {
   syncClarity(enabled);
   syncGA(enabled);
   syncPixel(enabled, pathname);
+  if (enabled) startWebVitals();
 }
 
-/** Evento do GA4 (ex.: assinatura da newsletter); ignorado se o GA não está ativo. */
-export function trackEvent(name, params = {}) {
-  if (gaLoaded && !window[`ga-disable-${GA_ID}`]) window.gtag("event", name, params);
+/* ================= EVENTOS ================= */
+
+const gaActive = () => gaLoaded && !window[`ga-disable-${GA_ID}`];
+
+/**
+ * Envia um evento para as três ferramentas ativas:
+ * - GA4: `name` com `params` (marque os de conversão como "evento-chave" no GA4)
+ * - Clarity: `name` como evento, para filtrar gravações e montar funis
+ * - Pixel: só se `pixel` for informado (evento padrão da Meta, ex.: "Lead")
+ */
+export function trackEvent(name, params = {}, { pixel, pixelParams } = {}) {
+  if (gaActive()) window.gtag("event", name, params);
+  if (clarityRunning) window.clarity("event", name);
+  if (pixel && pixelLoaded && lastPixelPath) window.fbq("track", pixel, pixelParams ?? {});
+}
+
+// Link de contato (WhatsApp/email) → nome do método para o evento "contact"
+export function contactMethod(href = "") {
+  if (/^mailto:/i.test(href)) return "email";
+  if (/wa\.me|api\.whatsapp\.com/i.test(href)) return "whatsapp";
+  return null;
+}
+
+/**
+ * Contexto da página para segmentar gravações do Clarity
+ * (ex.: { page_type: "post", post_category: "trafego" }).
+ */
+export function setPageContext(tags) {
+  if (!clarityRunning) return;
+  Object.entries(tags).forEach(([key, value]) => {
+    if (value) window.clarity("set", key, String(value));
+  });
+}
+
+/* ================= CORE WEB VITALS ================= */
+
+let vitalsStarted = false;
+
+// LCP, INP e CLS reais dos visitantes vão para o GA4 (eventos com o nome da
+// métrica), complementando o relatório de Core Web Vitals do Search Console
+async function startWebVitals() {
+  if (vitalsStarted) return;
+  vitalsStarted = true;
+  const { onCLS, onINP, onLCP, onFCP, onTTFB } = await import("web-vitals");
+  const send = ({ name, value, rating, id, navigationType }) => {
+    if (!gaActive()) return;
+    window.gtag("event", name, {
+      value: Math.round(name === "CLS" ? value * 1000 : value),
+      metric_value: value,
+      metric_rating: rating, // good | needs-improvement | poor
+      metric_id: id,
+      navigation_type: navigationType,
+      non_interaction: true,
+    });
+  };
+  onLCP(send);
+  onINP(send);
+  onCLS(send);
+  onFCP(send);
+  onTTFB(send);
 }

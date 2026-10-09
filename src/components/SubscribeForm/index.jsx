@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SubscriberService from "../../services/subscriber.service";
 import { trackEvent } from "../../utils/analytics";
 
-export default function SubscribeForm() {
+// location: onde o formulário está ("home" | "post"), para comparar conversão por página
+export default function SubscribeForm({ location = "home", postCategory }) {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -11,6 +12,14 @@ export default function SubscribeForm() {
   const [catLoading, setCatLoading] = useState(true);
   const [status, setStatus] = useState(null); // null | "success" | "duplicate" | "error"
   const [catError, setCatError] = useState(false);
+  const started = useRef(false);
+
+  // Primeira interação com o formulário: base do funil começou → assinou
+  const handleFormStart = () => {
+    if (started.current) return;
+    started.current = true;
+    trackEvent("newsletter_form_start", { form_location: location, post_category: postCategory });
+  };
 
   useEffect(() => {
     SubscriberService.getCategories()
@@ -42,7 +51,17 @@ export default function SubscribeForm() {
         categories: selected,
       });
 
-      trackEvent("newsletter_subscribe", { subscribe_categories: selected.join(",") });
+      // generate_lead = evento recomendado do GA4 para lead (marcar como evento-chave)
+      trackEvent(
+        "generate_lead",
+        {
+          lead_source: "newsletter",
+          form_location: location,
+          post_category: postCategory,
+          categories_count: selected.length,
+        },
+        { pixel: "Lead", pixelParams: { content_name: "newsletter", content_category: postCategory } }
+      );
 
       setStatus("success");
       setName("");
@@ -82,7 +101,7 @@ export default function SubscribeForm() {
         Todos os temas estão selecionados. Desmarque os que não quer receber.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-4" noValidate>
         <input
           type="text"
           placeholder="Seu nome (opcional)"

@@ -14,6 +14,7 @@ import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
 import Pagination from "../../components/Pagination";
 import SubscribeForm from "../../components/SubscribeForm";
+import { setPageContext, trackEvent } from "../../utils/analytics";
 import { useState } from "react";
 
 const POSTS_PER_PAGE = 12;
@@ -71,10 +72,14 @@ export default function BlogHome() {
     setLoading(true);
 
     PostsService.getPublished(page, POSTS_PER_PAGE, { categories: activeCategories, search })
-      .then(({ posts: data, totalPages: pages }) => {
+      .then(({ posts: data, totalPages: pages, total }) => {
         if (!mounted) return;
         setPosts(data.map(normalizePost));
         setTotalPages(pages || 1);
+        // "search" = evento recomendado do GA4; busca sem resultado = pauta que falta
+        if (search && page === 1) {
+          trackEvent("search", { search_term: search, results_count: total ?? data.length });
+        }
       })
       .catch(() => {
         if (mounted) {
@@ -88,12 +93,19 @@ export default function BlogHome() {
   }, [catsKey, search, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    setPageContext({ page_type: "home" });
+  }, []);
+
+  useEffect(() => {
     const cleanup = load();
     return cleanup;
   }, [load]);
 
   // Chip clicado → toggle no array, atualiza URL com múltiplos params
   const handleCategoryChange = (newCats) => {
+    if (newCats?.length) {
+      trackEvent("filter_category", { categories: newCats.join(","), categories_count: newCats.length });
+    }
     if (!newCats || newCats.length === 0) {
       setSearchParams({});
       return;
@@ -257,7 +269,7 @@ export default function BlogHome() {
         )}
 
         <div id="assinar" className="mt-12">
-          <SubscribeForm />
+          <SubscribeForm location="home" />
         </div>
       </main>
     </BlogLayout>

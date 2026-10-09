@@ -8,12 +8,15 @@ import BackButton from "../../components/BackButton";
 import Lightbox from "../../components/Lightbox";
 import PostsService from "../../services/posts.service";
 import SubscribeForm from "../../components/SubscribeForm";
+import { contactMethod, setPageContext, trackEvent } from "../../utils/analytics";
 import {
   AUTHOR_NAME,
   PORTFOLIO_URL,
   postTitle,
   postDescription,
 } from "../../seo/site";
+
+const READ_MARKS = [25, 50, 75, 100];
 
 // Post injetado por api/prerender.js no primeiro carregamento — evita o fetch
 // duplicado e o "Carregando..." que causava layout shift.
@@ -48,6 +51,59 @@ export default function Post() {
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
   }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Visualização do post: GA4 (com categoria), Pixel ViewContent (públicos por
+  // categoria para remarketing) e tags do Clarity para filtrar gravações
+  useEffect(() => {
+    if (!post?.slug) return;
+    setPageContext({ page_type: "post", post_category: post.category, post_slug: post.slug });
+    trackEvent(
+      "post_view",
+      { post_slug: post.slug, post_category: post.category },
+      { pixel: "ViewContent", pixelParams: { content_name: post.title, content_category: post.category, content_type: "article" } }
+    );
+  }, [post?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Profundidade de leitura do texto (não da página inteira, que inclui rodapé)
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!post?.slug || !el) return;
+    const reached = new Set();
+    let frame = 0;
+
+    const check = () => {
+      frame = 0;
+      const rect = el.getBoundingClientRect();
+      if (rect.height <= 0) return;
+      const seen = ((window.innerHeight - rect.top) / rect.height) * 100;
+      READ_MARKS.forEach((mark) => {
+        if (seen >= mark && !reached.has(mark)) {
+          reached.add(mark);
+          trackEvent("post_read", { percent: mark, post_slug: post.slug, post_category: post.category });
+        }
+      });
+      if (reached.size === READ_MARKS.length) window.removeEventListener("scroll", onScroll);
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [post?.slug, post?.content]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cliques em links de contato dentro do texto do post (ex.: CTA de WhatsApp)
+  const handleContentClick = (e) => {
+    const link = e.target.closest?.("a[href]");
+    const method = contactMethod(link?.getAttribute("href"));
+    if (!method) return;
+    trackEvent(
+      "contact",
+      { method, link_location: "post_content", post_slug: post.slug, post_category: post.category },
+      { pixel: "Contact" }
+    );
+  };
 
   // Aplica cursor-pointer e lightbox em todas as imagens do conteúdo
   useEffect(() => {
@@ -127,12 +183,13 @@ export default function Post() {
 
         <div
           ref={contentRef}
+          onClick={handleContentClick}
           className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
         <div className="mt-12">
-          <SubscribeForm />
+          <SubscribeForm location="post" postCategory={post.category} />
         </div>
       </main>
     </BlogLayout>

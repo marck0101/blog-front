@@ -1,6 +1,17 @@
 import { Link } from "react-router-dom";
 import { Linkedin, Github, MessageCircle } from "lucide-react";
 import authorPhoto from "../../../assets/author.webp";
+import { contactMethod, trackEvent } from "../../../utils/analytics";
+
+// WhatsApp/email = contato (conversão; vai também para o Pixel); demais = rede social
+function trackFooterLink(label, href) {
+  const method = contactMethod(href);
+  if (method) {
+    trackEvent("contact", { method, link_location: "footer" }, { pixel: "Contact" });
+  } else {
+    trackEvent("social_click", { network: label.toLowerCase(), link_location: "footer" });
+  }
+}
 
 const SOCIAL_LINKS = [
   {
@@ -58,6 +69,7 @@ export default function BlogFooter() {
           </p>
           <a
             href="https://marck0101.com.br/"
+            onClick={() => trackEvent("portfolio_click", { link_location: "footer" })}
             rel="author"
             className="inline-block mt-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
           >
@@ -100,6 +112,7 @@ export default function BlogFooter() {
             <li>
               <a
                 href="mailto:marck.mhc@gmail.com"
+                onClick={() => trackFooterLink("Email", "mailto:")}
                 className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
               >
                 Contato
@@ -118,6 +131,7 @@ export default function BlogFooter() {
               <li key={label}>
                 <a
                   href={url}
+                  onClick={() => trackFooterLink(label, url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300 ${hoverColor} transition`}
