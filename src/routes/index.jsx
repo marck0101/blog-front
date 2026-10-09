@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
+import ClarityTracker from "../components/ClarityTracker";
 
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
@@ -24,6 +25,7 @@ const Calendar = lazy(() => import("../pages/Admin/Calendar"));
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <ClarityTracker />
       <Suspense fallback={<div className="min-h-screen" />}>
       <Routes>
         {/* PUBLIC */}

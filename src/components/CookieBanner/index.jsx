@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CONSENT_EVENT } from "../../utils/clarity";
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
@@ -11,6 +12,7 @@ export default function CookieBanner() {
 
   const accept = (level) => {
     localStorage.setItem("cookiesAccepted", level);
+    window.dispatchEvent(new Event(CONSENT_EVENT));
     setVisible(false);
   };
 

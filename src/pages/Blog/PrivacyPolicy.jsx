@@ -129,8 +129,14 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>Analíticos</strong> — coletam dados anônimos de navegação para
-                melhoria do conteúdo. Você pode recusá-los ao interagir com o banner
-                de cookies.
+                melhoria do conteúdo. Usamos o{" "}
+                <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">
+                  Microsoft Clarity
+                </a>
+                , que registra cliques, rolagem e movimentos na página (mapas de calor
+                e reproduções de sessão) para entender como o blog é usado; textos
+                digitados em formulários não são gravados. Você pode recusá-los ao
+                interagir com o banner de cookies.
               </li>
             </ul>
             <p>
