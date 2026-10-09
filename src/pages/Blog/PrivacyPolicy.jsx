@@ -139,7 +139,12 @@ export default function PrivacyPolicy() {
                 </a>
                 , que registra cliques, rolagem e movimentos na página (mapas de calor
                 e reproduções de sessão) para entender como o blog é usado; textos
-                digitados em formulários não são gravados. Você pode recusá-los ao
+                digitados em formulários não são gravados. Também usamos o{" "}
+                <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer">
+                  Pixel da Meta
+                </a>
+                , que registra as páginas visitadas para medir e direcionar anúncios no
+                Facebook e no Instagram. Você pode recusá-los ao
                 interagir com o banner de cookies.
               </li>
             </ul>

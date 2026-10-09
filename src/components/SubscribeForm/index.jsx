@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SubscriberService from "../../services/subscriber.service";
+import { trackEvent } from "../../utils/analytics";
 
 export default function SubscribeForm() {
   const [categories, setCategories] = useState([]);
@@ -41,11 +42,7 @@ export default function SubscribeForm() {
         categories: selected,
       });
 
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: "newsletter_subscribe",
-        subscribe_categories: selected,
-      });
+      trackEvent("newsletter_subscribe", { subscribe_categories: selected.join(",") });
 
       setStatus("success");
       setName("");
