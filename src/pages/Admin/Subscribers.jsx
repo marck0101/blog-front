@@ -6,6 +6,7 @@ import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import Pagination from "../../components/Pagination";
 import SubscriberService from "../../services/subscriber.service";
 
 const STATUS_OPTIONS = [
@@ -477,28 +478,15 @@ export default function Subscribers() {
           </table>
         </div>
 
-        {/* Paginação */}
-        {data.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-300">
-            <span>Página {data.page} de {data.totalPages}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 rounded border hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 transition"
-              >
-                ← Anterior
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-                disabled={page === data.totalPages}
-                className="px-3 py-1.5 rounded border hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 transition"
-              >
-                Próxima →
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          page={data.page}
+          totalPages={data.totalPages}
+          onChange={(p) => {
+            setPage(p);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="mt-4"
+        />
       </main>
 
       <ConfirmDialog

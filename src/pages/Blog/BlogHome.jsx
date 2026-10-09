@@ -12,8 +12,11 @@ import { AUTHOR_NAME, PORTFOLIO_URL } from "../../seo/site";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
+import Pagination from "../../components/Pagination";
 import SubscribeForm from "../../components/SubscribeForm";
 import { useState } from "react";
+
+const POSTS_PER_PAGE = 12;
 
 export default function BlogHome() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,8 +24,11 @@ export default function BlogHome() {
   // Fonte de verdade: array de categorias ativas, suporta múltiplos valores
   // URL: /blog?categoria=tecnologia&categoria=design
   const activeCategories = searchParams.getAll("categoria");
+  // Página atual na URL (/blog?pagina=2) — trocar filtro volta para a 1
+  const page = Math.max(1, parseInt(searchParams.get("pagina")) || 1);
 
   const [posts, setPosts] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
@@ -64,10 +70,11 @@ export default function BlogHome() {
     let mounted = true;
     setLoading(true);
 
-    PostsService.getPublished(1, 20, { categories: activeCategories, search })
-      .then(({ posts: data }) => {
+    PostsService.getPublished(page, POSTS_PER_PAGE, { categories: activeCategories, search })
+      .then(({ posts: data, totalPages: pages }) => {
         if (!mounted) return;
         setPosts(data.map(normalizePost));
+        setTotalPages(pages || 1);
       })
       .catch(() => {
         if (mounted) {
@@ -78,7 +85,7 @@ export default function BlogHome() {
       .finally(() => mounted && setLoading(false));
 
     return () => { mounted = false; };
-  }, [catsKey, search]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [catsKey, search, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const cleanup = load();
@@ -94,6 +101,25 @@ export default function BlogHome() {
     const params = new URLSearchParams();
     newCats.forEach((cat) => params.append("categoria", cat));
     setSearchParams(params);
+  };
+
+  // O FilterBar chama onSearch("") ao montar; só volta para a página 1 se o termo mudou
+  const handleSearch = (val) => {
+    if (val === search) return;
+    setSearch(val);
+    if (searchParams.has("pagina")) {
+      const params = new URLSearchParams(searchParams);
+      params.delete("pagina");
+      setSearchParams(params);
+    }
+  };
+
+  const goToPage = (p) => {
+    const params = new URLSearchParams(searchParams);
+    if (p > 1) params.set("pagina", String(p));
+    else params.delete("pagina");
+    setSearchParams(params);
+    document.getElementById("posts")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const clearFilters = () => {
@@ -186,7 +212,7 @@ export default function BlogHome() {
         {/* Busca */}
         <div className="mb-6">
           <FilterBar
-            onSearch={(val) => setSearch(val)}
+            onSearch={handleSearch}
             showDateRange={false}
             onClear={clearFilters}
             searchPlaceholder="Buscar artigo..."
@@ -224,6 +250,10 @@ export default function BlogHome() {
               <PostCard key={post.id} post={post} />
             ))}
           </div>
+        )}
+
+        {!loading && (
+          <Pagination page={page} totalPages={totalPages} onChange={goToPage} className="mt-10" />
         )}
 
         <div id="assinar" className="mt-12">

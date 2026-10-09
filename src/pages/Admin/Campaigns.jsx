@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Plus, AlertCircle, Search, Users } from "lucide-react";
 import Header from "../../components/Header";
@@ -6,6 +6,7 @@ import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import RecipientStatus from "../../components/RecipientStatus";
 import CampaignAudienceModal from "../../components/CampaignAudienceModal";
+import Pagination from "../../components/Pagination";
 import CampaignService from "../../services/campaign.service";
 import { CAMPAIGN_STATUS, audienceLabel, campaignStatusKey } from "../../utils/campaignAudience";
 
@@ -71,39 +72,46 @@ function audienceSizeLabel(c) {
 
 export default function Campaigns() {
   const navigate = useNavigate();
-  const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({ campaigns: [], total: 0, page: 1, totalPages: 1 });
+  const [loadedKey, setLoadedKey] = useState(null); // filtros da última resposta
   const [error, setError] = useState(null);
   const [emailSearch, setEmailSearch] = useState("");
   const [appliedEmail, setAppliedEmail] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState("all");
   const [audienceOf, setAudienceOf] = useState(null); // id do envio aberto no modal
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    const t = setTimeout(() => setAppliedEmail(emailSearch.trim()), 400);
+    const t = setTimeout(() => {
+      setAppliedEmail(emailSearch.trim());
+      setPage(1);
+    }, 400);
     return () => clearTimeout(t);
   }, [emailSearch]);
 
+  const params = { page, limit: 20 };
+  if (appliedEmail) params.email = appliedEmail;
+  if (statusFilter !== "all") params.status = statusFilter;
+  if (kindFilter !== "all") params.kind = kindFilter;
+  const requestKey = JSON.stringify(params);
+  const loading = loadedKey !== requestKey;
+
   useEffect(() => {
-    CampaignService.getAll(appliedEmail ? { email: appliedEmail } : {})
-      .then((data) => {
-        setCampaigns(data);
+    let active = true;
+    CampaignService.getAll(JSON.parse(requestKey))
+      .then((res) => {
+        if (!active) return;
+        setData(res);
         setError(null);
       })
-      .catch(() => setError("Não foi possível carregar os envios."))
-      .finally(() => setLoading(false));
-  }, [appliedEmail]);
+      .catch(() => active && setError("Não foi possível carregar os envios."))
+      .finally(() => active && setLoadedKey(requestKey));
+    return () => { active = false; };
+  }, [requestKey]);
 
-  const visible = useMemo(
-    () =>
-      campaigns.filter(
-        (c) =>
-          (statusFilter === "all" || campaignStatusKey(c) === statusFilter) &&
-          (kindFilter === "all" || (c.kind || "custom") === kindFilter)
-      ),
-    [campaigns, statusFilter, kindFilter]
-  );
+  const changeFilter = (setter) => (val) => { setter(val); setPage(1); };
+  const visible = data.campaigns;
 
   const byEmail = Boolean(appliedEmail);
   const columns = byEmail ? 6 : 5;
@@ -145,20 +153,20 @@ export default function Campaigns() {
           <FilterChips
             options={STATUS_FILTERS}
             selected={statusFilter}
-            onChange={setStatusFilter}
+            onChange={changeFilter(setStatusFilter)}
             allLabel="Todos os status"
             multiSelect={false}
           />
           <FilterChips
             options={KIND_FILTERS}
             selected={kindFilter}
-            onChange={setKindFilter}
+            onChange={changeFilter(setKindFilter)}
             allLabel="Todos os tipos"
             multiSelect={false}
           />
           <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-300">
             <span>
-              {visible.length} envio{visible.length !== 1 ? "s" : ""}
+              {data.total} envio{data.total !== 1 ? "s" : ""}
               {byEmail && ` para emails contendo "${appliedEmail}"`}
             </span>
             {hasFilters && (
@@ -167,6 +175,7 @@ export default function Campaigns() {
                   setStatusFilter("all");
                   setKindFilter("all");
                   setEmailSearch("");
+                  setPage(1);
                 }}
                 className="text-blue-600 dark:text-blue-400 hover:underline"
               >
@@ -208,7 +217,7 @@ export default function Campaigns() {
                     <Mail size={32} className="mx-auto mb-3 opacity-30" />
                     {byEmail
                       ? "Nenhum envio foi para este email."
-                      : campaigns.length === 0
+                      : !hasFilters
                         ? "Nenhum envio ainda."
                         : "Nenhum envio com esses filtros."}
                   </td>
@@ -271,6 +280,16 @@ export default function Campaigns() {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={data.page}
+          totalPages={data.totalPages}
+          onChange={(p) => {
+            setPage(p);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="mt-4"
+        />
       </main>
 
       {audienceOf && (
