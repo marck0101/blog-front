@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CONSENT_EVENT } from "../../utils/clarity";
+import { CONSENT_EVENT } from "../../utils/analytics";
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);

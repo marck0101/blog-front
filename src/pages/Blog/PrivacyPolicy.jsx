@@ -130,6 +130,10 @@ export default function PrivacyPolicy() {
               <li>
                 <strong>Analíticos</strong> — coletam dados anônimos de navegação para
                 melhoria do conteúdo. Usamos o{" "}
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
+                  Google Analytics
+                </a>
+                , que mede visitas, páginas vistas e origem do tráfego, e o{" "}
                 <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">
                   Microsoft Clarity
                 </a>
