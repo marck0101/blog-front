@@ -1,9 +1,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect, useState, useCallback } from "react";
 import {
@@ -81,11 +79,10 @@ export default function RichTextEditor({ value, onChange }) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // StarterKit 3 já traz Link e Underline; registrar de novo duplica as extensões
+      StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
       ResizableImage.configure({ inline: false, allowBase64: false }),
-      Link.configure({ openOnClick: false, autolink: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Underline,
       Placeholder.configure({ placeholder: "Comece a escrever o conteúdo do post..." }),
     ],
     content: value || "",
@@ -93,8 +90,9 @@ export default function RichTextEditor({ value, onChange }) {
   });
 
   // Sincroniza value externo (ex: EditPost carregando post)
+  // O Tiptap 3 descarta e recria a instância (StrictMode); a descartada não tem schema
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     if (value !== editor.getHTML()) {
       editor.commands.setContent(value || "", false);
     }
