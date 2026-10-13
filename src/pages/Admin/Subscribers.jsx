@@ -7,6 +7,7 @@ import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import Pagination from "../../components/Pagination";
+import usePageSize from "../../hooks/usePageSize";
 import SubscriberService from "../../services/subscriber.service";
 
 const STATUS_OPTIONS = [
@@ -156,6 +157,8 @@ function RowSkeleton() {
   );
 }
 
+const PAGE_SIZES = [5, 10, 20, 50];
+
 export default function Subscribers() {
   const navigate = useNavigate();
   const [data, setData] = useState({ subscribers: [], total: 0, page: 1, totalPages: 1 });
@@ -174,6 +177,7 @@ export default function Subscribers() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize("admin-subscribers-page-size", PAGE_SIZES, 20);
   const [categories, setCategories] = useState([]);
 
   /* --- categorias via API --- */
@@ -184,7 +188,7 @@ export default function Subscribers() {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    const params = { page, limit: 20 };
+    const params = { page, limit: pageSize };
     if (statusFilter !== "all") params.status = statusFilter;
     if (tierFilter !== "all") params.tier = tierFilter;
     if (selectedCategories.length) params.categories = selectedCategories.join(",");
@@ -196,7 +200,7 @@ export default function Subscribers() {
       .then(setData)
       .catch(() => setError("Não foi possível carregar os assinantes."))
       .finally(() => setLoading(false));
-  }, [page, statusFilter, tierFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, tierFilter, selectedCategories, search, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -485,6 +489,9 @@ export default function Subscribers() {
             setPage(p);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          total={data.total}
           className="mt-4"
         />
       </main>

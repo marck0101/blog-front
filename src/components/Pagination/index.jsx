@@ -12,8 +12,24 @@ function pageItems(page, totalPages) {
   return items;
 }
 
-export default function Pagination({ page, totalPages, onChange, className = "" }) {
-  if (!totalPages || totalPages <= 1) return null;
+/**
+ * pageSize + onPageSizeChange (opcionais) mostram o seletor "Itens por página".
+ * Com ele, a barra aparece mesmo com uma página só, se houver mais itens que a
+ * menor opção (dá para ver menos por vez).
+ */
+export default function Pagination({
+  page,
+  totalPages,
+  onChange,
+  className = "",
+  pageSize,
+  pageSizeOptions = [5, 10, 20, 50],
+  onPageSizeChange,
+  total,
+}) {
+  const sizeSelector = Boolean(onPageSizeChange) && total > Math.min(...pageSizeOptions);
+  if ((!totalPages || totalPages <= 1) && !sizeSelector) return null;
+  const multiPage = totalPages > 1;
 
   const btn =
     "min-w-9 h-9 px-2 inline-flex items-center justify-center rounded-lg border text-sm transition " +
@@ -25,7 +41,24 @@ export default function Pagination({ page, totalPages, onChange, className = "" 
       aria-label="Paginação"
       className={`flex items-center justify-between gap-3 flex-wrap text-sm text-gray-600 dark:text-gray-300 ${className}`}
     >
-      <span>Página {page} de {totalPages}</span>
+      <div className="flex items-center gap-4 flex-wrap">
+        {multiPage && <span>Página {page} de {totalPages}</span>}
+        {sizeSelector && (
+          <label className="inline-flex items-center gap-2">
+            <span className="whitespace-nowrap">Itens por página</span>
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 text-sm text-gray-700 dark:text-gray-200"
+            >
+              {pageSizeOptions.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      {multiPage && (
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -65,6 +98,7 @@ export default function Pagination({ page, totalPages, onChange, className = "" 
           <ChevronRight size={16} />
         </button>
       </div>
+      )}
     </nav>
   );
 }

@@ -7,6 +7,7 @@ import FilterChips from "../../components/FilterChips";
 import RecipientStatus from "../../components/RecipientStatus";
 import CampaignAudienceModal from "../../components/CampaignAudienceModal";
 import Pagination from "../../components/Pagination";
+import usePageSize from "../../hooks/usePageSize";
 import CampaignService from "../../services/campaign.service";
 import { CAMPAIGN_STATUS, audienceLabel, campaignStatusKey } from "../../utils/campaignAudience";
 import { formatRate } from "../../utils/metrics";
@@ -77,6 +78,8 @@ function audienceSizeLabel(c) {
   return "ver público";
 }
 
+const PAGE_SIZES = [5, 10, 20, 50];
+
 export default function Campaigns() {
   const navigate = useNavigate();
   const [data, setData] = useState({ campaigns: [], total: 0, page: 1, totalPages: 1 });
@@ -88,6 +91,7 @@ export default function Campaigns() {
   const [kindFilter, setKindFilter] = useState("all");
   const [audienceOf, setAudienceOf] = useState(null); // id do envio aberto no modal
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize("admin-campaigns-page-size", PAGE_SIZES, 20);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -97,7 +101,7 @@ export default function Campaigns() {
     return () => clearTimeout(t);
   }, [emailSearch]);
 
-  const params = { page, limit: 20 };
+  const params = { page, limit: pageSize };
   if (appliedEmail) params.email = appliedEmail;
   if (statusFilter !== "all") params.status = statusFilter;
   if (kindFilter !== "all") params.kind = kindFilter;
@@ -295,6 +299,9 @@ export default function Campaigns() {
             setPage(p);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          total={data.total}
           className="mt-4"
         />
       </main>

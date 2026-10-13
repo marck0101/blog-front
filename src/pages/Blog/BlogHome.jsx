@@ -15,11 +15,13 @@ import EmptyState from "../../components/EmptyState";
 import Pagination from "../../components/Pagination";
 import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
+import usePageSize from "../../hooks/usePageSize";
 import SubscribeForm from "../../components/SubscribeForm";
 import { setPageContext, trackEvent } from "../../utils/analytics";
 import { useState } from "react";
 
-const POSTS_PER_PAGE = 12;
+// Múltiplos de 3: a grade tem 3 colunas e as linhas ficam completas
+const PAGE_SIZES = [6, 12, 24, 48];
 
 // Contêiner de cada formato de visualização
 const LAYOUT = {
@@ -39,6 +41,8 @@ export default function BlogHome() {
 
   const [posts, setPosts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [pageSize, setPageSize] = usePageSize("blog-page-size", PAGE_SIZES, 12);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
@@ -81,11 +85,12 @@ export default function BlogHome() {
     let mounted = true;
     setLoading(true);
 
-    PostsService.getPublished(page, POSTS_PER_PAGE, { categories: activeCategories, search })
+    PostsService.getPublished(page, pageSize, { categories: activeCategories, search })
       .then(({ posts: data, totalPages: pages, total }) => {
         if (!mounted) return;
         setPosts(data.map(normalizePost));
         setTotalPages(pages || 1);
+        setTotal(total ?? data.length);
         // "search" = evento recomendado do GA4; busca sem resultado = pauta que falta
         if (search && page === 1) {
           trackEvent("search", { search_term: search, results_count: total ?? data.length });
@@ -100,7 +105,7 @@ export default function BlogHome() {
       .finally(() => mounted && setLoading(false));
 
     return () => { mounted = false; };
-  }, [catsKey, search, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [catsKey, search, page, pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setPageContext({ page_type: "home" });
@@ -134,6 +139,12 @@ export default function BlogHome() {
       params.delete("pagina");
       setSearchParams(params);
     }
+  };
+
+  // Novo tamanho volta para a página 1 (a atual pode nem existir mais)
+  const changePageSize = (size) => {
+    setPageSize(size);
+    goToPage(1);
   };
 
   const goToPage = (p) => {
@@ -288,7 +299,16 @@ export default function BlogHome() {
         )}
 
         {!loading && (
-          <Pagination page={page} totalPages={totalPages} onChange={goToPage} className="mt-10" />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onChange={goToPage}
+            pageSize={pageSize}
+            pageSizeOptions={PAGE_SIZES}
+            onPageSizeChange={changePageSize}
+            total={total}
+            className="mt-10"
+          />
         )}
 
         <div id="assinar" className="mt-12">

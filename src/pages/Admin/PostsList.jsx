@@ -13,9 +13,11 @@ import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
-import { Pencil, Trash, ChevronLeft, ChevronRight } from "lucide-react";
+import usePageSize from "../../hooks/usePageSize";
+import Pagination from "../../components/Pagination";
+import { Pencil, Trash } from "lucide-react";
 
-const POSTS_PER_PAGE = 10;
+const PAGE_SIZES = [5, 10, 20, 50];
 
 // Contêiner de cada formato de visualização
 const LAYOUT = {
@@ -51,6 +53,7 @@ export default function PostsList() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [categories, setCategories] = useState([]);
+  const [pageSize, setPageSize] = usePageSize("admin-posts-page-size", PAGE_SIZES, 10);
   const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
 
   /* --- categorias via API --- */
@@ -76,7 +79,7 @@ export default function PostsList() {
   /* --- load posts --- */
   const load = useCallback(() => {
     setLoading(true);
-    PostsService.getAll(page, POSTS_PER_PAGE, {
+    PostsService.getAll(page, pageSize, {
       statusFilter,
       categories: selectedCategories,
       search,
@@ -93,7 +96,7 @@ export default function PostsList() {
         showToast("Erro ao carregar posts", "error");
       })
       .finally(() => setLoading(false));
-  }, [page, statusFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, selectedCategories, search, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -332,32 +335,18 @@ export default function PostsList() {
           </div>
         )}
 
-        {/* Paginação */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <button
-              onClick={() => setPage((p) => p - 1)}
-              disabled={page === 1}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
-                bg-gray-200 dark:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed
-                hover:bg-gray-300 dark:hover:bg-gray-700"
-            >
-              <ChevronLeft size={16} /> Anterior
-            </button>
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Página {page} de {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page === totalPages}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
-                bg-gray-200 dark:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed
-                hover:bg-gray-300 dark:hover:bg-gray-700"
-            >
-              Próximo <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onChange={(p) => {
+            setPage(p);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          total={total}
+          className="mt-8"
+        />
       </main>
 
       {/* Preview modal */}
