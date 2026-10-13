@@ -1,27 +1,29 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 import AnalyticsTracker from "../components/AnalyticsTracker";
+import lazyPage from "../utils/lazyPage";
 
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
 
 // Admin e páginas secundárias em chunks separados — o leitor do blog não baixa
-// editor (TipTap), Firebase, datepicker etc.
-const PrivacyPolicy = lazy(() => import("../pages/Blog/PrivacyPolicy"));
-const Login = lazy(() => import("../pages/Admin/Login"));
-const ForgotPassword = lazy(() => import("../pages/Admin/ForgotPassword"));
-const ResetPassword = lazy(() => import("../pages/Admin/ResetPassword"));
-const Dashboard = lazy(() => import("../pages/Admin/Dashboard"));
-const PostsList = lazy(() => import("../pages/Admin/PostsList"));
-const CreatePost = lazy(() => import("../pages/Admin/CreatePost"));
-const EditPost = lazy(() => import("../pages/Admin/EditPost"));
-const Trash = lazy(() => import("../pages/Admin/Trash"));
-const Subscribers = lazy(() => import("../pages/Admin/Subscribers"));
-const Campaigns = lazy(() => import("../pages/Admin/Campaigns"));
-const CampaignEditor = lazy(() => import("../pages/Admin/CampaignEditor"));
-const Calendar = lazy(() => import("../pages/Admin/Calendar"));
-const Metrics = lazy(() => import("../pages/Admin/Metrics"));
+// editor (TipTap), Firebase, datepicker etc. lazyPage recarrega se a aba ficou
+// com a versão de antes de um deploy.
+const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
+const Login = lazyPage(() => import("../pages/Admin/Login"));
+const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
+const ResetPassword = lazyPage(() => import("../pages/Admin/ResetPassword"));
+const Dashboard = lazyPage(() => import("../pages/Admin/Dashboard"));
+const PostsList = lazyPage(() => import("../pages/Admin/PostsList"));
+const CreatePost = lazyPage(() => import("../pages/Admin/CreatePost"));
+const EditPost = lazyPage(() => import("../pages/Admin/EditPost"));
+const Trash = lazyPage(() => import("../pages/Admin/Trash"));
+const Subscribers = lazyPage(() => import("../pages/Admin/Subscribers"));
+const Campaigns = lazyPage(() => import("../pages/Admin/Campaigns"));
+const CampaignEditor = lazyPage(() => import("../pages/Admin/CampaignEditor"));
+const Calendar = lazyPage(() => import("../pages/Admin/Calendar"));
+const Metrics = lazyPage(() => import("../pages/Admin/Metrics"));
 
 export default function AppRoutes() {
   return (
