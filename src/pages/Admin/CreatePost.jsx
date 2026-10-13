@@ -247,7 +247,7 @@ export default function CreatePost() {
           onChange={(linkedin) => setForm((f) => ({ ...f, linkedin }))}
           result={null}
           onResult={() => {}}
-          post={{ _id: undefined, slug: form.slug, coverPreview }}
+          post={{ _id: undefined, title: form.title, slug: form.slug, coverPreview }}
         />
 
         {/* AÇÃO */}

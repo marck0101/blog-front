@@ -305,7 +305,7 @@ export default function EditPost() {
           onChange={(linkedin) => setForm((f) => ({ ...f, linkedin }))}
           result={linkedinResult}
           onResult={setLinkedinResult}
-          post={{ _id: id, slug: form.slug, coverPreview }}
+          post={{ _id: id, title: form.title, slug: form.slug, coverPreview }}
           alreadyPublished={wasPublished}
         />
 

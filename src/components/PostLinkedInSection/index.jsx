@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Linkedin, ImagePlus, X, ExternalLink, Pin, RefreshCw } from "lucide-react";
+import { Linkedin, ImagePlus, X, ExternalLink, Pin, RefreshCw, Copy, Check } from "lucide-react";
 import LinkedInService from "../../services/linkedin.service";
 import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
 import { normalizeImageUrl } from "../../utils/imageUrl";
+import { DEFAULT_COMMENT, LINK_TOKEN, linkedinArticleUrl, slugFromTitle } from "../../utils/linkedin";
 
 const MAX_CHARS = 3000;
 // O feed mostra só o começo do texto; o resto fica atrás do "…mais"
 const FOLD_CHARS = 210;
-const DEFAULT_COMMENT = "Artigo completo no blog: {link}";
 
 const feedUrl = (postUrn) => `https://www.linkedin.com/feed/update/${postUrn}/`;
 
@@ -85,11 +85,9 @@ function ConnectionBar({ status, onRefresh }) {
   );
 }
 
-function LinkedInPreview({ account, text, imageUrl, comment, slug }) {
+function LinkedInPreview({ account, text, imageUrl, commentShown }) {
   const [expanded, setExpanded] = useState(false);
   const folded = !expanded && text.length > FOLD_CHARS;
-  const link = slug ? `blog.marck0101.com.br/blog/${slug}` : "blog.marck0101.com.br/blog/…";
-  const commentShown = (comment.trim() || DEFAULT_COMMENT).replaceAll("{link}", link);
 
   return (
     <div className="rounded-lg border dark:border-gray-700 overflow-hidden bg-white text-gray-900 text-sm">
@@ -188,7 +186,7 @@ function ShareStatus({ result, onShareNow, sharing }) {
  *
  * value:  { enabled, text, imageUrl, comment }
  * result: campos do sistema do post salvo { status, postUrn, postedAt, error }
- * post:   { _id, slug, coverPreview }
+ * post:   { _id, title, slug, coverPreview }
  */
 export default function PostLinkedInSection({ value, onChange, result, onResult, post, alreadyPublished = false }) {
   const [status, setStatus] = useState(null);
@@ -206,7 +204,27 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
     return () => window.removeEventListener("focus", refreshStatus);
   }, [refreshStatus]);
 
+  const [copied, setCopied] = useState(false);
   const set = (patch) => onChange({ ...value, ...patch });
+
+  // Link pronto: domínio + slug (o digitado ou o que será gerado do título) + UTM.
+  // O campo mostra o link real; por baixo fica {link}, então mudar o slug atualiza sozinho.
+  const slug = post.slug?.trim() || slugFromTitle(post.title);
+  const articleUrl = slug ? linkedinArticleUrl(slug) : "";
+  const commentTemplate = value.comment.trim() ? value.comment : DEFAULT_COMMENT;
+  const commentShown = articleUrl ? commentTemplate.replaceAll(LINK_TOKEN, articleUrl) : commentTemplate;
+  const setComment = (text) =>
+    set({ comment: articleUrl ? text.replaceAll(articleUrl, LINK_TOKEN) : text });
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(articleUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* sem permissão de área de transferência */
+    }
+  };
   const imageShown = normalizeImageUrl(value.imageUrl) || post.coverPreview || null;
 
   const handleImage = async (e) => {
@@ -338,16 +356,33 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                 Comentário com o link
               </label>
-              <input
-                type="text"
-                value={value.comment}
-                onChange={(e) => set({ comment: e.target.value })}
-                placeholder={DEFAULT_COMMENT}
-                className="input w-full"
+              <textarea
+                rows={3}
+                value={commentShown}
+                onChange={(e) => setComment(e.target.value)}
+                className="input w-full break-all"
               />
+              {articleUrl ? (
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-300">
+                  <span className="truncate" title={articleUrl}>
+                    Link rastreado (GA4: linkedin / social): <span className="font-mono">{articleUrl}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyLink}
+                    className="shrink-0 inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                  Escreva o título (ou o slug) para gerar o link do artigo.
+                </p>
+              )}
               <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
-                {"{link}"} vira o endereço do artigo (com UTM do LinkedIn). A API não fixa comentários: depois de
-                publicado, abra o post e fixe pelo menu "…" do comentário.
+                O link acompanha o slug automaticamente. A API não fixa comentários: depois de publicado, abra o
+                post e fixe pelo menu "…" do comentário.
               </p>
             </div>
 
@@ -360,8 +395,7 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
             account={status?.connected ? status : null}
             text={value.text}
             imageUrl={imageShown}
-            comment={value.comment}
-            slug={post.slug}
+            commentShown={commentShown}
           />
         </div>
       )}
