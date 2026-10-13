@@ -28,8 +28,13 @@ export default function Login() {
       const data = await AuthService.login(email, password);
       login(data);
       navigate("/admin", { replace: true });
-    } catch {
-      setError("Credenciais inválidas");
+    } catch (err) {
+      // 429 = muitas tentativas (bloqueio temporário contra força bruta)
+      setError(
+        err?.response?.status === 429
+          ? err.response.data?.message || "Muitas tentativas. Tente novamente mais tarde."
+          : "Credenciais inválidas"
+      );
     }
   }
 
