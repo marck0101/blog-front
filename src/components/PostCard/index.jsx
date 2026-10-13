@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { FileText } from "lucide-react";
+import { FileText, Layers } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
-import { AUTHOR_NAME } from "../../seo/site";
 
 // Lista: capa pequena ao lado do texto
-function ListCard({ post, coverSrc, date, categoryLabel }) {
+function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
   return (
     <article className="group">
       <Link
@@ -25,6 +24,7 @@ function ListCard({ post, coverSrc, date, categoryLabel }) {
             {date}
             {categoryLabel && <> • {categoryLabel}</>}
           </p>
+          {seasonLabel && <div className="mt-1"><SeasonBadge label={seasonLabel} /></div>}
           <h2 className="mt-1 font-semibold text-base sm:text-xl leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {post.title}
           </h2>
@@ -58,66 +58,70 @@ function CompactCard({ post, date, categoryLabel }) {
   );
 }
 
-// variant: "grid" (padrão) | "list" | "compact"
-export default function PostCard({ post, variant = "grid", categoryLabel }) {
-  const coverSrc = normalizeImageUrl(post.coverImage);
-  const date = new Date(post.publishedAt).toLocaleDateString();
-
-  if (variant === "list") return <ListCard post={post} coverSrc={coverSrc} date={date} categoryLabel={categoryLabel} />;
-  if (variant === "compact") return <CompactCard post={post} date={date} categoryLabel={categoryLabel} />;
-
+// Selo "Season" no card: mostra que o post faz parte de uma sequência
+function SeasonBadge({ label }) {
+  if (!label) return null;
   return (
-    <article className="group cursor-pointer">
-      <Link to={`/blog/${post.slug || post.id}`} className="block">
-        {/* IMAGEM */}
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-100">
+    <span className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+      <Layers size={12} className="shrink-0" />
+      <span className="truncate">Season: {label}</span>
+    </span>
+  );
+}
+
+// Grade: mesmo padrão do admin — card com borda, capa limpa e texto abaixo,
+// todos com a mesma altura na linha
+function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
+  return (
+    <article className="group h-full">
+      <Link
+        to={`/blog/${post.slug || post.id}`}
+        className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden transition hover:border-blue-400 hover:shadow-md"
+      >
+        <div className="aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
           {coverSrc ? (
             <img
               src={coverSrc}
-              alt={post.title}
+              alt=""
               width={640}
               height={360}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="w-full h-full flex items-center justify-center">
               <FileText className="text-gray-300" size={48} />
             </div>
           )}
-
-          {/* Faixa sólida que cresce com o texto (sem altura fixa), mais escura
-              que o original, com sombra no texto como reforço extra de contraste */}
-          <div className="absolute bottom-0 left-0 right-0 rounded-b-xl bg-black/75 backdrop-blur-sm px-4 py-3">
-            <p
-              className="text-xs text-white/90 mb-0.5"
-              style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9)" }}
-            >
-              {date} • {AUTHOR_NAME}
-            </p>
-            <h2
-              className="text-white font-semibold text-base md:text-lg leading-snug line-clamp-2 transition-colors duration-150 group-hover:text-blue-300"
-              style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
-            >
-              {post.title}
-            </h2>
-          </div>
         </div>
 
-        {/* CONTEÚDO abaixo da imagem */}
-        <div className="pt-3">
+        <div className="p-4 flex-1 flex flex-col gap-1.5">
+          <p className="text-xs text-gray-500 dark:text-gray-300">
+            {date}
+            {categoryLabel && <> • {categoryLabel}</>}
+          </p>
+          <SeasonBadge label={seasonLabel} />
+          <h2 className="font-semibold text-lg leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            {post.title}
+          </h2>
           {post.excerpt && (
-            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-              {post.excerpt}
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{post.excerpt}</p>
           )}
-
-          <div className="mt-2 text-sm font-medium text-blue-600 dark:text-blue-400">
-            Ler artigo →
-          </div>
+          <span className="mt-auto pt-2 text-sm font-medium text-blue-600 dark:text-blue-400">Ler artigo →</span>
         </div>
       </Link>
     </article>
   );
+}
+
+// variant: "grid" (padrão) | "list" | "compact"
+export default function PostCard({ post, variant = "grid", categoryLabel, seasonLabel }) {
+  const coverSrc = normalizeImageUrl(post.coverImage);
+  const date = new Date(post.publishedAt).toLocaleDateString("pt-BR");
+  const props = { post, coverSrc, date, categoryLabel, seasonLabel };
+
+  if (variant === "list") return <ListCard {...props} />;
+  if (variant === "compact") return <CompactCard {...props} />;
+  return <GridCard {...props} />;
 }

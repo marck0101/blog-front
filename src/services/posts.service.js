@@ -30,9 +30,10 @@ const PostsService = {
     return data;
   },
 
+  // Admin: todas as seasons, no formato dos chips ({ slug, label })
   async getSeasons() {
-    const { data } = await api.get("/seasons");
-    return normalizeArray(data);
+    const { data } = await api.get("/seasons/admin");
+    return normalizeArray(data).map((s) => ({ slug: s.slug, label: s.title }));
   },
 
   async getBySlug(slug) {

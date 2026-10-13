@@ -28,7 +28,8 @@ export default function SeasonNav({ post, variant = "full" }) {
   const index = episodes.findIndex((p) => p.slug === post.slug);
   const prev = index > 0 ? episodes[index - 1] : null;
   const next = index >= 0 && index < episodes.length - 1 ? episodes[index + 1] : null;
-  const label = data.season.label;
+  const label = data.season.title;
+  const seasonUrl = `/seasons/${data.season.slug}`;
 
   if (variant === "badge") {
     return (
@@ -53,7 +54,9 @@ export default function SeasonNav({ post, variant = "full" }) {
       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
         Season
       </p>
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-1">{label}</h2>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+        <Link to={seasonUrl} className="hover:underline">{label}</Link>
+      </h2>
 
       {(prev || next) && (
         <div className="grid gap-3 sm:grid-cols-2 mt-5">
@@ -97,6 +100,13 @@ export default function SeasonNav({ post, variant = "full" }) {
           </li>
         ))}
       </ol>
+
+      <Link
+        to={seasonUrl}
+        className="inline-block mt-4 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+      >
+        Ver a season completa →
+      </Link>
     </nav>
   );
 }

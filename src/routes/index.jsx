@@ -11,6 +11,9 @@ import Post from "../pages/Blog/Post";
 // editor (TipTap), Firebase, datepicker etc. lazyPage recarrega se a aba ficou
 // com a versão de antes de um deploy.
 const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
+const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
+const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
+const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
 const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
 const ResetPassword = lazyPage(() => import("../pages/Admin/ResetPassword"));
@@ -36,6 +39,8 @@ export default function AppRoutes() {
         <Route path="/blog" element={<BlogHome />} />
         <Route path="/blog/:slug" element={<Post />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
+        <Route path="/seasons" element={<Seasons />} />
+        <Route path="/seasons/:slug" element={<SeasonPage />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin/reset-password" element={<ResetPassword />} />
@@ -136,6 +141,15 @@ export default function AppRoutes() {
           element={
             <PrivateRoute>
               <Calendar />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/seasons"
+          element={
+            <PrivateRoute>
+              <AdminSeasons />
             </PrivateRoute>
           }
         />

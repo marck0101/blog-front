@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Menu, X, Lock, ChevronDown } from "lucide-react";
 import SubscriberService from "../../../services/subscriber.service";
+import SeasonsService from "../../../services/seasons.service";
 import ThemeToggle from "../../ThemeToggle";
 
 const VISIBLE_CATEGORIES_COUNT = 3;
 
 export default function BlogHeader() {
   const [categories, setCategories] = useState([]);
+  // Link "Seasons" só aparece quando existe season com episódio publicado
+  const [hasSeasons, setHasSeasons] = useState(false);
+  const { pathname } = useLocation();
+  const onSeasons = pathname.startsWith("/seasons");
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -27,6 +32,9 @@ export default function BlogHeader() {
   useEffect(() => {
     SubscriberService.getCategories()
       .then(setCategories)
+      .catch(() => {});
+    SeasonsService.getPublic()
+      .then((list) => setHasSeasons(list.length > 0))
       .catch(() => {});
   }, []);
 
@@ -57,7 +65,11 @@ export default function BlogHeader() {
   }, []);
 
   const navLinkClass = (slug) => {
-    const isActive = slug === ""
+    const isActive = slug === "seasons"
+      ? onSeasons
+      : onSeasons
+      ? false                                   // em /seasons nenhuma categoria fica ativa
+      : slug === ""
       ? activeCategories.length === 0          // "Todos" ativo quando sem filtro
       : slug === singleActive;                  // categoria ativa só se for a única
     return `px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap ${
@@ -93,6 +105,12 @@ export default function BlogHeader() {
             >
               Todos
             </Link>
+
+            {hasSeasons && (
+              <Link to="/seasons" className={navLinkClass("seasons")}>
+                Seasons
+              </Link>
+            )}
 
             {visibleCategories.map((cat) => (
               <Link
@@ -187,13 +205,27 @@ export default function BlogHeader() {
             to="/blog"
             onClick={() => setMenuOpen(false)}
             className={`text-sm py-2.5 px-2 rounded-md transition ${
-              activeCategories.length === 0
+              activeCategories.length === 0 && !onSeasons
                 ? "font-semibold text-blue-600 dark:text-blue-400"
                 : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
           >
             Todos
           </Link>
+
+          {hasSeasons && (
+            <Link
+              to="/seasons"
+              onClick={() => setMenuOpen(false)}
+              className={`text-sm py-2.5 px-2 rounded-md transition ${
+                onSeasons
+                  ? "font-semibold text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              Seasons
+            </Link>
+          )}
 
           {categories.map((cat) => (
             <Link

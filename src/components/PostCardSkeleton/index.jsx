@@ -23,14 +23,12 @@ export default function PostCardSkeleton({ variant = "grid" }) {
   }
 
   return (
-    <div className="animate-pulse">
-      {/* Imagem */}
-      <div className="w-full aspect-video rounded-xl bg-gray-100" />
-
-      {/* Conteúdo */}
-      <div className="pt-3 space-y-2">
-        <div className="h-4 w-full rounded bg-gray-100" />
-        <div className="h-4 w-2/3 rounded bg-gray-100" />
+    <div className="animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+      <div className="w-full aspect-video bg-gray-100 dark:bg-gray-800" />
+      <div className="p-4 space-y-2">
+        <div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-5 w-full rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-4 w-2/3 rounded bg-gray-100 dark:bg-gray-800" />
       </div>
     </div>
   );

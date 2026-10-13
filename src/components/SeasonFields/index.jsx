@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import FilterChips from "../FilterChips";
 import PostsService from "../../services/posts.service";
 
@@ -17,7 +18,11 @@ export default function SeasonFields({ season, seasonOrder, onChange }) {
 
   return (
     <div>
-      <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">Season</p>
+      <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">
+        Season <span className="text-gray-400">(opcional: só para posts que fazem parte de uma série)</span>
+        {" · "}
+        <Link to="/admin/seasons" className="text-blue-600 dark:text-blue-400 hover:underline">Gerenciar seasons</Link>
+      </p>
       <div className="flex flex-wrap items-center gap-3">
         <FilterChips
           options={seasons}

@@ -11,6 +11,7 @@ import { BlogSchema } from "../../components/StructuredData";
 import { AUTHOR_NAME, PORTFOLIO_URL } from "../../seo/site";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
+import SeasonsService from "../../services/seasons.service";
 import EmptyState from "../../components/EmptyState";
 import Pagination from "../../components/Pagination";
 import ViewToggle from "../../components/ViewToggle";
@@ -47,12 +48,15 @@ export default function BlogHome() {
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
+  // Seasons públicas (com episódio publicado): selo "Season" nos cards
+  const [seasons, setSeasons] = useState([]);
   const [view, setView] = useViewMode("blog-view", ["grid", "list", "compact"], "grid");
 
   const isFirst = useRef(true);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
+    SeasonsService.getPublic().then(setSeasons).catch(() => {});
   }, []);
 
   // Scroll suave para #posts quando filtro muda (não no mount inicial)
@@ -77,6 +81,7 @@ export default function BlogHome() {
     excerpt: post.excerpt,
     content: post.content,
     category: post.category,
+    season: post.season || null,
     coverImage: post.coverImage || null,
     publishedAt: post.publishedAt || post.createdAt,
   });
@@ -293,6 +298,7 @@ export default function BlogHome() {
                 post={post}
                 variant={view}
                 categoryLabel={categories.find((c) => c.slug === post.category)?.label}
+                seasonLabel={seasons.find((s) => s.slug === post.season)?.title}
               />
             ))}
           </div>

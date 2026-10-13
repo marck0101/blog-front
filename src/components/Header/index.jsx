@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Mail,
   BarChart3,
+  Layers,
   Menu,
   X,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import {
 const ADMIN_LINKS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, match: "exact" },
   { to: "/admin/posts", label: "Postagens", icon: FileText, match: "exact" },
+  { to: "/admin/seasons", label: "Seasons", icon: Layers, match: "exact" },
   { to: "/admin/trash", label: "Lixeira", icon: Trash, match: "exact" },
   { to: "/admin/subscribers", label: "Assinantes", icon: Users, match: "exact" },
   { to: "/admin/campaigns", label: "Envios", icon: Mail, match: "prefix" },
