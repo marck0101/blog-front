@@ -47,6 +47,7 @@ export default function Pagination({
           <label className="inline-flex items-center gap-2">
             <span className="whitespace-nowrap">Itens por página</span>
             <select
+              name="pageSize"
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               className="h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 text-sm text-gray-700 dark:text-gray-200"
