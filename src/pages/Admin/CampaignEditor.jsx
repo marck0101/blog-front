@@ -7,6 +7,7 @@ import RichTextEditor from "../../components/RichTextEditor";
 import FilterChips from "../../components/FilterChips";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import RecipientsTable from "../../components/RecipientsTable";
+import CampaignMetrics from "../../components/CampaignMetrics";
 import PostStatusBadge from "../../components/PostStatusBadge";
 import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
@@ -201,6 +202,8 @@ function SendReport({ campaign, busy, onResume, onRetryFailed, onDuplicate }) {
           </div>
         ))}
       </div>
+
+      <CampaignMetrics campaign={campaign} />
 
       {campaign.status === "sending" && (
         <button

@@ -21,6 +21,7 @@ const Subscribers = lazy(() => import("../pages/Admin/Subscribers"));
 const Campaigns = lazy(() => import("../pages/Admin/Campaigns"));
 const CampaignEditor = lazy(() => import("../pages/Admin/CampaignEditor"));
 const Calendar = lazy(() => import("../pages/Admin/Calendar"));
+const Metrics = lazy(() => import("../pages/Admin/Metrics"));
 
 export default function AppRoutes() {
   return (
@@ -115,6 +116,15 @@ export default function AppRoutes() {
           element={
             <PrivateRoute>
               <CampaignEditor />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/metrics"
+          element={
+            <PrivateRoute>
+              <Metrics />
             </PrivateRoute>
           }
         />

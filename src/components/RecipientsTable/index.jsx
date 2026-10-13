@@ -9,7 +9,7 @@ const formatDateTime = (date) => (date ? new Date(date).toLocaleString("pt-BR") 
 function exportRecipientsCsv(campaign) {
   const escape = (v = "") => `"${String(v).replace(/"/g, '""')}"`;
   const rows = [
-    ["email", "nome", "membro", "status", "enviado_em", "erro"],
+    ["email", "nome", "membro", "status", "enviado_em", "erro", "abriu_em", "aberturas", "clicou_em", "cliques", "cancelou_em"],
     ...campaign.recipients.map((r) => [
       r.email,
       r.subscriber?.name || "",
@@ -17,6 +17,11 @@ function exportRecipientsCsv(campaign) {
       RECIPIENT_STATUS_LABELS[r.status],
       formatDateTime(r.sentAt),
       r.error || "",
+      formatDateTime(r.openedAt),
+      r.opens || 0,
+      formatDateTime(r.clickedAt),
+      r.clicks || 0,
+      formatDateTime(r.unsubscribedAt),
     ]),
   ];
   const csv = "\uFEFF" + rows.map((row) => row.map(escape).join(";")).join("\n");
@@ -29,6 +34,39 @@ function exportRecipientsCsv(campaign) {
 }
 
 const STATUS_FILTERS = Object.entries(RECIPIENT_STATUS_LABELS).map(([value, label]) => ({ value, label }));
+// Envios com rastreio também filtram por engajamento
+const ENGAGEMENT_FILTERS = [
+  { value: "opened", label: "Abriram" },
+  { value: "clicked", label: "Clicaram" },
+  { value: "not-opened", label: "Não abriram" },
+  { value: "unsubscribed", label: "Cancelaram" },
+];
+const matchesFilter = (r, filter) => {
+  switch (filter) {
+    case "all": return true;
+    case "opened": return Boolean(r.openedAt);
+    case "clicked": return Boolean(r.clickedAt);
+    case "not-opened": return r.status === "sent" && !r.openedAt;
+    case "unsubscribed": return Boolean(r.unsubscribedAt);
+    default: return r.status === filter;
+  }
+};
+
+function Engagement({ r }) {
+  if (r.status !== "sent") return <span className="text-gray-400">—</span>;
+  const tags = [];
+  if (r.clickedAt) tags.push(["Clicou", "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300", `${r.clicks} clique(s), primeiro em ${formatDateTime(r.clickedAt)}`]);
+  else if (r.openedAt) tags.push(["Abriu", "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300", `Primeira abertura em ${formatDateTime(r.openedAt)}`]);
+  if (r.unsubscribedAt) tags.push(["Cancelou", "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300", `Cancelou em ${formatDateTime(r.unsubscribedAt)}`]);
+  if (tags.length === 0) return <span className="text-xs text-gray-400">Não abriu</span>;
+  return (
+    <span className="inline-flex gap-1">
+      {tags.map(([label, cls, title]) => (
+        <span key={label} title={title} className={`px-2 py-0.5 rounded-full text-xs font-medium ${cls}`}>{label}</span>
+      ))}
+    </span>
+  );
+}
 
 /**
  * Destinatários de um envio: status por pessoa, busca, filtro e CSV.
@@ -42,7 +80,7 @@ export default function RecipientsTable({ campaign }) {
   const term = search.trim().toLowerCase();
   const visible = recipients.filter(
     (r) =>
-      (status === "all" || r.status === status) &&
+      matchesFilter(r, status) &&
       (!term || r.email.includes(term) || r.subscriber?.name?.toLowerCase().includes(term))
   );
 
@@ -71,7 +109,7 @@ export default function RecipientsTable({ campaign }) {
           className="input w-full"
         />
         <FilterChips
-          options={STATUS_FILTERS}
+          options={campaign.tracking ? [...STATUS_FILTERS, ...ENGAGEMENT_FILTERS] : STATUS_FILTERS}
           selected={status}
           onChange={setStatus}
           allLabel="Todos"
@@ -87,6 +125,7 @@ export default function RecipientsTable({ campaign }) {
               <th className="px-4 py-2 font-semibold">Nome</th>
               <th className="px-4 py-2 font-semibold">Status</th>
               <th className="px-4 py-2 font-semibold">Enviado em</th>
+              {campaign.tracking && <th className="px-4 py-2 font-semibold">Engajamento</th>}
             </tr>
           </thead>
           <tbody>
@@ -106,11 +145,14 @@ export default function RecipientsTable({ campaign }) {
                 <td className="px-4 py-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   {formatDateTime(r.sentAt) || "—"}
                 </td>
+                {campaign.tracking && (
+                  <td className="px-4 py-2 whitespace-nowrap"><Engagement r={r} /></td>
+                )}
               </tr>
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={campaign.tracking ? 5 : 4} className="px-4 py-6 text-center text-gray-400">
                   Nenhum destinatário encontrado.
                 </td>
               </tr>

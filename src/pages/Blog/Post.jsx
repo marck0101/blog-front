@@ -189,7 +189,7 @@ export default function Post() {
         />
 
         <div className="mt-12">
-          <SubscribeForm location="post" postCategory={post.category} />
+          <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} />
         </div>
       </main>
     </BlogLayout>

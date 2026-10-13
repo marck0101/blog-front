@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import SubscriberService from "../../services/subscriber.service";
 import { trackEvent } from "../../utils/analytics";
+import { getAttribution } from "../../utils/attribution";
 
 // location: onde o formulário está ("home" | "post"), para comparar conversão por página
-export default function SubscribeForm({ location = "home", postCategory }) {
+// postSlug: post em que a pessoa assinou (métrica "posts que mais geram assinantes")
+export default function SubscribeForm({ location = "home", postCategory, postSlug }) {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -49,6 +51,12 @@ export default function SubscribeForm({ location = "home", postCategory }) {
         email,
         name: name.trim() || undefined,
         categories: selected,
+        source: {
+          ...getAttribution(),
+          location,
+          path: window.location.pathname,
+          post: postSlug || "",
+        },
       });
 
       // generate_lead = evento recomendado do GA4 para lead (marcar como evento-chave)

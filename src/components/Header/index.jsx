@@ -11,6 +11,7 @@ import {
   Users,
   CalendarDays,
   Mail,
+  BarChart3,
   Menu,
   X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const ADMIN_LINKS = [
   { to: "/admin/trash", label: "Lixeira", icon: Trash, match: "exact" },
   { to: "/admin/subscribers", label: "Assinantes", icon: Users, match: "exact" },
   { to: "/admin/campaigns", label: "Envios", icon: Mail, match: "prefix" },
+  { to: "/admin/metrics", label: "Métricas", icon: BarChart3, match: "exact" },
   { to: "/admin/calendar", label: "Calendário", icon: CalendarDays, match: "exact" },
   { to: "/blog", label: "Ver blog", icon: ArrowsUpFromLine, match: null },
 ];

@@ -9,6 +9,7 @@ import CampaignAudienceModal from "../../components/CampaignAudienceModal";
 import Pagination from "../../components/Pagination";
 import CampaignService from "../../services/campaign.service";
 import { CAMPAIGN_STATUS, audienceLabel, campaignStatusKey } from "../../utils/campaignAudience";
+import { formatRate } from "../../utils/metrics";
 
 const STATUS_FILTERS = [
   { value: "sent", label: "Enviados" },
@@ -49,6 +50,12 @@ function Delivery({ campaign }) {
       {pending > 0 && (
         <p className="text-xs text-amber-600 dark:text-amber-400">
           {pending} pendente{pending !== 1 ? "s" : ""}
+        </p>
+      )}
+      {campaign.tracking && sent > 0 && (
+        <p className="text-xs text-gray-500 dark:text-gray-300" title="Abertura · clique, sobre os entregues">
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{formatRate(campaign.stats.openRate)}</span> abriram ·{" "}
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{formatRate(campaign.stats.clickRate)}</span> clicaram
         </p>
       )}
     </div>

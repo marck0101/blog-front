@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
           Política de Privacidade
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-300 mb-10">
-          Última atualização: junho de 2026
+          Última atualização: outubro de 2026
         </p>
 
         <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
@@ -51,6 +51,16 @@ export default function PrivacyPolicy() {
                 <strong>Dados de navegação</strong> — coletados anonimamente por
                 ferramentas de análise para entender o desempenho do conteúdo.
               </li>
+              <li>
+                <strong>Origem da inscrição</strong> — ao assinar, registramos a página
+                em que você se inscreveu e de onde veio a visita (site de origem e
+                parâmetros de campanha do link, como utm_source).
+              </li>
+              <li>
+                <strong>Interação com os emails</strong> — os emails têm uma imagem de
+                rastreio e links rastreados que indicam se o email foi aberto, quais
+                links foram clicados e se a inscrição foi cancelada por ele.
+              </li>
             </ul>
           </section>
 
@@ -60,6 +70,7 @@ export default function PrivacyPolicy() {
               <li>Enviar comunicações do blog (novos artigos, atualizações).</li>
               <li>Personalizar o conteúdo enviado conforme suas categorias de interesse.</li>
               <li>Melhorar a experiência de navegação no site.</li>
+              <li>Medir o desempenho dos emails (taxas de abertura e clique) e dos canais que trazem assinantes.</li>
             </ul>
             <p>
               <strong>Não vendemos, alugamos nem compartilhamos</strong> seus dados
