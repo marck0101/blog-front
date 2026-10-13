@@ -64,7 +64,7 @@ function SubscriberPicker({ selected, onChange }) {
             {members.map((m) => (
               <li key={m._id}>
                 <label className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <input type="checkbox" checked={isSelected(m)} onChange={() => toggle(m)} />
+                  <input name="audienceSubscriber" type="checkbox" checked={isSelected(m)} onChange={() => toggle(m)} />
                   <span className="text-gray-900 dark:text-gray-100">{m.name || "—"}</span>
                   <span className="text-gray-500 truncate">{m.email}</span>
                 </label>
@@ -96,7 +96,7 @@ function SubscriberPicker({ selected, onChange }) {
       )}
 
       <div className="relative">
-        <input
+        <input name="audienceSearch"
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -228,7 +228,7 @@ export default function AudiencePicker({ value, onChange, categories = [], postC
 
       {canExclude && (
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-          <input
+          <input name="excludeMembers"
             type="checkbox"
             checked={value.excludeMembers}
             onChange={(e) => set({ excludeMembers: e.target.checked })}

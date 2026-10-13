@@ -9,6 +9,7 @@ import Lightbox from "../../components/Lightbox";
 import PostsService from "../../services/posts.service";
 import SubscribeForm from "../../components/SubscribeForm";
 import { contactMethod, setPageContext, trackEvent } from "../../utils/analytics";
+import SeasonNav from "../../components/SeasonNav";
 import {
   AUTHOR_NAME,
   PORTFOLIO_URL,
@@ -25,10 +26,17 @@ function getPrerenderedPost(slug) {
   return data && data.slug === slug ? data : null;
 }
 
+// Prerender já respondeu 404 para este slug — não buscar de novo na API
+function isPrerenderedNotFound(slug) {
+  return window.__PRERENDERED_NOT_FOUND__ === slug;
+}
+
 export default function Post() {
   const { slug } = useParams();
   const [post, setPost] = useState(() => getPrerenderedPost(slug));
-  const [loading, setLoading] = useState(() => !getPrerenderedPost(slug));
+  const [loading, setLoading] = useState(
+    () => !getPrerenderedPost(slug) && !isPrerenderedNotFound(slug)
+  );
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
 
@@ -39,13 +47,15 @@ export default function Post() {
     }
 
     if (post?.slug === slug) return;
+    if (isPrerenderedNotFound(slug)) return;
 
     setLoading(true);
 
     PostsService.getBySlug(slug)
       .then((postData) => {
         if (postData) return postData;
-        return PostsService.getPublicById(slug);
+        // Links antigos por ID; um slug comum daria 400 na rota por ID
+        return /^[a-f0-9]{24}$/i.test(slug) ? PostsService.getPublicById(slug) : null;
       })
       .then((postData) => setPost(postData || null))
       .catch(() => setPost(null))
@@ -181,12 +191,16 @@ export default function Post() {
           </time>
         </p>
 
+        <SeasonNav post={post} variant="badge" />
+
         <div
           ref={contentRef}
           onClick={handleContentClick}
           className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        <SeasonNav post={post} />
 
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} />

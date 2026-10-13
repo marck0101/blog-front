@@ -44,7 +44,7 @@ export default function FilterBar({
 
   return (
     <div className="flex flex-wrap gap-3 items-center">
-      <input
+      <input name="search"
         type="text"
         placeholder={searchPlaceholder}
         value={inputValue}

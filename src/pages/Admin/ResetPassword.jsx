@@ -70,7 +70,7 @@ export default function ResetPassword() {
           )}
 
           <div className="relative">
-            <input
+            <input name="password" autoComplete="new-password"
               type={showPassword ? "text" : "password"}
               placeholder="Nova senha"
               value={password}
@@ -88,7 +88,7 @@ export default function ResetPassword() {
             </button>
           </div>
 
-          <input
+          <input name="confirmPassword" autoComplete="new-password"
             type={showPassword ? "text" : "password"}
             placeholder="Confirmar nova senha"
             value={confirmPassword}

@@ -141,7 +141,7 @@ export default function ImageManager({
               </button>
 
               <label className="flex items-center gap-1">
-                <input
+                <input name="coverImageChoice"
                   type="radio"
                   checked={coverImage === img.url}
                   onChange={() => setCoverImage(img.url)}

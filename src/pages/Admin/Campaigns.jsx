@@ -153,7 +153,7 @@ export default function Campaigns() {
         <div className="mb-6 space-y-3">
           <div className="relative max-w-md">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input
+            <input name="emailSearch"
               type="text"
               value={emailSearch}
               onChange={(e) => setEmailSearch(e.target.value)}

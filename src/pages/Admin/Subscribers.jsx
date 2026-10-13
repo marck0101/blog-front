@@ -79,7 +79,7 @@ function SubscriberForm({ subscriber, categories, onSaved, onCancel }) {
         {isEdit ? `Editar ${subscriber.email}` : "Adicionar assinante"}
       </p>
       <div className="grid sm:grid-cols-2 gap-3">
-        <input
+        <input name="email" autoComplete="off"
           type="email"
           required
           placeholder="email@exemplo.com"
@@ -88,11 +88,11 @@ function SubscriberForm({ subscriber, categories, onSaved, onCancel }) {
           disabled={isEdit}
           className="input w-full disabled:opacity-60"
         />
-        <input type="text" placeholder="Nome (opcional)" value={name} onChange={(e) => setName(e.target.value)} className="input w-full" />
+        <input name="name" autoComplete="off" type="text" placeholder="Nome (opcional)" value={name} onChange={(e) => setName(e.target.value)} className="input w-full" />
       </div>
-      <input type="text" placeholder="Anotação interna (ex.: pagou via Pix)" value={notes} onChange={(e) => setNotes(e.target.value)} className="input w-full" />
+      <input name="notes" type="text" placeholder="Anotação interna (ex.: pagou via Pix)" value={notes} onChange={(e) => setNotes(e.target.value)} className="input w-full" />
       <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-        <input type="checkbox" checked={isMember} onChange={(e) => setIsMember(e.target.checked)} />
+        <input name="isMember" type="checkbox" checked={isMember} onChange={(e) => setIsMember(e.target.checked)} />
         Membro (recebe conteúdos exclusivos)
       </label>
 

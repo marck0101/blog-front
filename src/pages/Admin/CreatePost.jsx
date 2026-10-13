@@ -10,6 +10,7 @@ import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
 import CoverImageUpload from "../../components/CoverImageUpload";
 import FilterChips from "../../components/FilterChips";
+import SeasonFields from "../../components/SeasonFields";
 import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
 import SubscriberService from "../../services/subscriber.service";
@@ -30,6 +31,8 @@ export default function CreatePost() {
     excerpt: "",
     content: "",
     category: "marketing",
+    season: "",
+    seasonOrder: "",
     // Vindo do calendário: rascunho já com a data (só vira agendado quando pronto)
     status: "draft",
     plannedAt: urlPlannedAt || "",
@@ -127,13 +130,13 @@ export default function CreatePost() {
 
         {/* DADOS BÁSICOS */}
         <section className="space-y-2">
-          <input
+          <input name="title"
             className="input"
             placeholder="Título"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
-          <input
+          <input name="slug"
             className="input"
             placeholder="Slug (gerado automaticamente se vazio)"
             value={form.slug}
@@ -149,8 +152,13 @@ export default function CreatePost() {
               showAll={false}
             />
           </div>
+          <SeasonFields
+            season={form.season}
+            seasonOrder={form.seasonOrder}
+            onChange={(vals) => setForm({ ...form, ...vals })}
+          />
           <div className="relative">
-            <textarea
+            <textarea name="excerpt"
               className="input"
               placeholder="Resumo do post (máx. 160 caracteres)..."
               value={form.excerpt}
@@ -179,13 +187,13 @@ export default function CreatePost() {
         {/* SEO */}
         <section className="rounded-lg border p-4 space-y-2 bg-gray-50 dark:bg-gray-900">
           <h2 className="font-semibold text-sm uppercase text-gray-600 dark:text-gray-300">SEO</h2>
-          <input
+          <input name="seoTitle"
             className="input"
             placeholder="Título SEO (meta title)"
             value={form.seo.title}
             onChange={(e) => setForm({ ...form, seo: { ...form.seo, title: e.target.value } })}
           />
-          <textarea
+          <textarea name="seoDescription"
             className="input"
             placeholder="Descrição SEO (meta description)"
             value={form.seo.description}

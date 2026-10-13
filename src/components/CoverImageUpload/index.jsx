@@ -25,9 +25,9 @@ export default function CoverImageUpload({ existingUrl, onFileSelect }) {
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <p className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Imagem de capa
-      </label>
+      </p>
 
       {current ? (
         <div className="relative w-full max-w-md">
@@ -64,7 +64,7 @@ export default function CoverImageUpload({ existingUrl, onFileSelect }) {
         </button>
       )}
 
-      <input
+      <input name="coverImage"
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"

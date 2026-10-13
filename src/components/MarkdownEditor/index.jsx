@@ -51,7 +51,7 @@ export default function MarkdownEditor({ value, onChange }) {
             {mode === "split" && (
               <span className="text-xs text-gray-500 mb-1">Markdown</span>
             )}
-            <textarea
+            <textarea name="content"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={`# Título do post\n\nIntrodução aqui.\n\n## Subtítulo\n\n- Item 1\n- Item 2\n\n![Imagem](https://link-da-imagem.com)\n`}

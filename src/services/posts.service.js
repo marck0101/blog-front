@@ -24,8 +24,20 @@ const PostsService = {
     return data || null;
   },
 
+  // Retorna { season, posts } — só episódios publicados, em ordem
+  async getSeasonEpisodes(season) {
+    const { data } = await api.get(`/posts/season/${encodeURIComponent(season)}`);
+    return data;
+  },
+
+  async getSeasons() {
+    const { data } = await api.get("/seasons");
+    return normalizeArray(data);
+  },
+
   async getBySlug(slug) {
-    const { data } = await api.get(`/posts/slug/${encodeURIComponent(slug)}`);
+    // soft=1: post inexistente volta como null (200), sem erro de rede no console
+    const { data } = await api.get(`/posts/slug/${encodeURIComponent(slug)}`, { params: { soft: 1 } });
     return data || null;
   },
 
@@ -39,11 +51,13 @@ const PostsService = {
       search = "",
       dateFrom = "",
       dateTo = "",
+      season = "",
     } = filters;
     const params = { page, limit };
     if (["published", "planned", "draft"].includes(statusFilter)) params.status = statusFilter;
     // status exato do post: "draft" | "planned" | "published"
     if (filters.status) params.status = filters.status;
+    if (season) params.season = season;
     if (categories.length) params.categories = categories.join(",");
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;

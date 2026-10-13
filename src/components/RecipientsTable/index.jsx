@@ -101,7 +101,7 @@ export default function RecipientsTable({ campaign }) {
             <Download size={14} /> Exportar CSV
           </button>
         </div>
-        <input
+        <input name="recipientsSearch"
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

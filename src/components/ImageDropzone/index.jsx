@@ -37,7 +37,7 @@ export default function ImageDropzone({ onSelect, disabled }) {
         }
       `}
     >
-      <input
+      <input name="images"
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"

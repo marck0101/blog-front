@@ -49,7 +49,7 @@ export default function ForgotPassword() {
               </span>
             )}
 
-            <input
+            <input name="email" autoComplete="username"
               type="email"
               placeholder="Email"
               value={email}

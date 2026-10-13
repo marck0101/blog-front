@@ -16,7 +16,7 @@ export default function Login() {
 
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      navigate("/admin");
+      navigate("/admin", { replace: true });
     }
   }, [navigate]);
 
@@ -27,7 +27,7 @@ export default function Login() {
     try {
       const data = await AuthService.login(email, password);
       login(data);
-      navigate("/admin");
+      navigate("/admin", { replace: true });
     } catch {
       setError("Credenciais inválidas");
     }
@@ -44,7 +44,7 @@ export default function Login() {
           <span className="text-red-500 text-sm text-center">{error}</span>
         )}
 
-        <input
+        <input name="email" autoComplete="username"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -52,7 +52,7 @@ export default function Login() {
         />
 
         <div className="relative">
-          <input
+          <input name="password" autoComplete="current-password"
             type={showPassword ? "text" : "password"}
             placeholder="Senha"
             value={password}

@@ -110,7 +110,7 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
       </p>
 
       <form onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-4" noValidate>
-        <input
+        <input name="name" autoComplete="name"
           type="text"
           placeholder="Seu nome (opcional)"
           value={name}
@@ -118,7 +118,7 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
           className="input w-full"
         />
 
-        <input
+        <input name="email" autoComplete="email"
           type="email"
           placeholder="seu@email.com"
           required
@@ -159,7 +159,7 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
                           : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-400 dark:hover:border-blue-500"
                       }`}
                   >
-                    <input
+                    <input name="categories"
                       type="checkbox"
                       className="sr-only"
                       checked={checked}

@@ -30,7 +30,7 @@ export default function AppRoutes() {
       <Suspense fallback={<div className="min-h-screen" />}>
       <Routes>
         {/* PUBLIC */}
-        <Route path="/" element={<Navigate to="/blog" />} />
+        <Route path="/" element={<Navigate to="/blog" replace />} />
         <Route path="/blog" element={<BlogHome />} />
         <Route path="/blog/:slug" element={<Post />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
@@ -138,7 +138,7 @@ export default function AppRoutes() {
           }
         />
 
-        <Route path="*" element={<Navigate to="/blog" />} />
+        <Route path="*" element={<Navigate to="/blog" replace />} />
       </Routes>
       </Suspense>
     </BrowserRouter>

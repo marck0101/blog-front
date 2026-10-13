@@ -278,7 +278,7 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
 
       {!alreadyPublished && (
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-          <input
+          <input name="linkedinEnabled"
             type="checkbox"
             checked={value.enabled}
             onChange={(e) => set({ enabled: e.target.checked })}
@@ -292,8 +292,8 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
         <div className="grid lg:grid-cols-2 gap-5">
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Texto do post</label>
-              <textarea
+              <label htmlFor="linkedinText" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Texto do post</label>
+              <textarea id="linkedinText" name="linkedinText"
                 rows={10}
                 value={value.text}
                 maxLength={MAX_CHARS}
@@ -343,7 +343,7 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
                   : "Sem imagem: o post sai só com texto."}{" "}
                 Formatos que rendem bem: 1200×1200 ou 1080×1350.
               </p>
-              <input
+              <input name="linkedinImage"
                 ref={inputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -353,10 +353,10 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+              <label htmlFor="linkedinComment" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                 Comentário com o link
               </label>
-              <textarea
+              <textarea id="linkedinComment" name="linkedinComment"
                 rows={3}
                 value={commentShown}
                 onChange={(e) => setComment(e.target.value)}

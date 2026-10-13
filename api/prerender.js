@@ -177,7 +177,9 @@ function notFoundPage(slug) {
     type: "website",
     robots: "noindex",
   });
-  return { head, body: "" };
+  // Avisa o React que o post não existe — evita refazer a busca (e um 404 a mais no console)
+  const body = `<script>window.__PRERENDERED_NOT_FOUND__=${safeJson(slug)}</script>`;
+  return { head, body };
 }
 
 export default async function handler(req, res) {

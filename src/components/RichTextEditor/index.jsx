@@ -78,6 +78,9 @@ export default function RichTextEditor({ value, onChange }) {
   const [uploading, setUploading] = useState(false);
 
   const editor = useEditor({
+    // Cria o editor depois do render: criado durante o render, o Tiptap dispara
+    // onUpdate → onChange → setState do pai ("Cannot update a component while rendering")
+    immediatelyRender: false,
     extensions: [
       // StarterKit 3 já traz Link e Underline; registrar de novo duplica as extensões
       StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
@@ -94,7 +97,7 @@ export default function RichTextEditor({ value, onChange }) {
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
     if (value !== editor.getHTML()) {
-      editor.commands.setContent(value || "", false);
+      editor.commands.setContent(value || "", { emitUpdate: false });
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -253,7 +256,7 @@ export default function RichTextEditor({ value, onChange }) {
                 </p>
                 <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:border-blue-500 hover:text-blue-600 transition">
                   {uploading ? "Enviando..." : "Escolher arquivo"}
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleUpload} disabled={uploading} />
+                  <input name="editorImage" type="file" accept="image/*" className="sr-only" onChange={handleUpload} disabled={uploading} />
                 </label>
               </div>
 

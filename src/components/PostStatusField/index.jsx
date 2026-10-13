@@ -128,7 +128,7 @@ export default function PostStatusField({
 
       {status !== "published" && (
         <div>
-          <label className="text-xs text-gray-500 dark:text-gray-300 block mb-1">
+          <label htmlFor="plannedAt" className="text-xs text-gray-500 dark:text-gray-300 block mb-1">
             {status === "planned" ? (
               <>Publicar em <span className="text-red-500">*</span></>
             ) : (
@@ -136,7 +136,7 @@ export default function PostStatusField({
             )}
           </label>
           <div className="flex items-center gap-2 flex-wrap">
-            <input
+            <input id="plannedAt" name="plannedAt"
               type="date"
               value={plannedAt}
               min={status === "planned" ? todayInput() : undefined}

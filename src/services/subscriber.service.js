@@ -8,7 +8,8 @@ const SubscriberService = {
 
   async getCategories() {
     const { data } = await api.get("/categories");
-    return data;
+    // Se a API estiver mal configurada (ex.: VITE_API_URL vazio) chega HTML, não array
+    return Array.isArray(data) ? data : [];
   },
 
   async getAll(params = {}) {

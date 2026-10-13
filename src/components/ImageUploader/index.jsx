@@ -27,7 +27,7 @@ export default function ImageUploader({ onChange }) {
 
   return (
     <div className="mt-4">
-      {!preview && <input type="file" accept="image/*" onChange={handleFile} />}
+      {!preview && <input name="image" type="file" accept="image/*" onChange={handleFile} />}
 
       {preview && (
         <div className="relative mt-4">

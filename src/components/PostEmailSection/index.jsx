@@ -148,7 +148,7 @@ export default function PostEmailSection({ value, onChange, post, categories, al
       ) : (
         <>
           <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            <input
+            <input name="emailNotify"
               type="checkbox"
               checked={value.emailNotify}
               onChange={(e) => set({ emailNotify: e.target.checked })}
@@ -178,8 +178,8 @@ export default function PostEmailSection({ value, onChange, post, categories, al
               <div className="grid lg:grid-cols-2 gap-5">
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Assunto</label>
-                    <input
+                    <label htmlFor="emailSubject" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Assunto</label>
+                    <input id="emailSubject" name="emailSubject"
                       type="text"
                       value={value.emailSubject}
                       onChange={(e) => set({ emailSubject: e.target.value })}
@@ -188,10 +188,10 @@ export default function PostEmailSection({ value, onChange, post, categories, al
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+                    <label htmlFor="emailPreheader" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                       Pré-visualização <span className="font-normal text-gray-400">(texto ao lado do assunto)</span>
                     </label>
-                    <input
+                    <input id="emailPreheader" name="emailPreheader"
                       type="text"
                       value={value.emailPreheader}
                       onChange={(e) => set({ emailPreheader: e.target.value })}
@@ -200,10 +200,10 @@ export default function PostEmailSection({ value, onChange, post, categories, al
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+                    <label htmlFor="emailTeaser" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                       Chamada para o email
                     </label>
-                    <textarea
+                    <textarea id="emailTeaser" name="emailTeaser"
                       rows={5}
                       value={value.emailTeaser}
                       onChange={(e) => set({ emailTeaser: e.target.value })}
@@ -220,7 +220,7 @@ export default function PostEmailSection({ value, onChange, post, categories, al
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <input
+                    <input name="testEmail" autoComplete="email"
                       type="email"
                       value={testEmail}
                       onChange={(e) => setTestEmail(e.target.value)}

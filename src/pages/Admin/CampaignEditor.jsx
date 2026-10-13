@@ -124,7 +124,7 @@ function PostPicker({ linkedPost, onPick, onUnlink, onUseFull }) {
     <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="p-3 space-y-3 border-b dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <input
+          <input name="recipientSearch"
             type="text"
             autoFocus
             value={search}
@@ -528,14 +528,14 @@ export default function CampaignEditor() {
                 onUnlink={() => set("post")(null)}
                 onUseFull={handleUseFullPost}
               />
-              <input
+              <input name="subject"
                 type="text"
                 value={form.subject}
                 onChange={(e) => set("subject")(e.target.value)}
                 placeholder="Assunto do email"
                 className="input w-full text-lg"
               />
-              <input
+              <input name="preheader"
                 type="text"
                 value={form.preheader}
                 onChange={(e) => set("preheader")(e.target.value)}
@@ -563,7 +563,7 @@ export default function CampaignEditor() {
                 </div>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <input
+                <input name="testEmail" autoComplete="email"
                   type="email"
                   value={testEmail}
                   onChange={(e) => setTestEmail(e.target.value)}
