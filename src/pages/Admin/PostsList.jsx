@@ -55,11 +55,16 @@ export default function PostsList() {
   const [categories, setCategories] = useState([]);
   const [pageSize, setPageSize] = usePageSize("admin-posts-page-size", PAGE_SIZES, 10);
   const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
+  const [selectedSeason, setSelectedSeason] = useState("all");
+  const [seasons, setSeasons] = useState([]);
 
   /* --- categorias via API --- */
   useEffect(() => {
     SubscriberService.getCategories()
       .then(setCategories)
+      .catch(() => {});
+    PostsService.getSeasons()
+      .then(setSeasons)
       .catch(() => {});
   }, []);
 
@@ -82,6 +87,7 @@ export default function PostsList() {
     PostsService.getAll(page, pageSize, {
       statusFilter,
       categories: selectedCategories,
+      season: selectedSeason === "all" ? "" : selectedSeason,
       search,
       dateFrom,
       dateTo,
@@ -96,7 +102,7 @@ export default function PostsList() {
         showToast("Erro ao carregar posts", "error");
       })
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -208,6 +214,19 @@ export default function PostsList() {
               onChange={changeFilter(setSelectedCategories)}
               allLabel="Todas as categorias"
               multiSelect
+            />
+          </div>
+        )}
+
+        {/* Season chips */}
+        {seasons.length > 0 && (
+          <div className="mb-3">
+            <FilterChips
+              options={seasons}
+              selected={selectedSeason}
+              onChange={changeFilter(setSelectedSeason)}
+              allLabel="Todas as seasons"
+              multiSelect={false}
             />
           </div>
         )}
