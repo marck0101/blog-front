@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostEmailSection from "../../components/PostEmailSection";
+import PostLinkedInSection from "../../components/PostLinkedInSection";
+import { emptyLinkedIn } from "../../utils/linkedin";
 import PostStatusField from "../../components/PostStatusField";
 import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
@@ -36,6 +38,7 @@ export default function CreatePost() {
     emailSubject: "",
     emailPreheader: "",
     emailAudience: emptyAudience("post-category"),
+    linkedin: emptyLinkedIn(),
     seo: { title: "", description: "" },
   });
 
@@ -237,6 +240,14 @@ export default function CreatePost() {
             coverPreview,
           }}
           categories={categories}
+        />
+
+        <PostLinkedInSection
+          value={form.linkedin}
+          onChange={(linkedin) => setForm((f) => ({ ...f, linkedin }))}
+          result={null}
+          onResult={() => {}}
+          post={{ _id: undefined, slug: form.slug, coverPreview }}
         />
 
         {/* AÇÃO */}

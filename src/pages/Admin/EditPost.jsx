@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostEmailSection from "../../components/PostEmailSection";
+import PostLinkedInSection from "../../components/PostLinkedInSection";
+import { emptyLinkedIn } from "../../utils/linkedin";
 import PostStatusField from "../../components/PostStatusField";
 import RichTextEditor from "../../components/RichTextEditor";
 import ImageManager from "../../components/ImageManager";
@@ -35,10 +37,13 @@ export default function EditPost() {
     emailSubject: "",
     emailPreheader: "",
     emailAudience: emptyAudience("post-category"),
+    linkedin: emptyLinkedIn(),
     seo: { title: "", description: "" },
   });
   // Já estava publicado ao abrir: o aviso automático não sai de novo
   const [wasPublished, setWasPublished] = useState(false);
+  // Resultado no LinkedIn (status, postUrn, erro), gravado pelo servidor
+  const [linkedinResult, setLinkedinResult] = useState(null);
 
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
@@ -87,12 +92,19 @@ export default function EditPost() {
             ...post.emailAudience,
             subscribers: post.emailAudience?.subscribers || [],
           },
+          linkedin: {
+            enabled: post.linkedin?.enabled === true,
+            text: post.linkedin?.text || "",
+            imageUrl: post.linkedin?.imageUrl || "",
+            comment: post.linkedin?.comment || "",
+          },
           seo: {
             title: post.seo?.title || "",
             description: post.seo?.description || "",
           },
         });
         setWasPublished(derivedStatus === "published");
+        setLinkedinResult(post.linkedin || null);
         setGallery(post.gallery || []);
         setCoverImage(post.coverImage || "");
       })
@@ -285,6 +297,15 @@ export default function EditPost() {
             coverPreview,
           }}
           categories={categories}
+          alreadyPublished={wasPublished}
+        />
+
+        <PostLinkedInSection
+          value={form.linkedin}
+          onChange={(linkedin) => setForm((f) => ({ ...f, linkedin }))}
+          result={linkedinResult}
+          onResult={setLinkedinResult}
+          post={{ _id: id, slug: form.slug, coverPreview }}
           alreadyPublished={wasPublished}
         />
 
