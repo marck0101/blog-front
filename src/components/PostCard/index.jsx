@@ -3,9 +3,68 @@ import { FileText } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import { AUTHOR_NAME } from "../../seo/site";
 
-export default function PostCard({ post }) {
+// Lista: capa pequena ao lado do texto
+function ListCard({ post, coverSrc, date, categoryLabel }) {
+  return (
+    <article className="group">
+      <Link
+        to={`/blog/${post.slug || post.id}`}
+        className="flex gap-4 sm:gap-6 items-start rounded-xl p-2 -m-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+      >
+        <div className="w-28 sm:w-56 shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+          {coverSrc ? (
+            <img src={coverSrc} alt="" width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <FileText className="text-gray-300" size={28} />
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-gray-500 dark:text-gray-300">
+            {date}
+            {categoryLabel && <> • {categoryLabel}</>}
+          </p>
+          <h2 className="mt-1 font-semibold text-base sm:text-xl leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            {post.title}
+          </h2>
+          {post.excerpt && (
+            <p className="hidden sm:block mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{post.excerpt}</p>
+          )}
+          <span className="hidden sm:inline-block mt-2 text-sm font-medium text-blue-600 dark:text-blue-400">Ler artigo →</span>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
+// Compacta: só data, categoria e título, para varrer o arquivo
+function CompactCard({ post, date, categoryLabel }) {
+  return (
+    <article className="group">
+      <Link
+        to={`/blog/${post.slug || post.id}`}
+        className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 py-3"
+      >
+        <span className="shrink-0 sm:w-24 text-xs sm:text-sm text-gray-500 dark:text-gray-300 tabular-nums">{date}</span>
+        <h2 className="flex-1 font-medium text-gray-900 dark:text-gray-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline underline-offset-4 transition-colors">
+          {post.title}
+        </h2>
+        {categoryLabel && (
+          <span className="hidden sm:inline shrink-0 text-xs text-gray-500 dark:text-gray-300">{categoryLabel}</span>
+        )}
+      </Link>
+    </article>
+  );
+}
+
+// variant: "grid" (padrão) | "list" | "compact"
+export default function PostCard({ post, variant = "grid", categoryLabel }) {
   const coverSrc = normalizeImageUrl(post.coverImage);
   const date = new Date(post.publishedAt).toLocaleDateString();
+
+  if (variant === "list") return <ListCard post={post} coverSrc={coverSrc} date={date} categoryLabel={categoryLabel} />;
+  if (variant === "compact") return <CompactCard post={post} date={date} categoryLabel={categoryLabel} />;
 
   return (
     <article className="group cursor-pointer">

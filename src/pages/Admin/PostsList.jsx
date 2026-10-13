@@ -11,9 +11,18 @@ import PostStatusBadge from "../../components/PostStatusBadge";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
+import ViewToggle from "../../components/ViewToggle";
+import useViewMode from "../../hooks/useViewMode";
 import { Pencil, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 
 const POSTS_PER_PAGE = 10;
+
+// Contêiner de cada formato de visualização
+const LAYOUT = {
+  list: "space-y-4",
+  grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+  compact: "rounded-xl border bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800",
+};
 
 const STATUS_OPTIONS = [
   { value: "published", label: "Publicados" },
@@ -42,6 +51,7 @@ export default function PostsList() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [categories, setCategories] = useState([]);
+  const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
 
   /* --- categorias via API --- */
   useEffect(() => {
@@ -199,8 +209,9 @@ export default function PostsList() {
           </div>
         )}
 
-        {/* Search + date range */}
-        <div className="mb-6">
+        {/* Search + date range + formato */}
+        <div className="mb-6 flex items-start gap-3">
+          <div className="flex-1 min-w-0">
           <FilterBar
             onSearch={changeFilter(setSearch)}
             showDateRange
@@ -211,6 +222,8 @@ export default function PostsList() {
             onClear={clearFilters}
             searchPlaceholder="Buscar por título..."
           />
+          </div>
+          <ViewToggle value={view} onChange={setView} modes={["list", "grid", "compact"]} />
         </div>
 
         {!loading && posts.length === 0 && (
@@ -228,67 +241,96 @@ export default function PostsList() {
           </div>
         )}
 
-        <div className="space-y-4">
-          {!loading && posts.map((post) => (
-            <article key={post?._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                <div
-                  onClick={() => setPreviewPost(post)}
-                  className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer flex items-center justify-center"
-                >
-                  {post?.coverImage ? (
-                    <img src={post?.coverImage} alt={post?.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs text-gray-400">Sem imagem</span>
-                  )}
-                </div>
-
-                <div onClick={() => setPreviewPost(post)} className="flex-1 cursor-pointer">
-                  <div className="flex items-start gap-2 flex-wrap">
-                    <h2 className="text-lg font-semibold">{post?.title}</h2>
-                    <PostStatusBadge post={post} className="mt-1" />
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    {post?.category} • {new Date(post?.createdAt).toLocaleDateString()}
-                  </p>
-                  {post?.slug && (
-                    <p className="text-xs text-gray-400 mt-0.5 font-mono">/blog/{post.slug}</p>
-                  )}
-                </div>
-
-                <div className="hidden sm:flex gap-4">
+        {!loading && posts.length > 0 && (
+          <div className={LAYOUT[view]}>
+            {posts.map((post) => {
+              const actions = (
+                <>
                   <PublishToggle
                     checked={post?.published}
                     disabled={loadingId === post?._id}
                     onChange={() => handleToggleRequest(post)}
                   />
-                  <Link to={`/admin/posts/${post?._id}`}>
+                  <Link to={`/admin/posts/${post?._id}`} aria-label="Editar" title="Editar">
                     <Pencil size={16} className="mt-1" />
                   </Link>
-                  <button onClick={() => handleDeleteRequest(post)}>
+                  <button onClick={() => handleDeleteRequest(post)} aria-label="Mover para a lixeira" title="Mover para a lixeira">
                     <Trash size={16} className="mb-1" />
                   </button>
-                </div>
-              </div>
+                </>
+              );
+              const cover = post?.coverImage ? (
+                <img src={post.coverImage} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs text-gray-400">Sem imagem</span>
+              );
+              const meta = `${post?.category} • ${new Date(post?.createdAt).toLocaleDateString()}`;
 
-              <div className="flex sm:hidden justify-between mt-4 pt-4 border-t">
-                <PublishToggle
-                  checked={post?.published}
-                  disabled={loadingId === post?._id}
-                  onChange={() => handleToggleRequest(post)}
-                />
-                <div className="flex gap-4">
-                  <Link to={`/admin/posts/${post?._id}`}>
-                    <Pencil size={16} className="mt-1" />
-                  </Link>
-                  <button onClick={() => handleDeleteRequest(post)}>
-                    <Trash size={16} className="mb-1" />
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              if (view === "compact") {
+                return (
+                  <div key={post?._id} className="flex items-center gap-3 px-4 py-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPost(post)}
+                      className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 text-left"
+                    >
+                      <span className="truncate font-medium text-gray-900 dark:text-gray-100">{post?.title}</span>
+                      <span className="shrink-0 text-xs text-gray-500 dark:text-gray-300">{meta}</span>
+                    </button>
+                    <div className="flex items-center gap-4 shrink-0">{actions}</div>
+                  </div>
+                );
+              }
+
+              if (view === "grid") {
+                return (
+                  <article key={post?._id} className="rounded-xl border bg-white dark:bg-gray-900 overflow-hidden flex flex-col">
+                    <div
+                      onClick={() => setPreviewPost(post)}
+                      className="aspect-video bg-gray-100 dark:bg-gray-800 cursor-pointer flex items-center justify-center"
+                    >
+                      {cover}
+                    </div>
+                    <div onClick={() => setPreviewPost(post)} className="p-4 flex-1 cursor-pointer space-y-1.5">
+                      <PostStatusBadge post={post} />
+                      <h2 className="font-semibold leading-snug line-clamp-2">{post?.title}</h2>
+                      <p className="text-sm text-gray-500">{meta}</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 px-4 py-3 border-t">{actions}</div>
+                  </article>
+                );
+              }
+
+              return (
+                <article key={post?._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                    <div
+                      onClick={() => setPreviewPost(post)}
+                      className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer flex items-center justify-center"
+                    >
+                      {cover}
+                    </div>
+
+                    <div onClick={() => setPreviewPost(post)} className="flex-1 cursor-pointer">
+                      <div className="flex items-start gap-2 flex-wrap">
+                        <h2 className="text-lg font-semibold">{post?.title}</h2>
+                        <PostStatusBadge post={post} className="mt-1" />
+                      </div>
+                      <p className="text-sm text-gray-500">{meta}</p>
+                      {post?.slug && (
+                        <p className="text-xs text-gray-400 mt-0.5 font-mono">/blog/{post.slug}</p>
+                      )}
+                    </div>
+
+                    <div className="hidden sm:flex gap-4">{actions}</div>
+                  </div>
+
+                  <div className="flex sm:hidden justify-between mt-4 pt-4 border-t">{actions}</div>
+                </article>
+              );
+            })}
+          </div>
+        )}
 
         {/* Paginação */}
         {totalPages > 1 && (

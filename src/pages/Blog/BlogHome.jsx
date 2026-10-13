@@ -13,11 +13,20 @@ import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import EmptyState from "../../components/EmptyState";
 import Pagination from "../../components/Pagination";
+import ViewToggle from "../../components/ViewToggle";
+import useViewMode from "../../hooks/useViewMode";
 import SubscribeForm from "../../components/SubscribeForm";
 import { setPageContext, trackEvent } from "../../utils/analytics";
 import { useState } from "react";
 
 const POSTS_PER_PAGE = 12;
+
+// Contêiner de cada formato de visualização
+const LAYOUT = {
+  grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8",
+  list: "space-y-6",
+  compact: "divide-y divide-gray-200 dark:divide-gray-800 border-y border-gray-200 dark:border-gray-800",
+};
 
 export default function BlogHome() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,6 +43,7 @@ export default function BlogHome() {
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
+  const [view, setView] = useViewMode("blog-view", ["grid", "list", "compact"], "grid");
 
   const isFirst = useRef(true);
 
@@ -134,6 +144,11 @@ export default function BlogHome() {
     document.getElementById("posts")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const changeView = (next) => {
+    setView(next);
+    trackEvent("change_view", { view_mode: next });
+  };
+
   const clearFilters = () => {
     setSearchParams({});
     setSearch("");
@@ -221,20 +236,23 @@ export default function BlogHome() {
           </div>
         )}
 
-        {/* Busca */}
-        <div className="mb-6">
-          <FilterBar
-            onSearch={handleSearch}
-            showDateRange={false}
-            onClear={clearFilters}
-            searchPlaceholder="Buscar artigo..."
-          />
+        {/* Busca + formato */}
+        <div className="mb-6 flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <FilterBar
+              onSearch={handleSearch}
+              showDateRange={false}
+              onClear={clearFilters}
+              searchPlaceholder="Buscar artigo..."
+            />
+          </div>
+          <ViewToggle value={view} onChange={changeView} />
         </div>
 
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          <div className={LAYOUT[view]}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <PostCardSkeleton key={i} />
+              <PostCardSkeleton key={i} variant={view} />
             ))}
           </div>
         )}
@@ -257,9 +275,14 @@ export default function BlogHome() {
         )}
 
         {!loading && posts.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          <div className={LAYOUT[view]}>
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard
+                key={post.id}
+                post={post}
+                variant={view}
+                categoryLabel={categories.find((c) => c.slug === post.category)?.label}
+              />
             ))}
           </div>
         )}
