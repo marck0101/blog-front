@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Layers, FileText } from "lucide-react";
+import { Layers } from "lucide-react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
 import EmptyState from "../../components/EmptyState";
 import SubscribeForm from "../../components/SubscribeForm";
 import SeasonsService from "../../services/seasons.service";
-import { normalizeImageUrl } from "../../utils/imageUrl";
+import SeasonCard from "../../components/SeasonCard";
 import { setPageContext } from "../../utils/analytics";
+import { AUTHOR_NAME } from "../../seo/site";
 
 // /seasons — séries de posts que se complementam (só as que já têm episódio publicado)
 export default function Seasons() {
@@ -25,12 +26,12 @@ export default function Seasons() {
   return (
     <BlogLayout>
       <SEO
-        title="Seasons"
+        title={`Seasons | ${AUTHOR_NAME}`}
         description="Séries de artigos que se complementam: comece pelo primeiro episódio e avance do básico ao avançado."
         url="/seasons"
       />
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-6 py-10">
         <nav className="text-sm text-gray-500 dark:text-gray-300 mb-6">
           <Link to="/blog" className="hover:underline dark:hover:text-gray-100">Blog</Link>
           <span className="mx-2">/</span>
@@ -73,39 +74,9 @@ export default function Seasons() {
 
         {!loading && seasons.length > 0 && (
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {seasons.map((season) => {
-              const cover = normalizeImageUrl(season.coverImage);
-              return (
-                <article key={season.slug} className="group h-full">
-                  <Link
-                    to={`/seasons/${season.slug}`}
-                    className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden transition hover:border-blue-400 hover:shadow-md"
-                  >
-                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                      {cover ? (
-                        <img src={cover} alt="" width={640} height={360} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <FileText className="text-gray-300" size={48} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col gap-1.5">
-                      <p className="text-xs text-gray-500 dark:text-gray-300">
-                        {season.episodes} {season.episodes === 1 ? "episódio" : "episódios"}
-                      </p>
-                      <h2 className="font-semibold text-lg leading-snug text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {season.title}
-                      </h2>
-                      {season.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{season.description}</p>
-                      )}
-                      <span className="mt-auto pt-2 text-sm font-medium text-blue-600 dark:text-blue-400">Ver episódios →</span>
-                    </div>
-                  </Link>
-                </article>
-              );
-            })}
+            {seasons.map((season) => (
+              <SeasonCard key={season.slug} season={season} />
+            ))}
           </div>
         )}
 

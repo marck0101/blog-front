@@ -5,6 +5,10 @@ import App from "./App";
 import "./styles/global.css";
 import { AuthProvider } from "./context/AuthContext";
 import { reloadForNewVersion } from "./utils/lazyPage";
+import { applyTheme } from "./utils/theme";
+
+// Tema antes do primeiro render: evita piscar claro em quem usa o escuro
+applyTheme();
 
 // Metadados injetados pelo servidor (index.html / api/prerender.js) servem para
 // crawlers sem JS; no navegador o React 19 assume o <head> — remove para não duplicar.

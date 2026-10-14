@@ -13,6 +13,8 @@ const DateRangePicker = lazy(() => import("../DateRangePicker"));
  *   onDateToChange(val)
  *   onClear()               — callback para limpar filtros externos
  *   searchPlaceholder
+ *   searchValue             — termo vindo de fora (ex.: ?q= da URL); sincroniza o campo
+ *   hasActiveFilters        — false esconde "Limpar filtros" (aparece se houver texto digitado)
  */
 export default function FilterBar({
   onSearch,
@@ -23,8 +25,18 @@ export default function FilterBar({
   onDateToChange,
   onClear,
   searchPlaceholder = "Buscar...",
+  searchValue = "",
+  hasActiveFilters = true,
 }) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(searchValue);
+
+  // Termo mudou por fora (voltar do navegador, link sem ?q=): atualiza o campo.
+  // Ignora a diferença de espaços enquanto a pessoa digita.
+  const [syncedValue, setSyncedValue] = useState(searchValue);
+  if (searchValue !== syncedValue) {
+    setSyncedValue(searchValue);
+    if (searchValue !== inputValue.trim()) setInputValue(searchValue);
+  }
 
   // Debounce interno de 400ms
   useEffect(() => {
@@ -65,6 +77,7 @@ export default function FilterBar({
         </Suspense>
       )}
 
+      {(hasActiveFilters || inputValue.trim()) && (
       <button
         type="button"
         onClick={handleClear}
@@ -72,6 +85,7 @@ export default function FilterBar({
       >
         Limpar filtros
       </button>
+      )}
     </div>
   );
 }

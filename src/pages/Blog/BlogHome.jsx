@@ -1,7 +1,7 @@
 import BlogLayout from "../../layouts/BlogLayout";
 import authorPhoto from "../../assets/author.webp";
-import { useCallback, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useCallback, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
 import FilterChips from "../../components/FilterChips";
@@ -18,6 +18,7 @@ import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
 import usePageSize from "../../hooks/usePageSize";
 import SubscribeForm from "../../components/SubscribeForm";
+import SeasonCard from "../../components/SeasonCard";
 import { setPageContext, trackEvent } from "../../utils/analytics";
 import { useState } from "react";
 
@@ -39,6 +40,8 @@ export default function BlogHome() {
   const activeCategories = searchParams.getAll("categoria");
   // Página atual na URL (/blog?pagina=2) — trocar filtro volta para a 1
   const page = Math.max(1, parseInt(searchParams.get("pagina")) || 1);
+  // Busca na URL (/blog?q=seo): dá para compartilhar e voltar a ela
+  const search = searchParams.get("q") || "";
 
   const [posts, setPosts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -46,28 +49,17 @@ export default function BlogHome() {
   const [pageSize, setPageSize] = usePageSize("blog-page-size", PAGE_SIZES, 12);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
   // Seasons públicas (com episódio publicado): selo "Season" nos cards
   const [seasons, setSeasons] = useState([]);
   const [view, setView] = useViewMode("blog-view", ["grid", "list", "compact"], "grid");
-
-  const isFirst = useRef(true);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
     SeasonsService.getPublic().then(setSeasons).catch(() => {});
   }, []);
 
-  // Scroll suave para #posts quando filtro muda (não no mount inicial)
   const catsKey = activeCategories.join(",");
-  useEffect(() => {
-    if (isFirst.current) {
-      isFirst.current = false;
-      return;
-    }
-    document.getElementById("posts")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [catsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -126,24 +118,22 @@ export default function BlogHome() {
     if (newCats?.length) {
       trackEvent("filter_category", { categories: newCats.join(","), categories_count: newCats.length });
     }
-    if (!newCats || newCats.length === 0) {
-      setSearchParams({});
-      return;
-    }
+    // Troca de categoria mantém a busca e volta para a página 1
     const params = new URLSearchParams();
-    newCats.forEach((cat) => params.append("categoria", cat));
+    (newCats || []).forEach((cat) => params.append("categoria", cat));
+    if (search) params.set("q", search);
     setSearchParams(params);
   };
 
-  // O FilterBar chama onSearch("") ao montar; só volta para a página 1 se o termo mudou
+  // O FilterBar chama onSearch ao montar com o termo atual; só mexe na URL se mudou.
+  // replace: cada pausa na digitação não vira uma entrada no histórico
   const handleSearch = (val) => {
     if (val === search) return;
-    setSearch(val);
-    if (searchParams.has("pagina")) {
-      const params = new URLSearchParams(searchParams);
-      params.delete("pagina");
-      setSearchParams(params);
-    }
+    const params = new URLSearchParams(searchParams);
+    if (val) params.set("q", val);
+    else params.delete("q");
+    params.delete("pagina");
+    setSearchParams(params, { replace: true });
   };
 
   // Novo tamanho volta para a página 1 (a atual pode nem existir mais)
@@ -157,7 +147,11 @@ export default function BlogHome() {
     if (p > 1) params.set("pagina", String(p));
     else params.delete("pagina");
     setSearchParams(params);
-    document.getElementById("posts")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Só rola se o topo da lista saiu da tela (paginação fica no fim da lista)
+    const list = document.getElementById("posts");
+    if (list && list.getBoundingClientRect().top < 0) {
+      list.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const changeView = (next) => {
@@ -165,10 +159,9 @@ export default function BlogHome() {
     trackEvent("change_view", { view_mode: next });
   };
 
-  const clearFilters = () => {
-    setSearchParams({});
-    setSearch("");
-  };
+  const clearFilters = () => setSearchParams({});
+
+  const hasActiveFilters = activeCategories.length > 0 || Boolean(search);
 
   // Labels das categorias ativas (para título dinâmico e empty state)
   const activeCatLabels = activeCategories
@@ -212,10 +205,11 @@ export default function BlogHome() {
               .
             </p>
             <a
-              href="#posts"
+              href="#assinar"
+              onClick={() => trackEvent("newsletter_cta_click", { link_location: "hero" })}
               className="mt-6 inline-flex items-center px-6 py-2.5 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
             >
-              Ver todos os posts
+              Assinar a newsletter
             </a>
           </div>
 
@@ -229,8 +223,35 @@ export default function BlogHome() {
         </div>
       </section>
 
+      {/* Destaque das seasons: só na primeira página, sem filtro */}
+      {seasons.length > 0 && page === 1 && !hasActiveFilters && (
+        <section aria-labelledby="seasons-destaque" className="max-w-5xl mx-auto px-6 pt-10">
+          <div className="flex items-end justify-between gap-4 mb-4">
+            <div>
+              <h2 id="seasons-destaque" className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Seasons
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                Artigos em sequência para aprender um assunto do começo ao fim.
+              </p>
+            </div>
+            {seasons.length > 3 && (
+              <Link to="/seasons" className="shrink-0 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                Ver todas →
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {seasons.slice(0, 3).map((season) => (
+              <SeasonCard key={season.slug} season={season} headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Posts */}
-      <main id="posts" className="max-w-5xl mx-auto px-6 py-10">
+      {/* scroll-mt: o título não fica escondido atrás do header fixo */}
+      <main id="posts" className="max-w-5xl mx-auto px-6 py-10 scroll-mt-16">
 
         {/* Título dinâmico — só quando 1 categoria ativa */}
         {activeCategories.length === 1 && activeCatLabels[0] && (
@@ -259,6 +280,8 @@ export default function BlogHome() {
               onSearch={handleSearch}
               showDateRange={false}
               onClear={clearFilters}
+              searchValue={search}
+              hasActiveFilters={hasActiveFilters}
               searchPlaceholder="Buscar artigo..."
             />
           </div>
@@ -317,7 +340,7 @@ export default function BlogHome() {
           />
         )}
 
-        <div id="assinar" className="mt-12">
+        <div className="mt-12">
           <SubscribeForm location="home" />
         </div>
       </main>

@@ -5,7 +5,9 @@ import { getAttribution } from "../../utils/attribution";
 
 // location: onde o formulário está ("home" | "post"), para comparar conversão por página
 // postSlug: post em que a pessoa assinou (métrica "posts que mais geram assinantes")
-export default function SubscribeForm({ location = "home", postCategory, postSlug }) {
+// compact: uma linha (email + botão, todos os temas); "Escolher temas" abre o completo
+export default function SubscribeForm({ location = "home", postCategory, postSlug, compact = false }) {
+  const [expanded, setExpanded] = useState(!compact);
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -88,7 +90,7 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
 
   if (status === "success") {
     return (
-      <section className="border rounded-xl p-8 bg-white dark:bg-gray-900 text-center">
+      <section id="assinar" className="scroll-mt-20 border rounded-xl p-8 bg-white dark:bg-gray-900 text-center">
         <p className="text-2xl mb-2">✅</p>
         <p className="font-semibold text-gray-900 dark:text-gray-100">
           Inscrição realizada! Obrigado por assinar.
@@ -100,8 +102,57 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
     );
   }
 
+  const feedback = (
+    <>
+      {status === "duplicate" && (
+        <p className="text-sm text-amber-600 dark:text-amber-400">
+          Você já está inscrito com este email.
+        </p>
+      )}
+      {status === "error" && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          Ocorreu um erro. Tente novamente mais tarde.
+        </p>
+      )}
+    </>
+  );
+
+  if (!expanded) {
+    return (
+      <section id="assinar" className="scroll-mt-20 border rounded-xl p-5 bg-white dark:bg-gray-900">
+        <h2 className="font-bold text-gray-900 dark:text-gray-100">Gostou? Receba os próximos artigos por email</h2>
+        <form onSubmit={handleSubmit} onFocus={handleFormStart} className="mt-3 flex flex-col sm:flex-row gap-2" noValidate>
+          <input name="email" autoComplete="email"
+            type="email"
+            placeholder="seu@email.com"
+            required
+            aria-label="Seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input flex-1 min-w-0"
+          />
+          <button
+            type="submit"
+            disabled={loading || catLoading || selected.length === 0}
+            className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium text-sm
+              hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap"
+          >
+            {loading ? "Inscrevendo..." : "Assinar"}
+          </button>
+        </form>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-300">
+          <span>Todos os temas. Cancele quando quiser.</span>
+          <button type="button" onClick={() => setExpanded(true)} className="underline hover:text-gray-800 dark:hover:text-gray-100">
+            Escolher temas
+          </button>
+        </div>
+        {status && <div className="mt-2">{feedback}</div>}
+      </section>
+    );
+  }
+
   return (
-    <section className="border rounded-xl p-8 bg-white dark:bg-gray-900">
+    <section id="assinar" className="scroll-mt-20 border rounded-xl p-8 bg-white dark:bg-gray-900">
       <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
         Receba novidades no seu email
       </h2>
@@ -179,17 +230,7 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
           )}
         </div>
 
-        {/* Feedbacks */}
-        {status === "duplicate" && (
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            Você já está inscrito com este email.
-          </p>
-        )}
-        {status === "error" && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            Ocorreu um erro. Tente novamente mais tarde.
-          </p>
-        )}
+        {feedback}
 
         <button
           type="submit"

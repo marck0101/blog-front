@@ -1,17 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import PostsService from "../../services/posts.service";
+import SeasonsService from "../../services/seasons.service";
+import { seasonStatus, useSeasonProgress } from "../../utils/seasonProgress";
+import { formatMinutes } from "../../utils/readingTime";
 
 /**
  * SeasonNav — navegação entre episódios publicados da mesma season.
  * Episódios em rascunho/planejados não aparecem, então nunca gera link quebrado.
  *
  * variant="badge" → selo curto no topo do post
- * variant="full"  → anterior/próximo + lista de episódios no fim do post
+ * variant="full"  → anterior/próximo + lista de episódios no fim do post; no
+ *                   último episódio, chamada para a próxima season ou a newsletter
  */
 export default function SeasonNav({ post, variant = "full" }) {
   const [data, setData] = useState(null);
+  // Outras seasons (para indicar a próxima no fim do último episódio)
+  const [allSeasons, setAllSeasons] = useState([]);
+  const progress = useSeasonProgress();
 
   useEffect(() => {
     if (!post?.season) return;
@@ -22,6 +29,11 @@ export default function SeasonNav({ post, variant = "full" }) {
     return () => { cancelled = true; };
   }, [post?.season]);
 
+  useEffect(() => {
+    if (!post?.season || variant !== "full") return;
+    SeasonsService.getPublic().then(setAllSeasons).catch(() => {});
+  }, [post?.season, variant]);
+
   if (!post?.season || !data?.season) return null;
 
   const episodes = data.posts || [];
@@ -30,6 +42,14 @@ export default function SeasonNav({ post, variant = "full" }) {
   const next = index >= 0 && index < episodes.length - 1 ? episodes[index + 1] : null;
   const label = data.season.title;
   const seasonUrl = `/seasons/${data.season.slug}`;
+  const { read } = seasonStatus(progress, data.season.slug, episodes.map((e) => e.slug));
+  const isLast = index >= 0 && !next;
+  // Próxima season: a primeira que a pessoa ainda não terminou
+  const nextSeason = isLast
+    ? allSeasons.find(
+        (s) => s.slug !== data.season.slug && !seasonStatus(progress, s.slug, s.episodeSlugs).done
+      )
+    : null;
 
   if (variant === "badge") {
     return (
@@ -97,6 +117,9 @@ export default function SeasonNav({ post, variant = "full" }) {
             ) : (
               <Link to={`/blog/${ep.slug}`} className="hover:underline">{ep.title}</Link>
             )}
+            {read.has(ep.slug) && (
+              <CheckCircle2 size={14} className="inline ml-1.5 -mt-0.5 text-green-600 dark:text-green-400" aria-label="lido" />
+            )}
           </li>
         ))}
       </ol>
@@ -107,6 +130,39 @@ export default function SeasonNav({ post, variant = "full" }) {
       >
         Ver a season completa →
       </Link>
+
+      {isLast && (
+        <div className="mt-6 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-800 p-4">
+          <p className="font-semibold text-gray-900 dark:text-white">Você chegou ao fim desta season 🎉</p>
+          {nextSeason ? (
+            <>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Próxima: <strong>{nextSeason.title}</strong> · {nextSeason.episodes}{" "}
+                {nextSeason.episodes === 1 ? "episódio" : "episódios"}
+                {nextSeason.readingMinutes > 0 && <> · ~{formatMinutes(nextSeason.readingMinutes)}</>}
+              </p>
+              <Link
+                to={`/seasons/${nextSeason.slug}`}
+                className="inline-block mt-3 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+              >
+                Começar a próxima season →
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Assine a newsletter para saber quando sair a próxima.
+              </p>
+              <a
+                href="#assinar"
+                className="inline-block mt-3 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+              >
+                Assinar a newsletter
+              </a>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

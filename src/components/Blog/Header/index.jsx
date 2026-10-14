@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Menu, X, Lock, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import SubscriberService from "../../../services/subscriber.service";
 import SeasonsService from "../../../services/seasons.service";
 import ThemeToggle from "../../ThemeToggle";
 
 const VISIBLE_CATEGORIES_COUNT = 3;
 
-export default function BlogHeader() {
+// activeNav: item ativo definido pela página ("" = Todos, "seasons" ou slug da
+// categoria). Sem ele, deduz pela URL.
+export default function BlogHeader({ activeNav }) {
   const [categories, setCategories] = useState([]);
   // Link "Seasons" só aparece quando existe season com episódio publicado
   const [hasSeasons, setHasSeasons] = useState(false);
@@ -24,10 +26,20 @@ export default function BlogHeader() {
   const [searchParams] = useSearchParams();
   // Suporta múltiplas categorias: /blog?categoria=a&categoria=b
   const activeCategories = searchParams.getAll("categoria");
-  // Destaque no header apenas quando exatamente 1 categoria está ativa
-  const singleActive = activeCategories.length === 1 ? activeCategories[0] : "";
+  // Item ativo: o da página (post → categoria, episódio → Seasons) ou, pela URL,
+  // Seasons, "Todos" sem filtro, ou a categoria quando só uma está ativa
+  const current =
+    activeNav !== undefined
+      ? activeNav
+      : onSeasons
+      ? "seasons"
+      : activeCategories.length === 0
+      ? ""
+      : activeCategories.length === 1
+      ? activeCategories[0]
+      : null;
   // "Mais ▾" recebe estilo ativo quando a categoria ativa está dentro do dropdown
-  const isMoreActive = moreCategories.some((cat) => cat.slug === singleActive);
+  const isMoreActive = moreCategories.some((cat) => cat.slug === current);
 
   useEffect(() => {
     SubscriberService.getCategories()
@@ -65,13 +77,7 @@ export default function BlogHeader() {
   }, []);
 
   const navLinkClass = (slug) => {
-    const isActive = slug === "seasons"
-      ? onSeasons
-      : onSeasons
-      ? false                                   // em /seasons nenhuma categoria fica ativa
-      : slug === ""
-      ? activeCategories.length === 0          // "Todos" ativo quando sem filtro
-      : slug === singleActive;                  // categoria ativa só se for a única
+    const isActive = slug === current;
     return `px-3 py-1.5 text-sm rounded-md transition whitespace-nowrap ${
       isActive
         ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
@@ -155,7 +161,7 @@ export default function BlogHeader() {
                   to={`/blog?categoria=${cat.slug}`}
                   onClick={() => setMoreOpen(false)}
                   className={`block px-3 py-1.5 text-sm transition whitespace-nowrap ${
-                    cat.slug === singleActive
+                    cat.slug === current
                       ? "font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
@@ -167,7 +173,7 @@ export default function BlogHeader() {
           </div>
         )}
 
-        {/* Direita: theme toggle + assinar + cadeado + hamburger */}
+        {/* Direita: theme toggle + assinar + hamburger (acesso do autor fica no rodapé) */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           <ThemeToggle />
 
@@ -177,15 +183,6 @@ export default function BlogHeader() {
           >
             Assinar
           </a>
-
-          {/* Cadeado — acesso admin */}
-          <Link
-            to="/admin/login"
-            title="Área restrita"
-            className="hidden md:flex p-2 rounded-md text-gray-300 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          >
-            <Lock size={14} />
-          </Link>
 
           <button
             onClick={() => setMenuOpen((v) => !v)}
@@ -205,7 +202,7 @@ export default function BlogHeader() {
             to="/blog"
             onClick={() => setMenuOpen(false)}
             className={`text-sm py-2.5 px-2 rounded-md transition ${
-              activeCategories.length === 0 && !onSeasons
+              current === ""
                 ? "font-semibold text-blue-600 dark:text-blue-400"
                 : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
@@ -218,7 +215,7 @@ export default function BlogHeader() {
               to="/seasons"
               onClick={() => setMenuOpen(false)}
               className={`text-sm py-2.5 px-2 rounded-md transition ${
-                onSeasons
+                current === "seasons"
                   ? "font-semibold text-blue-600 dark:text-blue-400"
                   : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
@@ -233,7 +230,7 @@ export default function BlogHeader() {
               to={`/blog?categoria=${cat.slug}`}
               onClick={() => setMenuOpen(false)}
               className={`text-sm py-2.5 px-2 rounded-md transition ${
-                cat.slug === singleActive
+                cat.slug === current
                   ? "font-semibold text-blue-600 dark:text-blue-400"
                   : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
@@ -250,13 +247,6 @@ export default function BlogHeader() {
             >
               Assinar newsletter
             </a>
-            <Link
-              to="/admin/login"
-              onClick={() => setMenuOpen(false)}
-              className="text-center text-sm text-gray-400 dark:text-gray-300 py-2 hover:text-gray-800 dark:hover:text-gray-100 transition"
-            >
-              Entrar
-            </Link>
           </div>
         </div>
       )}

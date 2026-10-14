@@ -1,38 +1,38 @@
 import { useEffect, useState } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
+import { getThemePref, setThemePref, watchSystemTheme } from "../utils/theme";
+
+// Ciclo claro → escuro → sistema. O ícone mostra o modo atual; o rótulo, a ação.
+const NEXT = { light: "dark", dark: "system", system: "light" };
+const ICON = { light: Sun, dark: Moon, system: Monitor };
+const LABEL = {
+  light: "Ativar modo claro",
+  dark: "Ativar modo escuro",
+  system: "Seguir o tema do sistema",
+};
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState("light");
+  const [pref, setPref] = useState(getThemePref);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
+  // Só reaplica a classe; o ícone continua "sistema"
+  useEffect(() => watchSystemTheme(() => {}), []);
 
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle(
-        "dark",
-        savedTheme === "dark"
-      );
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-    localStorage.setItem("theme", newTheme);
-  };
+  const next = NEXT[pref];
+  const Icon = ICON[pref];
 
   return (
     <button
-      onClick={toggleTheme}
-      className="px-3 py-1 rounded border text-sm
-                 bg-gray-100 text-gray-700
-                 dark:bg-gray-800 dark:text-gray-200
-                 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-      title="Alternar tema"
+      type="button"
+      onClick={() => {
+        setThemePref(next);
+        setPref(next);
+      }}
+      aria-label={LABEL[next]}
+      title={LABEL[next]}
+      className="p-2 rounded-md text-gray-600 dark:text-gray-300
+                 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition"
     >
-      {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
+      <Icon size={18} />
     </button>
   );
 }

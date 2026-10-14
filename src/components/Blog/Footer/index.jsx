@@ -1,4 +1,6 @@
+import { useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
 import { Linkedin, Github, MessageCircle } from "lucide-react";
 import authorPhoto from "../../../assets/author.webp";
 import { contactMethod, trackEvent } from "../../../utils/analytics";
@@ -42,6 +44,8 @@ const QUICK_LINKS = [
 
 export default function BlogFooter() {
   const year = new Date().getFullYear();
+  // Logado vai direto ao painel; senão, ao login
+  const { user } = useContext(AuthContext);
 
   return (
     <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-16">
@@ -148,7 +152,14 @@ export default function BlogFooter() {
       {/* Copyright */}
       <div className="border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-4 text-center text-xs text-gray-500 dark:text-gray-300">
-          © {year} Marcos Henrique Corrêa (marck0101) · Todos os direitos reservados
+          © {year} Marcos Henrique Corrêa (marck0101) · Todos os direitos reservados ·{" "}
+          <Link
+            to={user ? "/admin" : "/admin/login"}
+            rel="nofollow"
+            className="hover:text-gray-800 dark:hover:text-gray-100 hover:underline"
+          >
+            {user ? "Painel do autor" : "Área do autor"}
+          </Link>
         </div>
       </div>
     </footer>

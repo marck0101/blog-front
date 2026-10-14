@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
@@ -10,14 +10,27 @@ import PostsService from "../../services/posts.service";
 import SubscribeForm from "../../components/SubscribeForm";
 import { contactMethod, setPageContext, trackEvent } from "../../utils/analytics";
 import SeasonNav from "../../components/SeasonNav";
+import SubscriberService from "../../services/subscriber.service";
+import SeasonsService from "../../services/seasons.service";
 import {
   AUTHOR_NAME,
   PORTFOLIO_URL,
   postTitle,
   postDescription,
 } from "../../seo/site";
+import { readingMinutes } from "../../utils/readingTime";
+import { markEpisodeRead } from "../../utils/seasonProgress";
 
 const READ_MARKS = [25, 50, 75, 100];
+// Episódio de season conta como lido a partir de 75% do texto
+const SEASON_READ_PERCENT = 75;
+
+// Quanto do texto já passou pela tela (0–100+)
+function percentSeen(el) {
+  const rect = el.getBoundingClientRect();
+  if (rect.height <= 0) return 0;
+  return ((window.innerHeight - rect.top) / rect.height) * 100;
+}
 
 // Post injetado por api/prerender.js no primeiro carregamento — evita o fetch
 // duplicado e o "Carregando..." que causava layout shift.
@@ -39,6 +52,14 @@ export default function Post() {
   );
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
+  // Nomes para exibir: "Negócios" em vez do slug, título da season no breadcrumb
+  const [categories, setCategories] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+
+  useEffect(() => {
+    SubscriberService.getCategories().then(setCategories).catch(() => {});
+    SeasonsService.getPublic().then(setSeasons).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!slug) {
@@ -83,9 +104,8 @@ export default function Post() {
 
     const check = () => {
       frame = 0;
-      const rect = el.getBoundingClientRect();
-      if (rect.height <= 0) return;
-      const seen = ((window.innerHeight - rect.top) / rect.height) * 100;
+      const seen = percentSeen(el);
+      if (seen <= 0) return;
       READ_MARKS.forEach((mark) => {
         if (seen >= mark && !reached.has(mark)) {
           reached.add(mark);
@@ -102,6 +122,29 @@ export default function Post() {
       if (frame) cancelAnimationFrame(frame);
     };
   }, [post?.slug, post?.content]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Progresso da season (localStorage): marca o episódio como lido. Confere também
+  // ao abrir, para post curto que cabe na tela sem rolar.
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!post?.season || !el) return;
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      if (percentSeen(el) >= SEASON_READ_PERCENT) {
+        markEpisodeRead(post.season, post.slug);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
+
+    frame = requestAnimationFrame(check);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [post?.slug, post?.season, post?.content]);
 
   // Cliques em links de contato dentro do texto do post (ex.: CTA de WhatsApp)
   const handleContentClick = (e) => {
@@ -147,8 +190,12 @@ export default function Post() {
     );
   }
 
+  const categoryLabel = categories.find((c) => c.slug === post.category)?.label || post.category;
+  const season = post.season ? seasons.find((s) => s.slug === post.season) : null;
+  const minutes = readingMinutes(post.content);
+
   return (
-    <BlogLayout>
+    <BlogLayout activeNav={post.season ? "seasons" : post.category}>
       <SEO
         title={postTitle(post)}
         description={postDescription(post)}
@@ -170,7 +217,17 @@ export default function Post() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <BackButton />
-        <Breadcrumb title={post.title} />
+        <Breadcrumb
+          title={post.title}
+          trail={
+            season
+              ? [
+                  { label: "Seasons", to: "/seasons" },
+                  { label: season.title, to: `/seasons/${season.slug}` },
+                ]
+              : []
+          }
+        />
 
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
           {post.title}
@@ -185,10 +242,18 @@ export default function Post() {
           >
             {AUTHOR_NAME}
           </a>{" "}
-          • {post.category} •{" "}
+          •{" "}
+          <Link
+            to={`/blog?categoria=${post.category}`}
+            className="hover:underline hover:text-gray-800 dark:hover:text-gray-100"
+          >
+            {categoryLabel}
+          </Link>{" "}
+          •{" "}
           <time dateTime={post.publishedAt}>
             {new Date(post.publishedAt).toLocaleDateString("pt-BR")}
-          </time>
+          </time>{" "}
+          • {minutes} min de leitura
         </p>
 
         <SeasonNav post={post} variant="badge" />
@@ -203,7 +268,7 @@ export default function Post() {
         <SeasonNav post={post} />
 
         <div className="mt-12">
-          <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} />
+          <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />
         </div>
       </main>
     </BlogLayout>

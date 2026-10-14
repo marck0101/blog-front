@@ -1,14 +1,16 @@
 import api from "./api";
+import { memoRequest } from "../utils/memo";
 
 const SeasonsService = {
   /* ================= BLOG PÚBLICO ================= */
 
   // Seasons com pelo menos 1 episódio publicado
   // [{ slug, title, description, episodes, coverImage, firstSlug, lastPublishedAt }]
-  async getPublic() {
-    const { data } = await api.get("/seasons");
+  // Compartilhada entre header, home, breadcrumb e /seasons
+  getPublic: memoRequest(async () => {
+    const { data } = await api.get("/seasons", { cacheable: true });
     return Array.isArray(data) ? data : [];
-  },
+  }),
 
   // { season: { slug, title, description }, posts } — ou null se não existe/não publicada
   async getPublicOne(slug) {

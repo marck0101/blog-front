@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { FileText, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
+import GeneratedCover from "../GeneratedCover";
 
 // Lista: capa pequena ao lado do texto
 function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
@@ -14,9 +15,7 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
           {coverSrc ? (
             <img src={coverSrc} alt="" width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <FileText className="text-gray-300" size={28} />
-            </div>
+            <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
           )}
         </div>
         <div className="min-w-0 flex-1">
@@ -90,9 +89,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <FileText className="text-gray-300" size={48} />
-            </div>
+            <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} />
           )}
         </div>
 
