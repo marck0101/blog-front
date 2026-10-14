@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import PublishToggle from "../../components/PublishToggle";
@@ -47,7 +47,11 @@ export default function PostsList() {
   const [total, setTotal] = useState(0);
 
   // filtros
-  const [statusFilter, setStatusFilter] = useState("all");
+  // ?status=draft vem dos cards do Dashboard
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(() =>
+    ["published", "planned", "draft"].includes(searchParams.get("status")) ? searchParams.get("status") : "all"
+  );
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -57,6 +61,13 @@ export default function PostsList() {
   const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
   const [selectedSeason, setSelectedSeason] = useState("all");
   const [seasons, setSeasons] = useState([]);
+
+  // seleção em massa (ids da página atual)
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkSeason, setBulkSeason] = useState("");
+
+  const categoryLabel = (slug) => categories.find((c) => c.slug === slug)?.label || slug;
 
   /* --- categorias via API --- */
   useEffect(() => {
@@ -106,6 +117,75 @@ export default function PostsList() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Trocou de página/filtro: a seleção (que é da página) recomeça
+  const [selectionKey, setSelectionKey] = useState("");
+  const currentKey = posts.map((p) => p._id).join(",");
+  if (currentKey !== selectionKey) {
+    setSelectionKey(currentKey);
+    setSelected(new Set());
+  }
+
+  const toggleSelected = (id) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const allSelected = posts.length > 0 && posts.every((p) => selected.has(p._id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(posts.map((p) => p._id)));
+
+  // Uma requisição por post (rotas já existentes); recarrega a lista no fim.
+  // Publicar em massa fica de fora de propósito: cada publicação dispara email.
+  const runBulk = async (label, action) => {
+    const ids = [...selected];
+    setBulkBusy(true);
+    const results = await Promise.allSettled(ids.map(action));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    setBulkBusy(false);
+    setSelected(new Set());
+    showToast(
+      failed ? `${label}: ${ids.length - failed} ok, ${failed} com erro` : `${label}: ${ids.length} post(s)`,
+      failed ? "error" : "success"
+    );
+    load();
+  };
+
+  const bulkRequest = (kind) => {
+    const n = selected.size;
+    const plural = n !== 1 ? "s" : "";
+    const actions = {
+      draft: {
+        title: `Mover ${n} post${plural} para rascunho?`,
+        description: "Publicados saem do ar e agendados deixam de ter publicação automática.",
+        confirmText: "Mover para rascunho",
+        type: "warning",
+        run: () => runBulk("Movidos para rascunho", (id) => PostsService.update(id, { status: "draft" })),
+      },
+      season: {
+        title: bulkSeason ? `Colocar ${n} post${plural} na season?` : `Tirar ${n} post${plural} da season?`,
+        description: bulkSeason
+          ? `Season: ${seasons.find((s) => s.slug === bulkSeason)?.label}. O nº do episódio fica em branco para você ordenar depois.`
+          : "Os posts deixam de fazer parte de qualquer season.",
+        confirmText: "Aplicar",
+        type: "info",
+        run: () =>
+          runBulk("Season atualizada", (id) =>
+            PostsService.update(id, { season: bulkSeason || null, seasonOrder: null })
+          ),
+      },
+      trash: {
+        title: `Mover ${n} post${plural} para a lixeira?`,
+        description: "Dá para restaurar depois pela Lixeira.",
+        confirmText: "Mover para lixeira",
+        type: "danger",
+        run: () => runBulk("Movidos para a lixeira", (id) => PostsService.softDelete(id)),
+      },
+    };
+    const a = actions[kind];
+    setConfirmAction({ ...a, onConfirm: a.run });
+  };
+
   /* --- helpers para resetar página ao mudar filtro --- */
   const changeFilter = (setter) => (val) => { setter(val); setPage(1); };
 
@@ -140,7 +220,9 @@ export default function PostsList() {
   const handleToggleRequest = (post) => {
     setConfirmAction({
       title: post?.published ? "Mover para rascunho?" : "Publicar post?",
-      description: `Deseja realmente ${post?.published ? "despublicar" : "publicar"} o post "${post?.title}"?`,
+      description: post?.published
+        ? `O post "${post?.title}" sai do ar e volta para rascunho.`
+        : `O post "${post?.title}" vai ao ar agora${post?.status === "planned" ? ", antes da data agendada" : ""}.`,
       type: "warning",
       confirmText: post?.published ? "Mover para rascunho" : "Publicar",
       onConfirm: () => handleToggle(post),
@@ -187,7 +269,7 @@ export default function PostsList() {
         </div>
 
         {/* Status chips */}
-        <div className="mb-3 flex flex-wrap items-center gap-3">
+        <div className="mb-3">
           <FilterChips
             options={STATUS_OPTIONS}
             selected={statusFilter}
@@ -195,14 +277,6 @@ export default function PostsList() {
             allLabel="Todos"
             multiSelect={false}
           />
-          <Link
-            to="/admin/trash"
-            className="px-3 py-1.5 rounded-full border text-sm font-medium whitespace-nowrap
-              bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300
-              border-gray-300 dark:border-gray-600 hover:border-red-400 hover:text-red-600 transition"
-          >
-            Lixeira
-          </Link>
         </div>
 
         {/* Category chips */}
@@ -264,12 +338,45 @@ export default function PostsList() {
         )}
 
         {!loading && posts.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-3 min-h-[2.5rem]">
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
+              <input type="checkbox" checked={allSelected} onChange={toggleAll} className="w-4 h-4 accent-blue-600" />
+              {selected.size > 0 ? `${selected.size} selecionado(s)` : "Selecionar todos da página"}
+            </label>
+            {selected.size > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" disabled={bulkBusy} onClick={() => bulkRequest("draft")}
+                  className="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50">
+                  Mover para rascunho
+                </button>
+                <span className="flex items-center gap-1">
+                  <select aria-label="Season para os selecionados" value={bulkSeason} onChange={(e) => setBulkSeason(e.target.value)}
+                    className="input !w-auto !py-1.5 text-sm">
+                    <option value="">Sem season</option>
+                    {seasons.map((s) => <option key={s.slug} value={s.slug}>{s.label}</option>)}
+                  </select>
+                  <button type="button" disabled={bulkBusy} onClick={() => bulkRequest("season")}
+                    className="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50">
+                    Aplicar season
+                  </button>
+                </span>
+                <button type="button" disabled={bulkBusy} onClick={() => bulkRequest("trash")}
+                  className="px-3 py-1.5 rounded-md border border-red-300 text-red-600 dark:border-red-800 dark:text-red-400 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50">
+                  Mover para lixeira
+                </button>
+                {bulkBusy && <span className="text-sm text-gray-500">Aplicando...</span>}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!loading && posts.length > 0 && (
           <div className={LAYOUT[view]}>
             {posts.map((post) => {
               const actions = (
                 <>
                   <PublishToggle
-                    checked={post?.published}
+                    post={post}
                     disabled={loadingId === post?._id}
                     onChange={() => handleToggleRequest(post)}
                   />
@@ -286,17 +393,31 @@ export default function PostsList() {
               ) : (
                 <span className="text-xs text-gray-400">Sem imagem</span>
               );
-              const meta = `${post?.category} • ${new Date(post?.createdAt).toLocaleDateString()}`;
+              const meta = `${categoryLabel(post?.category)} • ${new Date(post?.createdAt).toLocaleDateString("pt-BR")}`;
+              const checkbox = (
+                <input
+                  type="checkbox"
+                  aria-label={`Selecionar "${post?.title}"`}
+                  checked={selected.has(post?._id)}
+                  onChange={() => toggleSelected(post?._id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-4 h-4 accent-blue-600 shrink-0 cursor-pointer"
+                />
+              );
 
               if (view === "compact") {
                 return (
                   <div key={post?._id} className="flex items-center gap-3 px-4 py-2.5">
+                    {checkbox}
                     <button
                       type="button"
                       onClick={() => setPreviewPost(post)}
                       className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 text-left"
                     >
-                      <span className="truncate font-medium text-gray-900 dark:text-gray-100">{post?.title}</span>
+                      <span className="flex items-center gap-2 min-w-0">
+                        <PostStatusBadge post={post} />
+                        <span className="truncate font-medium text-gray-900 dark:text-gray-100">{post?.title}</span>
+                      </span>
                       <span className="shrink-0 text-xs text-gray-500 dark:text-gray-300">{meta}</span>
                     </button>
                     <div className="flex items-center gap-4 shrink-0">{actions}</div>
@@ -314,7 +435,7 @@ export default function PostsList() {
                       {cover}
                     </div>
                     <div onClick={() => setPreviewPost(post)} className="p-4 flex-1 cursor-pointer space-y-1.5">
-                      <PostStatusBadge post={post} />
+                      <div className="flex items-center gap-2">{checkbox}<PostStatusBadge post={post} /></div>
                       <h2 className="font-semibold leading-snug line-clamp-2">{post?.title}</h2>
                       <p className="text-sm text-gray-500">{meta}</p>
                     </div>
@@ -326,6 +447,7 @@ export default function PostsList() {
               return (
                 <article key={post?._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">
                   <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                    {checkbox}
                     <div
                       onClick={() => setPreviewPost(post)}
                       className="w-full h-40 sm:w-32 sm:h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer flex items-center justify-center"

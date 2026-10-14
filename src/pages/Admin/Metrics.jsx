@@ -46,12 +46,21 @@ function WeeklyBars({ weekly }) {
 
   return (
     <div>
+      {/* Linha de referência no topo: dá escala ao gráfico sem eixo completo */}
+      <div className="relative">
+        <span className="absolute -top-2 left-0 text-[10px] text-gray-400 tabular-nums bg-white dark:bg-gray-900 pr-1">{max}</span>
+        <div className="border-t border-dashed border-gray-200 dark:border-gray-700" />
+      </div>
       <div className="flex items-end gap-1 h-32 border-b border-gray-200 dark:border-gray-700" role="img" aria-label="Novos assinantes por semana">
         {weekly.map((w) => (
-          <div key={w.week} className="group relative flex-1 h-full flex items-end justify-center">
+          <div key={w.week} className="group relative flex-1 h-full flex flex-col items-center justify-end">
+            {/* Valor em cima da barra (some quando há semanas demais para caber) */}
+            {w.new > 0 && weekly.length <= 16 && (
+              <span className="text-[10px] leading-3 mb-0.5 text-gray-600 dark:text-gray-300 tabular-nums">{w.new}</span>
+            )}
             <div
               className="w-full max-w-8 rounded-t bg-blue-600 dark:bg-blue-500 group-hover:bg-blue-700 dark:group-hover:bg-blue-400 transition-colors"
-              style={{ height: `${Math.max((w.new / max) * 100, w.new ? 4 : 0)}%` }}
+              style={{ height: `${Math.max((w.new / max) * 85, w.new ? 4 : 0)}%` }}
             />
             <div className="pointer-events-none absolute bottom-full mb-1 hidden group-hover:block whitespace-nowrap rounded-md bg-gray-900 text-white text-xs px-2 py-1 shadow z-10">
               Semana de {label(w)}: {w.new} novo(s)
@@ -160,8 +169,11 @@ export default function Metrics() {
                 )}
               </Card>
 
-              <Card title="Posts que mais geram assinantes" subtitle="Inscrições feitas dentro do post · conversão sobre as visualizações totais dele">
+              <Card title="Posts que mais geram assinantes" subtitle="Inscrições feitas dentro do post · barra = fatia do total de inscrições em posts">
                 <BarList
+                  scale="total"
+                  showDetail
+                  formatValue={(v) => `${v.toLocaleString("pt-BR")} inscriç${v === 1 ? "ão" : "ões"}`}
                   items={data.sources.byPost.map((p) => ({
                     key: p.slug,
                     label: p.title,
@@ -169,8 +181,8 @@ export default function Metrics() {
                     href: `/blog/${p.slug}`,
                     detail:
                       p.conversionRate !== null
-                        ? `${formatRate(p.conversionRate, 2)} de ${p.views.toLocaleString("pt-BR")} visualizações`
-                        : undefined,
+                        ? `Conversão ${formatRate(p.conversionRate, 2)} · ${p.views.toLocaleString("pt-BR")} visualizações`
+                        : "Sem visualizações registradas",
                   }))}
                   empty="Nenhuma inscrição dentro de posts no período."
                 />

@@ -89,6 +89,7 @@ export default function PostStatusField({
   publishLabel = "Publicar agora",
   postId,
   alreadyPublished = false,
+  stacked = false, // coluna lateral do editor: opções uma embaixo da outra
 }) {
   const options = [
     { value: "draft", label: "Rascunho", hint: "Ainda escrevendo. Não vai ao ar sozinho." },
@@ -100,7 +101,7 @@ export default function PostStatusField({
     <section className="space-y-3">
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</p>
 
-      <div className="grid sm:grid-cols-3 gap-2">
+      <div className={`grid gap-2 ${stacked ? "grid-cols-1" : "sm:grid-cols-3"}`}>
         {options.map(({ value, label, hint }) => (
           <label
             key={value}
@@ -141,7 +142,7 @@ export default function PostStatusField({
               value={plannedAt}
               min={status === "planned" ? todayInput() : undefined}
               onChange={(e) => onChange({ plannedAt: e.target.value })}
-              className="input w-48"
+              className={`input ${stacked ? "w-full" : "w-48"}`}
             />
             {status === "draft" && plannedAt && (
               <button

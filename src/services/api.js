@@ -9,10 +9,16 @@ const api = axios.create({
   },
 });
 
+// Sessão do admin: cookie httpOnly enviado pelo navegador (withCredentials).
+// Nenhum token passa pelo JavaScript.
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  // Dados que quase não mudam (categorias, seasons) pedem `cacheable: true`:
+  // sem _ts e sem os headers no-cache, o navegador usa o Cache-Control da API
+  // e a requisição não precisa de preflight CORS (OPTIONS).
+  if (config.cacheable) {
+    config.headers.delete("Cache-Control");
+    config.headers.delete("Pragma");
+    return config;
   }
 
   config.params = {
@@ -26,12 +32,18 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Sessão expirou no meio do uso do painel: volta para o login.
+    // Rotas /auth/* tratam o 401 elas mesmas (login errado, conferência da sessão).
     const is401 = error?.response?.status === 401;
-    const isLoginEndpoint = error?.config?.url?.includes("/auth/login");
+    const isAuthEndpoint = error?.config?.url?.startsWith("/auth/");
+    const inPanel = window.location.pathname.startsWith("/admin") && window.location.pathname !== "/admin/login";
 
-    if (is401 && !isLoginEndpoint) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+    if (is401 && !isAuthEndpoint && inPanel) {
+      try {
+        localStorage.removeItem("user");
+      } catch {
+        /* sem localStorage */
+      }
       window.location.href = "/admin/login";
     }
 

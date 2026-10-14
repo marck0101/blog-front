@@ -94,8 +94,9 @@ function NotificationStatus({ postId }) {
  *
  * value: { emailNotify, emailSubject, emailPreheader, emailTeaser, emailAudience }
  * post:  { _id, title, slug, excerpt, category, coverUrl, coverPreview }
+ * onRecipientsChange(count): quantas pessoas receberiam hoje (confirmação ao publicar)
  */
-export default function PostEmailSection({ value, onChange, post, categories, alreadyPublished = false }) {
+export default function PostEmailSection({ value, onChange, post, categories, alreadyPublished = false, onRecipientsChange }) {
   const [testEmail, setTestEmail] = useState("");
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null); // { ok, message }
@@ -172,6 +173,7 @@ export default function PostEmailSection({ value, onChange, post, categories, al
                   onChange={(emailAudience) => set({ emailAudience })}
                   categories={categories}
                   postCategory={post.category}
+                  onPreview={(p) => onRecipientsChange?.(p?.count ?? null)}
                 />
               </div>
 

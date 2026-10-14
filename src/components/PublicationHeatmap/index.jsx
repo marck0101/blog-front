@@ -66,6 +66,8 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
   const weeks = useMemo(() => buildWeeks(year), [year]);
   const monthLabels = useMemo(() => buildMonthLabels(weeks), [weeks]);
 
+  const currentYear = new Date().getFullYear();
+
   const totalPosts = useMemo(
     () => Object.values(data).reduce((s, v) => s + v, 0),
     [data]
@@ -82,9 +84,11 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
             ← {year - 1}
           </button>
           <span className="font-semibold text-gray-900 dark:text-gray-100">{year}</span>
+          {/* Ano futuro não tem publicações: sem botão para ele */}
           <button
             onClick={() => onYearChange(year + 1)}
-            className="text-sm text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
+            disabled={year >= currentYear}
+            className="text-sm text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
           >
             {year + 1} →
           </button>
@@ -94,58 +98,41 @@ export default function PublicationHeatmap({ data = {}, year, onYearChange }) {
         </span>
       </div>
 
-      <div className="flex gap-1">
-        {/* Labels de dias */}
-        <div className="flex flex-col gap-0.5 mr-1 mt-5">
-          {DAYS_PT.map((d, i) => (
-            <div
-              key={i}
-              className="h-3 w-3 text-[9px] text-gray-400 dark:text-gray-300 leading-3 flex items-center justify-center"
-            >
-              {i % 2 === 0 ? d : ""}
-            </div>
-          ))}
-        </div>
+      {/* Grade fluida: as semanas dividem a largura do card (mínimo 640px, com rolagem) */}
+      <div
+        className="grid gap-[3px] min-w-[640px]"
+        style={{ gridTemplateColumns: `auto repeat(${weeks.length}, minmax(0, 1fr))` }}
+      >
+        {/* Linha dos meses */}
+        <div />
+        {weeks.map((_, wi) => (
+          <div key={`m${wi}`} className="h-4 text-[10px] text-gray-400 dark:text-gray-300 leading-4 whitespace-nowrap overflow-visible">
+            {monthLabels[wi] || ""}
+          </div>
+        ))}
 
-        {/* Grid de semanas */}
-        <div className="flex gap-0.5">
-          {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-0.5">
-              {/* Label de mês */}
-              <div className="h-4 text-[9px] text-gray-400 dark:text-gray-300 leading-4 whitespace-nowrap">
-                {monthLabels[wi] || ""}
-              </div>
-
-              {/* Células do dia */}
-              {week.map((day, di) => {
-                if (!day) {
-                  return (
-                    <div
-                      key={di}
-                      className="w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: "transparent" }}
-                    />
-                  );
-                }
-
-                const key = toKey(day);
-                const count = data[key] || 0;
-                const label = count
-                  ? `${count} post${count > 1 ? "s" : ""} em ${day.toLocaleDateString("pt-BR")}`
-                  : `Sem publicações em ${day.toLocaleDateString("pt-BR")}`;
-
-                return (
-                  <div
-                    key={di}
-                    title={label}
-                    className="w-3 h-3 rounded-sm cursor-default"
-                    style={{ backgroundColor: getColor(count) }}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        {/* Uma linha por dia da semana */}
+        {DAYS_PT.map((d, di) => [
+          <div key={`d${di}`} className="pr-1 text-[10px] text-gray-400 dark:text-gray-300 flex items-center">
+            {di % 2 === 0 ? d : ""}
+          </div>,
+          ...weeks.map((week, wi) => {
+            const day = week[di];
+            if (!day) return <div key={`${wi}-${di}`} />;
+            const count = data[toKey(day)] || 0;
+            const label = count
+              ? `${count} post${count > 1 ? "s" : ""} em ${day.toLocaleDateString("pt-BR")}`
+              : `Sem publicações em ${day.toLocaleDateString("pt-BR")}`;
+            return (
+              <div
+                key={`${wi}-${di}`}
+                title={label}
+                className="aspect-square rounded-sm cursor-default"
+                style={{ backgroundColor: getColor(count) }}
+              />
+            );
+          }),
+        ])}
       </div>
 
       {/* Legenda */}

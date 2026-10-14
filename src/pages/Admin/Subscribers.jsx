@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, RefreshCw, Users, AlertCircle, Crown, Send, UserPlus, Pencil } from "lucide-react";
+import { RefreshCw, Users, AlertCircle, Crown, Send, UserPlus, Pencil, Download } from "lucide-react";
+import RowMenu from "../../components/RowMenu";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
@@ -185,6 +186,30 @@ export default function Subscribers() {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
   }, []);
 
+  // Filtros atuais (lista e exportação usam os mesmos)
+  const filterParams = () => {
+    const params = {};
+    if (statusFilter !== "all") params.status = statusFilter;
+    if (tierFilter !== "all") params.tier = tierFilter;
+    if (selectedCategories.length) params.categories = selectedCategories.join(",");
+    if (search) params.search = search;
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    return params;
+  };
+
+  const [exporting, setExporting] = useState(false);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await SubscriberService.exportCsv(filterParams());
+    } catch {
+      alert("Erro ao exportar assinantes.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
@@ -286,9 +311,18 @@ export default function Subscribers() {
               <UserPlus size={16} /> Adicionar
             </button>
             <button
+              onClick={handleExport}
+              disabled={exporting || data.total === 0}
+              title="Baixar CSV com os filtros atuais"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 transition"
+            >
+              <Download size={16} /> {exporting ? "Exportando..." : "Exportar CSV"}
+            </button>
+            <button
               onClick={load}
               className="p-2 rounded-lg border text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
               title="Recarregar"
+              aria-label="Recarregar"
             >
               <RefreshCw size={16} />
             </button>
@@ -457,23 +491,23 @@ export default function Subscribers() {
                         <Send size={14} />
                       </button>
 
-                      <button
-                        onClick={() => handleToggleStatus(sub)}
-                        disabled={actionLoading === sub._id}
-                        title={sub.status === "active" ? "Cancelar inscrição" : "Reativar inscrição"}
-                        className="p-1.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-40 transition"
-                      >
-                        <RefreshCw size={14} />
-                      </button>
-
-                      <button
-                        onClick={() => setConfirm({ action: "delete", sub })}
-                        disabled={actionLoading === sub._id}
-                        title="Excluir assinante"
-                        className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 transition"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {/* Ações raras ou destrutivas ficam no "⋯" */}
+                      <RowMenu
+                        label={`Mais ações para ${sub.email}`}
+                        items={[
+                          {
+                            label: sub.status === "active" ? "Cancelar inscrição" : "Reativar inscrição",
+                            onClick: () => handleToggleStatus(sub),
+                            disabled: actionLoading === sub._id,
+                          },
+                          {
+                            label: "Excluir assinante",
+                            danger: true,
+                            onClick: () => setConfirm({ action: "delete", sub }),
+                            disabled: actionLoading === sub._id,
+                          },
+                        ]}
+                      />
                     </div>
                   </td>
                 </tr>

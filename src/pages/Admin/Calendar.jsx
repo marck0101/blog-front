@@ -74,7 +74,6 @@ function emailStyleKey(email) {
 function EmailBadge({ email }) {
   const auto = email.kind === "post-notification";
   const subject = auto ? email.subject.replace(/^Novo artigo: /, "").replace(/ \| marck0101$/, "") : email.subject;
-  const label = subject.length > 20 ? subject.slice(0, 20) + "…" : subject;
   const detail =
     email.status === "draft"
       ? "rascunho"
@@ -86,13 +85,13 @@ function EmailBadge({ email }) {
       title={`${auto ? "Aviso automático: " : "Envio: "}${subject} (${detail})`}
       className={`block text-[10px] leading-tight px-1.5 py-0.5 rounded border bg-white dark:bg-gray-900 truncate ${EMAIL_STYLE[emailStyleKey(email)]}`}
     >
-      ✉️ {label}
+      ✉️ {subject}
     </Link>
   );
 }
 
 function PostBadge({ post, onPublish }) {
-  const label = post.title.length > 22 ? post.title.slice(0, 22) + "…" : post.title;
+  const label = post.title;
 
   return (
     <div className="flex items-center gap-1 group">
@@ -126,6 +125,15 @@ export default function Calendar() {
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  // Dia aberto no painel com a lista completa (quando não cabe na célula)
+  const [openDay, setOpenDay] = useState(null);
+
+  useEffect(() => {
+    if (!openDay) return;
+    const onKey = (e) => e.key === "Escape" && setOpenDay(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openDay]);
 
   const cells = useMemo(() => buildCalendarGrid(year, month), [year, month]);
 
@@ -258,14 +266,11 @@ export default function Calendar() {
         {/* Legenda */}
         <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mb-4 text-xs text-gray-500 dark:text-gray-300">
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.published}`}>Publicado</span>
-          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.planned}`}>Agendado (vai ao ar ~9h)</span>
-          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.draft}`}>Rascunho com data</span>
-          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.undated}`}>Rascunho sem data</span>
+          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.planned}`} title="Vai ao ar sozinho por volta das 9h">Agendado</span>
+          <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.draft}`} title="Contorno tracejado: rascunho sem data, no dia em que foi criado">Rascunho (tracejado = sem data)</span>
           <span className={`px-2 py-0.5 rounded ${STATUS_STYLE.overdue}`}>Atrasado</span>
-          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.sent}`}>✉️ Email enviado</span>
-          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.failed}`}>✉️ Com falhas</span>
-          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.draft}`}>✉️ Rascunho</span>
-          <span className="text-gray-400">Clique num dia vazio para criar um rascunho nessa data</span>
+          <span className={`px-2 py-0.5 rounded border ${EMAIL_STYLE.sent}`} title="Verde: enviado · vermelho: com falhas · tracejado: rascunho">✉️ Email (cor = situação)</span>
+          <span className="text-gray-400">Dia vazio: clique para criar um rascunho</span>
         </div>
 
         {/* Grid */}
@@ -302,32 +307,39 @@ export default function Calendar() {
                     {day && (
                       <>
                         {/* Número do dia */}
-                        <div className={`text-xs font-semibold mb-1 w-6 h-6 flex items-center justify-center rounded-full
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (dayPosts.length || dayEmails.length) setOpenDay(day);
+                            else handleDayClick(day);
+                          }}
+                          aria-label={`Ver o dia ${day.toLocaleDateString("pt-BR")}`}
+                          className={`text-xs font-semibold mb-1 w-6 h-6 flex items-center justify-center rounded-full hover:ring-2 hover:ring-blue-300
                           ${isToday ? "bg-blue-600 text-white" : "text-gray-700 dark:text-gray-300"}`}
                         >
                           {day.getDate()}
-                        </div>
+                        </button>
 
                         {/* Posts */}
                         <div className="space-y-0.5">
                           {dayPosts.slice(0, 3).map((p) => (
                             <PostBadge key={p._id} post={p} onPublish={handlePublish} />
                           ))}
-                          {dayPosts.length > 3 && (
-                            <p className="text-[10px] text-gray-400 dark:text-gray-300 pl-1">
-                              +{dayPosts.length - 3}
-                            </p>
-                          )}
                           {dayEmails.slice(0, 2).map((e) => (
                             <EmailBadge key={e._id} email={e} />
                           ))}
-                          {dayEmails.length > 2 && (
-                            <Link
-                              to="/admin/campaigns"
-                              className="block text-[10px] text-gray-400 dark:text-gray-300 pl-1 hover:underline"
+                          {(dayPosts.length > 3 || dayEmails.length > 2) && (
+                            <button
+                              type="button"
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                setOpenDay(day);
+                              }}
+                              className="block text-[10px] font-medium text-blue-600 dark:text-blue-400 pl-1 hover:underline"
                             >
-                              +{dayEmails.length - 2} envio(s)
-                            </Link>
+                              +{Math.max(dayPosts.length - 3, 0) + Math.max(dayEmails.length - 2, 0)} · ver todos
+                            </button>
                           )}
                         </div>
                       </>
@@ -339,6 +351,62 @@ export default function Calendar() {
           )}
         </div>
       </main>
+
+      {openDay && (() => {
+        const key = toDateKey(openDay);
+        const list = postsByDay[key] || [];
+        const mails = emailsByDay[key] || [];
+        return (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4" onClick={() => setOpenDay(null)}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Dia ${openDay.toLocaleDateString("pt-BR")}`}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-xl shadow-xl max-h-[80vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b">
+                <h2 className="font-semibold capitalize">
+                  {openDay.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+                </h2>
+                <button type="button" onClick={() => setOpenDay(null)} aria-label="Fechar" className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">✕</button>
+              </div>
+              <div className="overflow-y-auto p-5 space-y-5">
+                {list.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-2">Posts ({list.length})</h3>
+                    <ul className="space-y-1.5">
+                      {list.map((p) => (
+                        <li key={p._id} className="flex items-center gap-2">
+                          <span className={`shrink-0 text-[11px] px-1.5 py-0.5 rounded ${STATUS_STYLE[postStyleKey(p)]}`}>
+                            {isOverdue(p) ? "Atrasado" : POST_STATUS[postStatusKey(p)].label}
+                          </span>
+                          <Link to={`/admin/posts/${p._id}`} className="text-sm hover:underline">{p.title}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                {mails.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-2">Envios ({mails.length})</h3>
+                    <div className="space-y-1">
+                      {mails.map((m) => <EmailBadge key={m._id} email={m} />)}
+                    </div>
+                  </section>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDayClick(openDay)}
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  + Novo rascunho neste dia
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }

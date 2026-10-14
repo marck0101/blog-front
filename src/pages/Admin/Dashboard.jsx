@@ -31,14 +31,32 @@ function StatCardSkeleton() {
   );
 }
 
-function StatCard({ icon: Icon, value, label, colorClass, to }) {
+// "+3 vs. mês passado": este mês comparado ao anterior (meses do calendário)
+function monthDelta(thisMonth, lastMonth, noun) {
+  if (thisMonth == null || lastMonth == null) return null;
+  const diff = thisMonth - lastMonth;
+  const sign = diff > 0 ? "+" : diff < 0 ? "−" : "±";
+  return {
+    text: `${thisMonth} ${noun} este mês · ${sign}${Math.abs(diff)} vs. mês passado`,
+    tone: diff > 0 ? "up" : diff < 0 ? "down" : "flat",
+  };
+}
+
+const HINT_TONE = {
+  up: "text-green-700 dark:text-green-400",
+  down: "text-red-600 dark:text-red-400",
+  flat: "text-gray-500 dark:text-gray-300",
+};
+
+function StatCard({ icon: Icon, value, label, colorClass, to, hint }) {
   const content = (
-    <div className={`rounded-xl border p-6 bg-white dark:bg-gray-900 transition hover:shadow-md ${to ? "cursor-pointer" : ""}`}>
+    <div className={`h-full rounded-xl border p-6 bg-white dark:bg-gray-900 transition hover:shadow-md ${to ? "cursor-pointer" : ""}`}>
       <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-4 ${colorClass}`}>
         <Icon size={20} className="text-white" />
       </div>
       <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
       <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">{label}</p>
+      {hint && <p className={`text-xs mt-2 ${HINT_TONE[hint.tone]}`}>{hint.text}</p>}
     </div>
   );
 
@@ -140,14 +158,17 @@ export default function Dashboard() {
         )}
 
         {/* Cards — Posts */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+            Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
           ) : (
             <>
               <StatCard icon={FileText} value={stats?.totalPosts ?? "—"} label="Total de posts" colorClass="bg-blue-500" to="/admin/posts" />
-              <StatCard icon={Globe} value={stats?.published ?? "—"} label="Publicados" colorClass="bg-green-500" to="/admin/posts" />
-              <StatCard icon={PencilLine} value={stats?.drafts ?? "—"} label="Rascunhos" colorClass="bg-amber-500" to="/admin/posts" />
+              <StatCard icon={Globe} value={stats?.published ?? "—"} label="Publicados" colorClass="bg-green-500" to="/admin/posts?status=published"
+                hint={monthDelta(stats?.publishedThisMonth, stats?.publishedLastMonth, "publicados")} />
+              <StatCard icon={PencilLine} value={stats?.drafts ?? "—"} label="Rascunhos" colorClass="bg-gray-500" to="/admin/posts?status=draft"
+                hint={stats?.staleDrafts ? { text: `${stats.staleDrafts} parado(s) há +${stats.staleDraftDays} dias`, tone: "down" } : null} />
+              <StatCard icon={CalendarDays} value={stats?.planned ?? "—"} label="Agendados" colorClass="bg-blue-500" to="/admin/calendar" />
               <StatCard icon={Trash2} value={stats?.deleted ?? "—"} label="Na lixeira" colorClass="bg-red-500" to="/admin/trash" />
             </>
           )}
@@ -159,7 +180,8 @@ export default function Dashboard() {
             Array.from({ length: 2 }).map((_, i) => <StatCardSkeleton key={i} />)
           ) : (
             <>
-              <StatCard icon={UserCheck} value={stats?.activeSubscribers ?? "—"} label="Assinantes ativos" colorClass="bg-teal-500" to="/admin/subscribers" />
+              <StatCard icon={UserCheck} value={stats?.activeSubscribers ?? "—"} label="Assinantes ativos" colorClass="bg-teal-500" to="/admin/subscribers"
+                hint={monthDelta(stats?.subscribersThisMonth, stats?.subscribersLastMonth, "novos")} />
               <StatCard icon={Users} value={stats?.totalSubscribers ?? "—"} label="Total de assinantes" colorClass="bg-indigo-500" to="/admin/subscribers" />
             </>
           )}

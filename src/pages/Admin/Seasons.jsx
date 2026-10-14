@@ -1,12 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Layers, Pencil, Trash2, Plus, ExternalLink } from "lucide-react";
+import { Layers, Pencil, Trash2, Plus, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import SeasonsService from "../../services/seasons.service";
 
 const EMPTY = { title: "", slug: "", description: "", order: 0 };
+
+// Barra empilhada: publicados / agendados / rascunhos sobre o total da season
+function SeasonProgress({ posts }) {
+  const total = posts.published + posts.planned + posts.draft;
+  if (!total) return <p className="text-xs text-gray-400 mt-2">Nenhum post nesta season ainda.</p>;
+  const pct = (n) => `${(n / total) * 100}%`;
+  return (
+    <div className="mt-3 max-w-md">
+      <div
+        className="flex h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800"
+        role="img"
+        aria-label={`${posts.published} de ${total} publicados`}
+      >
+        <div className="bg-green-500" style={{ width: pct(posts.published) }} />
+        <div className="bg-blue-500" style={{ width: pct(posts.planned) }} />
+        <div className="bg-gray-400 dark:bg-gray-600" style={{ width: pct(posts.draft) }} />
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-300 mt-1.5 flex flex-wrap gap-x-3">
+        <span><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />{posts.published} de {total} publicados</span>
+        <span><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />{posts.planned} agendado(s)</span>
+        <span><span className="inline-block w-2 h-2 rounded-full bg-gray-400 mr-1" />{posts.draft} rascunho(s)</span>
+      </p>
+    </div>
+  );
+}
 
 // Criar (sem `season`) ou editar uma season
 function SeasonForm({ season, onSaved, onCancel }) {
@@ -149,6 +174,27 @@ export default function AdminSeasons() {
     }
   };
 
+  // Setas: troca de lugar e grava a ordem de todas (0, 1, 2…), corrigindo
+  // empates antigos do campo "ordem"
+  const [reordering, setReordering] = useState(false);
+  const move = async (index, delta) => {
+    const next = [...seasons];
+    [next[index], next[index + delta]] = [next[index + delta], next[index]];
+    setSeasons(next);
+    setReordering(true);
+    try {
+      await Promise.all(
+        next.map((s, i) => (s.order !== i ? SeasonsService.update(s._id, { order: i }) : null))
+      );
+      load();
+    } catch {
+      showToast("Erro ao reordenar", "error");
+      load();
+    } finally {
+      setReordering(false);
+    }
+  };
+
   return (
     <>
       <SEO robots="noindex, nofollow" />
@@ -172,13 +218,14 @@ export default function AdminSeasons() {
         onCancel={() => setToDelete(null)}
       />
 
-      <main className="admin-content max-w-5xl mx-auto px-6 py-10 space-y-6">
+      <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2"><Layers size={22} /> Seasons</h1>
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1 max-w-2xl">
               Séries de posts que se complementam. O leitor só vê a season depois que ela tiver pelo menos
-              um post publicado. A ordem dos episódios é o campo &quot;Episódio&quot; de cada post.
+              um post publicado. A ordem dos episódios é o campo &quot;Nº do episódio&quot; de cada post; a ordem das
+              seasons você muda pelas setas.
             </p>
           </div>
           {editing === null && (
@@ -206,7 +253,7 @@ export default function AdminSeasons() {
         )}
 
         <div className="space-y-4">
-          {seasons.map((season) =>
+          {seasons.map((season, index) =>
             editing && editing !== "new" && editing._id === season._id ? (
               <SeasonForm
                 key={season._id}
@@ -219,18 +266,28 @@ export default function AdminSeasons() {
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="min-w-0">
                     <h2 className="text-lg font-semibold">{season.title}</h2>
-                    <p className="text-xs text-gray-400 font-mono mt-0.5">/seasons/{season.slug} · ordem {season.order}</p>
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">/seasons/{season.slug}</p>
                     {season.description && (
                       <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-2xl">{season.description}</p>
                     )}
-                    <p className="text-sm text-gray-500 dark:text-gray-300 mt-2">
-                      {season.posts.published} publicado(s) · {season.posts.planned} agendado(s) · {season.posts.draft} rascunho(s)
-                    </p>
+                    <SeasonProgress posts={season.posts} />
                     <p className={`text-xs mt-1 ${season.posts.published > 0 ? "text-green-600 dark:text-green-400" : "text-gray-400"}`}>
                       {season.posts.published > 0 ? "Visível para os leitores" : "Oculta: aparece quando o 1º post for publicado"}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
+                    <span className="flex items-center">
+                      <button type="button" disabled={reordering || index === 0} onClick={() => move(index, -1)}
+                        aria-label={`Subir "${season.title}"`} title="Subir"
+                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30">
+                        <ArrowUp size={16} />
+                      </button>
+                      <button type="button" disabled={reordering || index === seasons.length - 1} onClick={() => move(index, 1)}
+                        aria-label={`Descer "${season.title}"`} title="Descer"
+                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30">
+                        <ArrowDown size={16} />
+                      </button>
+                    </span>
                     {season.posts.published > 0 && (
                       <Link to={`/seasons/${season.slug}`} target="_blank" className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:underline">
                         <ExternalLink size={14} /> Ver

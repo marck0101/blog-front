@@ -441,7 +441,7 @@ export default function CampaignEditor() {
     return (
       <>
         <Header />
-        <main className="admin-content max-w-5xl mx-auto px-6 py-10 text-gray-400">Carregando...</main>
+        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-400">Carregando...</main>
       </>
     );
   }
@@ -451,7 +451,7 @@ export default function CampaignEditor() {
       <SEO robots="noindex, nofollow" />
       <Header />
 
-      <main className="admin-content max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+      <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         <Link to="/admin/campaigns" className="inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">
           ← Voltar para envios
         </Link>

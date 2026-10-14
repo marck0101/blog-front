@@ -1,7 +1,15 @@
 import { Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Navigate,
+  Outlet,
+  Route,
+  RouterProvider,
+} from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 import AnalyticsTracker from "../components/AnalyticsTracker";
+import ScrollToTop from "../components/ScrollToTop";
 import lazyPage from "../utils/lazyPage";
 
 import BlogHome from "../pages/Blog/BlogHome";
@@ -14,6 +22,7 @@ const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
 const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
 const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
 const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
+const Security = lazyPage(() => import("../pages/Admin/Security"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
 const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
 const ResetPassword = lazyPage(() => import("../pages/Admin/ResetPassword"));
@@ -28,12 +37,22 @@ const CampaignEditor = lazyPage(() => import("../pages/Admin/CampaignEditor"));
 const Calendar = lazyPage(() => import("../pages/Admin/Calendar"));
 const Metrics = lazyPage(() => import("../pages/Admin/Metrics"));
 
-export default function AppRoutes() {
+// Data router: permite useBlocker (aviso de alterações não salvas no editor)
+function RootLayout() {
   return (
-    <BrowserRouter>
+    <>
       <AnalyticsTracker />
+      <ScrollToTop />
       <Suspense fallback={<div className="min-h-screen" />}>
-      <Routes>
+        <Outlet />
+      </Suspense>
+    </>
+  );
+}
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+      <Route element={<RootLayout />}>
         {/* PUBLIC */}
         <Route path="/" element={<Navigate to="/blog" replace />} />
         <Route path="/blog" element={<BlogHome />} />
@@ -154,9 +173,20 @@ export default function AppRoutes() {
           }
         />
 
+        <Route
+          path="/admin/security"
+          element={
+            <PrivateRoute>
+              <Security />
+            </PrivateRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/blog" replace />} />
-      </Routes>
-      </Suspense>
-    </BrowserRouter>
-  );
+      </Route>
+  )
+);
+
+export default function AppRoutes() {
+  return <RouterProvider router={router} />;
 }

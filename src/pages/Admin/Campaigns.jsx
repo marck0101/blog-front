@@ -231,6 +231,19 @@ export default function Campaigns() {
                       : !hasFilters
                         ? "Nenhum envio ainda."
                         : "Nenhum envio com esses filtros."}
+                    {!byEmail && !hasFilters && (
+                      <div className="mt-4 space-y-2">
+                        <Link
+                          to="/admin/campaigns/new"
+                          className="inline-block px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+                        >
+                          Criar primeiro envio
+                        </Link>
+                        <p className="text-xs">
+                          Avisos de post novo aparecem aqui sozinhos quando um post é publicado com email.
+                        </p>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}

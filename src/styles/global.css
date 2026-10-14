@@ -9,6 +9,32 @@ body,
   min-height: 100%;
 }
 
+/* Reserva o espaço da barra de rolagem: o layout não "pula" entre páginas
+   com e sem rolagem */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Borda padrão (classe `border` sem cor) no escuro: cinza escuro em vez de
+   clara. Cores explícitas (border-blue-500, dark:border-…) continuam valendo. */
+@layer base {
+  .dark *,
+  .dark ::before,
+  .dark ::after {
+    border-color: rgb(31 41 55); /* gray-800 */
+  }
+}
+
+/* Admin: sidebar fixa a partir de 1024px (ver components/Header) */
+@media (min-width: 1024px) {
+  html.admin-layout body {
+    padding-left: 15rem;
+  }
+  html.admin-layout .admin-fixed-bar {
+    left: 15rem;
+  }
+}
+
 body {
   @apply bg-gray-50 text-gray-900;
 }

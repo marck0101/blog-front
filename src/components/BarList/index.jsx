@@ -4,10 +4,22 @@
  * própria tabela. Passar o mouse mostra o detalhe.
  *
  * items: [{ key, label, value, detail?, href? }]
+ * scale: "max" (barra relativa ao maior) | "total" (fatia do total: com poucos
+ *        dados, 1 contra 1 não aparece como barra cheia)
+ * showDetail: mostra o detalhe sempre, não só ao passar o mouse
  */
-export default function BarList({ items, formatValue = (v) => v.toLocaleString("pt-BR"), empty = "Sem dados no período." }) {
+export default function BarList({
+  items,
+  formatValue = (v) => v.toLocaleString("pt-BR"),
+  empty = "Sem dados no período.",
+  scale = "max",
+  showDetail = false,
+}) {
   if (!items?.length) return <p className="text-sm text-gray-400 py-2">{empty}</p>;
-  const max = Math.max(...items.map((i) => i.value), 1);
+  const max =
+    scale === "total"
+      ? Math.max(items.reduce((sum, i) => sum + i.value, 0), 1)
+      : Math.max(...items.map((i) => i.value), 1);
 
   return (
     <ul className="space-y-2">
@@ -37,7 +49,7 @@ export default function BarList({ items, formatValue = (v) => v.toLocaleString("
             />
           </div>
           {item.detail && (
-            <p className="hidden group-hover:block text-xs text-gray-500 dark:text-gray-300 mt-0.5">{item.detail}</p>
+            <p className={`${showDetail ? "" : "hidden group-hover:block "}text-xs text-gray-500 dark:text-gray-300 mt-0.5`}>{item.detail}</p>
           )}
         </li>
       ))}
