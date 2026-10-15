@@ -39,6 +39,12 @@ const PostsService = {
     return api.post(`/posts/public/${safeId(id)}/engage`, { type, channel }).catch(() => {});
   },
 
+  // "Continue lendo": até 3 da mesma categoria (completa com outras)
+  async getRelated(id) {
+    const { data } = await api.get(`/posts/public/${safeId(id)}/related`, { cacheable: true });
+    return normalizeArray(data);
+  },
+
   async getPublicById(id) {
     const { data } = await api.get(`/posts/public/${safeId(id)}`);
     return data || null;

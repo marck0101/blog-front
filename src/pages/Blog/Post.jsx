@@ -24,6 +24,7 @@ import { recordShareVisit } from "../../utils/share";
 import FavoriteButton from "../../components/FavoriteButton";
 import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
+import RelatedPosts from "../../components/RelatedPosts";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -283,11 +284,13 @@ export default function Post() {
           <FavoriteButton post={post} location="post_bottom" />
         </div>
 
+        <RelatedPosts key={`related-${post._id}`} post={post} categories={categories} seasons={seasons} />
+
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />
         </div>
 
-        <Comments key={post._id} post={post} />
+        <Comments key={`comments-${post._id}`} post={post} />
       </main>
     </BlogLayout>
   );
