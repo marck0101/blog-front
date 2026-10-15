@@ -28,6 +28,15 @@ import GeneratedCover from "../../components/GeneratedCover";
 // Múltiplos de 3: a grade tem 3 colunas e as linhas ficam completas
 const PAGE_SIZES = [6, 12, 24, 48];
 
+// Ordem da lista: valor na URL (?ordem=) → valor da API. "recentes" é o padrão
+// e não aparece na URL.
+const SORTS = [
+  { value: "recentes", api: "recent", label: "Mais recentes" },
+  { value: "antigos", api: "oldest", label: "Mais antigos" },
+  { value: "populares", api: "popular", label: "Mais lidos" },
+  { value: "az", api: "az", label: "Título (A–Z)" },
+];
+
 // Contêiner de cada formato de visualização
 const LAYOUT = {
   grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8",
@@ -81,6 +90,8 @@ export default function BlogHome() {
   const page = Math.max(1, parseInt(searchParams.get("pagina")) || 1);
   // Busca na URL (/blog?q=seo): dá para compartilhar e voltar a ela
   const search = searchParams.get("q") || "";
+  // Ordem na URL (/blog?ordem=antigos): volta igual ao recarregar ou compartilhar
+  const sort = SORTS.find((s) => s.value === searchParams.get("ordem")) || SORTS[0];
 
   const [posts, setPosts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -129,7 +140,7 @@ export default function BlogHome() {
     // Sem filtro, os fixados ficam só na vitrine (em todas as páginas, para a
     // paginação não pular nem repetir posts)
     const excludePinned = activeCategories.length === 0 && !search;
-    PostsService.getPublished(page, pageSize, { categories: activeCategories, search, excludePinned })
+    PostsService.getPublished(page, pageSize, { categories: activeCategories, search, excludePinned, sort: sort.api })
       .then(({ posts: data, totalPages: pages, total }) => {
         if (!mounted) return;
         setPosts(data.map(normalizePost));
@@ -149,7 +160,7 @@ export default function BlogHome() {
       .finally(() => mounted && setLoading(false));
 
     return () => { mounted = false; };
-  }, [catsKey, search, page, pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [catsKey, search, page, pageSize, sort.api]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setPageContext({ page_type: "home" });
@@ -169,7 +180,18 @@ export default function BlogHome() {
     const params = new URLSearchParams();
     (newCats || []).forEach((cat) => params.append("categoria", cat));
     if (search) params.set("q", search);
+    if (sort.value !== "recentes") params.set("ordem", sort.value);
     setSearchParams(params);
+  };
+
+  // Nova ordem mantém filtros e busca e volta para a página 1
+  const changeSort = (value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === "recentes") params.delete("ordem");
+    else params.set("ordem", value);
+    params.delete("pagina");
+    setSearchParams(params);
+    trackEvent("sort_posts", { sort: value });
   };
 
   // O FilterBar chama onSearch ao montar com o termo atual; só mexe na URL se mudou.
@@ -354,8 +376,9 @@ export default function BlogHome() {
         )}
 
         {/* Busca + formato */}
-        <div className="mb-6 flex items-start gap-3">
-          <div className="flex-1 min-w-0">
+        {/* Celular: busca em cima, ordem e formato embaixo */}
+        <div className="mb-6 flex flex-wrap sm:flex-nowrap items-start gap-3">
+          <div className="w-full sm:w-auto sm:flex-1 min-w-0">
             <FilterBar
               onSearch={handleSearch}
               showDateRange={false}
@@ -365,6 +388,19 @@ export default function BlogHome() {
               searchPlaceholder="Buscar artigo..."
             />
           </div>
+          <label htmlFor="ordem" className="sr-only">Ordenar artigos</label>
+          <select
+            id="ordem"
+            name="ordem"
+            value={sort.value}
+            onChange={(e) => changeSort(e.target.value)}
+            title="Ordenar artigos"
+            className="flex-1 sm:flex-none min-w-0 h-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {SORTS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
           <ViewToggle value={view} onChange={changeView} />
         </div>
 

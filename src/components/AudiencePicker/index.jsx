@@ -3,7 +3,8 @@ import { Crown, X } from "lucide-react";
 import FilterChips from "../FilterChips";
 import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
-import { AUDIENCE_LABELS, AUDIENCE_HINTS, audienceToApi } from "../../utils/campaignAudience";
+import AudiencesService from "../../services/audiences.service";
+import { AUDIENCE_LABELS, AUDIENCE_HINTS, EXCLUDE_MEMBERS_TYPES, audienceToApi } from "../../utils/campaignAudience";
 
 function SubscriberPicker({ selected, onChange }) {
   const [search, setSearch] = useState("");
@@ -174,16 +175,24 @@ function RecipientsPreview({ preview }) {
  */
 export default function AudiencePicker({ value, onChange, categories = [], postCategory, onPreview }) {
   const [preview, setPreview] = useState(null);
+  // Públicos nomeados, no formato dos chips
+  const [lists, setLists] = useState([]);
+
+  useEffect(() => {
+    AudiencesService.getAll()
+      .then((data) => setLists(data.map((l) => ({ slug: l._id, label: `${l.name} (${l.active})` }))))
+      .catch(() => setLists([]));
+  }, []);
 
   const typeOptions = [
     ...(postCategory !== undefined
       ? [{ slug: "post-category", label: AUDIENCE_LABELS["post-category"] }]
       : []),
-    ...["members", "all", "categories", "selected"].map((slug) => ({ slug, label: AUDIENCE_LABELS[slug] })),
+    ...["members", "all", "categories", "selected", "lists"].map((slug) => ({ slug, label: AUDIENCE_LABELS[slug] })),
   ];
 
   const set = (patch) => onChange({ ...value, ...patch });
-  const canExclude = ["post-category", "all", "categories"].includes(value.type);
+  const canExclude = EXCLUDE_MEMBERS_TYPES.includes(value.type);
   const postCategoryLabel = categories.find((c) => c.slug === postCategory)?.label ?? postCategory;
 
   const apiAudience = audienceToApi(value, postCategory);
@@ -225,6 +234,21 @@ export default function AudiencePicker({ value, onChange, categories = [], postC
           showAll={false}
         />
       )}
+
+      {value.type === "lists" &&
+        (lists.length > 0 ? (
+          <FilterChips
+            options={lists}
+            selected={value.lists || []}
+            onChange={(ids) => set({ lists: ids })}
+            multiSelect
+            showAll={false}
+          />
+        ) : (
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            Nenhum público criado. Crie e importe listas em <a href="/admin/audiences" className="underline">Públicos</a>.
+          </p>
+        ))}
 
       {canExclude && (
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">

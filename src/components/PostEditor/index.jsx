@@ -64,6 +64,7 @@ function formFromPost(post) {
       ...emptyAudience("post-category"),
       ...post.emailAudience,
       subscribers: post.emailAudience?.subscribers || [],
+      lists: post.emailAudience?.lists || [],
     },
     linkedin: {
       enabled: post.linkedin?.enabled === true,

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { RefreshCw, Users, AlertCircle, Crown, Send, UserPlus, Pencil, Download } from "lucide-react";
 import RowMenu from "../../components/RowMenu";
 import Header from "../../components/Header";
@@ -10,6 +10,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import Pagination from "../../components/Pagination";
 import usePageSize from "../../hooks/usePageSize";
 import SubscriberService from "../../services/subscriber.service";
+import AudiencesService from "../../services/audiences.service";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Ativos" },
@@ -162,6 +163,10 @@ const PAGE_SIZES = [5, 10, 20, 50];
 
 export default function Subscribers() {
   const navigate = useNavigate();
+  // ?list=<id>: chega filtrado vindo de Públicos
+  const [searchParams] = useSearchParams();
+  const [listFilter, setListFilter] = useState(() => searchParams.get("list") || "all");
+  const [audiences, setAudiences] = useState([]);
   const [data, setData] = useState({ subscribers: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -184,6 +189,9 @@ export default function Subscribers() {
   /* --- categorias via API --- */
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
+    AudiencesService.getAll()
+      .then((list) => setAudiences(list.map((a) => ({ slug: a._id, label: a.name }))))
+      .catch(() => {});
   }, []);
 
   // Filtros atuais (lista e exportação usam os mesmos)
@@ -191,6 +199,7 @@ export default function Subscribers() {
     const params = {};
     if (statusFilter !== "all") params.status = statusFilter;
     if (tierFilter !== "all") params.tier = tierFilter;
+    if (listFilter !== "all") params.list = listFilter;
     if (selectedCategories.length) params.categories = selectedCategories.join(",");
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
@@ -216,6 +225,7 @@ export default function Subscribers() {
     const params = { page, limit: pageSize };
     if (statusFilter !== "all") params.status = statusFilter;
     if (tierFilter !== "all") params.tier = tierFilter;
+    if (listFilter !== "all") params.list = listFilter;
     if (selectedCategories.length) params.categories = selectedCategories.join(",");
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
@@ -225,7 +235,7 @@ export default function Subscribers() {
       .then(setData)
       .catch(() => setError("Não foi possível carregar os assinantes."))
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, tierFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, tierFilter, listFilter, selectedCategories, search, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -234,6 +244,7 @@ export default function Subscribers() {
   const clearFilters = () => {
     setStatusFilter("all");
     setTierFilter("all");
+    setListFilter("all");
     setSelectedCategories([]);
     setSearch("");
     setDateFrom("");
@@ -249,6 +260,19 @@ export default function Subscribers() {
       load();
     } catch {
       alert("Erro ao remover assinante.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Sai só do público filtrado; continua assinante
+  const handleRemoveFromList = async (sub) => {
+    setActionLoading(sub._id);
+    try {
+      await AudiencesService.removeMember(listFilter, sub._id);
+      load();
+    } catch {
+      alert("Erro ao tirar do público.");
     } finally {
       setActionLoading(null);
     }
@@ -360,6 +384,22 @@ export default function Subscribers() {
             multiSelect={false}
           />
         </div>
+
+        {/* Públicos (listas) */}
+        {audiences.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <FilterChips
+              options={audiences}
+              selected={listFilter}
+              onChange={changeFilter((v) => setListFilter(v || "all"))}
+              allLabel="Todos os públicos"
+              multiSelect={false}
+            />
+            <Link to="/admin/audiences" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+              Gerenciar públicos
+            </Link>
+          </div>
+        )}
 
         {/* Category chips */}
         {categories.length > 0 && (
@@ -500,6 +540,15 @@ export default function Subscribers() {
                             onClick: () => handleToggleStatus(sub),
                             disabled: actionLoading === sub._id,
                           },
+                          ...(listFilter !== "all"
+                            ? [
+                                {
+                                  label: "Tirar deste público",
+                                  onClick: () => handleRemoveFromList(sub),
+                                  disabled: actionLoading === sub._id,
+                                },
+                              ]
+                            : []),
                           {
                             label: "Excluir assinante",
                             danger: true,

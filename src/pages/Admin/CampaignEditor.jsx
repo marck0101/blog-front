@@ -249,6 +249,8 @@ export default function CampaignEditor() {
 
   // Atalho vindo da tela de assinantes: já abre com a pessoa selecionada
   const preselected = location.state?.subscriber;
+  // Atalho vindo de Públicos: já abre com o público selecionado
+  const preselectedList = location.state?.list;
 
   const [campaign, setCampaign] = useState(null);
   const [form, setForm] = useState({
@@ -257,6 +259,8 @@ export default function CampaignEditor() {
     content: "",
     audience: preselected
       ? { ...emptyAudience("selected"), subscribers: [preselected] }
+      : preselectedList
+      ? { ...emptyAudience("lists"), lists: [preselectedList] }
       : emptyAudience("members"),
     post: null,
   });
@@ -291,6 +295,7 @@ export default function CampaignEditor() {
             type: c.audience?.type || "members",
             categories: c.audience?.categories || [],
             subscribers: c.audience?.subscribers || [],
+            lists: c.audience?.lists || [],
             excludeMembers: Boolean(c.audience?.excludeMembers),
           },
           post: c.post || null,

@@ -10,7 +10,9 @@ const PostsService = {
   // Retorna { posts, total, page, totalPages }
   async getPublished(page = 1, limit = 20, filters = {}) {
     const params = { page, limit };
-    const { categories = [], search = "", dateFrom = "", dateTo = "", excludePinned = false } = filters;
+    const { categories = [], search = "", dateFrom = "", dateTo = "", excludePinned = false, sort = "" } = filters;
+    // recent (padrão) | oldest | popular | az
+    if (sort && sort !== "recent") params.sort = sort;
     if (categories.length) params.categories = categories.join(",");
     // Home sem filtro: os fixados aparecem na vitrine e não repetem na lista
     if (excludePinned) params.excludePinned = 1;

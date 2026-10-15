@@ -24,6 +24,7 @@ const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
 const Favorites = lazyPage(() => import("../pages/Blog/Favorites"));
 const Showcase = lazyPage(() => import("../pages/Admin/Showcase"));
 const AdminComments = lazyPage(() => import("../pages/Admin/Comments"));
+const Audiences = lazyPage(() => import("../pages/Admin/Audiences"));
 const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
 const Security = lazyPage(() => import("../pages/Admin/Security"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
@@ -182,6 +183,15 @@ const router = createBrowserRouter(
           element={
             <PrivateRoute>
               <Showcase />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/audiences"
+          element={
+            <PrivateRoute>
+              <Audiences />
             </PrivateRoute>
           }
         />

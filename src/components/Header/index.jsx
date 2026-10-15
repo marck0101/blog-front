@@ -18,6 +18,7 @@ import {
   Layers,
   Menu,
   MessageSquare,
+  ListChecks,
   Pin,
   ShieldCheck,
   Moon,
@@ -42,6 +43,7 @@ const ADMIN_GROUPS = [
     label: "Audiência",
     links: [
       { to: "/admin/subscribers", label: "Assinantes", icon: Users, match: "exact" },
+      { to: "/admin/audiences", label: "Públicos", icon: ListChecks, match: "exact" },
       { to: "/admin/campaigns", label: "Envios", icon: Mail, match: "prefix" },
       { to: "/admin/comments", label: "Comentários", icon: MessageSquare, match: "exact", badge: "pendingComments" },
       { to: "/admin/metrics", label: "Métricas", icon: BarChart3, match: "exact" },

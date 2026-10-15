@@ -4,6 +4,7 @@ export const AUDIENCE_LABELS = {
   all: "Todos os assinantes",
   categories: "Por categorias",
   selected: "Assinantes específicos",
+  lists: "Públicos",
 };
 
 export const AUDIENCE_HINTS = {
@@ -11,12 +12,17 @@ export const AUDIENCE_HINTS = {
   all: "Todos os assinantes ativos, membros ou não.",
   categories: "Assinantes ativos que seguem ao menos uma das categorias.",
   selected: "Apenas as pessoas que você escolher abaixo.",
+  lists: "Pessoas ativas de um ou mais públicos (listas importadas ou montadas por você).",
 };
+
+// Tipos em que dá para tirar os membros do envio
+export const EXCLUDE_MEMBERS_TYPES = ["post-category", "all", "categories", "lists"];
 
 export const emptyAudience = (type = "members") => ({
   type,
   categories: [],
   subscribers: [],
+  lists: [],
   excludeMembers: false,
 });
 
@@ -26,8 +32,7 @@ export const emptyAudience = (type = "members") => ({
  * sem ele, mantém "post-category" (salvo no post e resolvido ao publicar).
  */
 export function audienceToApi(value, postCategory) {
-  const excludeMembers =
-    ["post-category", "all", "categories"].includes(value.type) && Boolean(value.excludeMembers);
+  const excludeMembers = EXCLUDE_MEMBERS_TYPES.includes(value.type) && Boolean(value.excludeMembers);
 
   if (value.type === "post-category" && postCategory !== undefined) {
     return { type: "categories", categories: postCategory ? [postCategory] : [], excludeMembers };
@@ -37,6 +42,7 @@ export function audienceToApi(value, postCategory) {
     type: value.type,
     categories: value.categories || [],
     subscribers: (value.subscribers || []).map((s) => s._id ?? s),
+    lists: value.lists || [],
     excludeMembers,
   };
 }
@@ -44,7 +50,7 @@ export function audienceToApi(value, postCategory) {
 // Rótulo completo do público, incluindo o "exceto membros"
 export function audienceLabel(audience = {}) {
   const label = AUDIENCE_LABELS[audience.type] ?? "";
-  const excludes = audience.excludeMembers && ["all", "categories"].includes(audience.type);
+  const excludes = audience.excludeMembers && ["all", "categories", "lists"].includes(audience.type);
   return excludes ? `${label} (exceto membros)` : label;
 }
 
