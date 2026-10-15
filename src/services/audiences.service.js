@@ -20,8 +20,26 @@ const AudiencesService = {
     return data;
   },
 
+  // Manda para a lixeira (as pessoas continuam ligadas ao público)
   async remove(id) {
     await api.delete(`/audiences/${safeId(id)}`);
+  },
+
+  /* ================= LIXEIRA ================= */
+
+  async getTrash() {
+    const { data } = await api.get("/audiences/trash");
+    return Array.isArray(data) ? data : [];
+  },
+
+  async restore(id) {
+    const { data } = await api.patch(`/audiences/${safeId(id)}/restore`);
+    return data;
+  },
+
+  // Só da lixeira: apaga o público; as pessoas continuam como assinantes
+  async deletePermanent(id) {
+    await api.delete(`/audiences/${safeId(id)}/hard`);
   },
 
   async removeMember(id, subscriberId) {

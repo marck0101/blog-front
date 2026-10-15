@@ -325,6 +325,7 @@ export default function Audiences() {
   const [form, setForm] = useState(null); // null | "new" | público
   const [importing, setImporting] = useState(null);
   const [toDelete, setToDelete] = useState(null);
+  const [trashCount, setTrashCount] = useState(0);
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = "success") => {
@@ -332,16 +333,17 @@ export default function Audiences() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const load = useCallback(
-    () =>
-      AudiencesService.getAll()
-        .then((list) => {
-          setAudiences(list);
-          setError(null);
-        })
-        .catch(() => setError("Erro ao carregar os públicos.")),
-    []
-  );
+  const load = useCallback(() => {
+    AudiencesService.getTrash()
+      .then((list) => setTrashCount(list.length))
+      .catch(() => {});
+    return AudiencesService.getAll()
+      .then((list) => {
+        setAudiences(list);
+        setError(null);
+      })
+      .catch(() => setError("Erro ao carregar os públicos."));
+  }, []);
 
   useEffect(() => {
     load();
@@ -354,9 +356,9 @@ export default function Audiences() {
     try {
       await AudiencesService.remove(audience._id);
       await load();
-      showToast("Público excluído. As pessoas continuam como assinantes.");
+      showToast("Público movido para a lixeira. Dá para restaurar em Lixeira → Públicos.");
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao excluir", "error");
+      showToast(err?.response?.data?.error || "Erro ao mover para a lixeira", "error");
     }
   };
 
@@ -378,9 +380,9 @@ export default function Audiences() {
 
       <ConfirmDialog
         open={Boolean(toDelete)}
-        title={`Excluir o público "${toDelete?.name}"?`}
-        description="Só o agrupamento some: as pessoas continuam como assinantes, com as categorias que já têm."
-        confirmText="Excluir público"
+        title={`Mover "${toDelete?.name}" para a lixeira?`}
+        description="O público sai daqui e dos envios, mas as pessoas continuam como assinantes e ligadas a ele. Restaurar pela Lixeira devolve o público completo."
+        confirmText="Mover para a lixeira"
         type="danger"
         onConfirm={confirmDelete}
         onCancel={() => setToDelete(null)}
@@ -403,13 +405,23 @@ export default function Audiences() {
               Listas de pessoas para mirar envios: importe nomes e emails ou agrupe assinantes.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setForm(form === "new" ? null : "new")}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
-          >
-            <Plus size={16} /> Novo público
-          </button>
+          <div className="flex items-center gap-2">
+            {trashCount > 0 && (
+              <Link
+                to="/admin/trash?tipo=publicos"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <Trash2 size={16} /> Lixeira ({trashCount})
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => setForm(form === "new" ? null : "new")}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            >
+              <Plus size={16} /> Novo público
+            </button>
+          </div>
         </div>
 
         {form && (
@@ -456,7 +468,7 @@ export default function Audiences() {
                     <button type="button" onClick={() => setForm(a)} aria-label="Editar" title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
                       <Pencil size={15} />
                     </button>
-                    <button type="button" onClick={() => setToDelete(a)} aria-label="Excluir" title="Excluir" className="p-1.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <button type="button" onClick={() => setToDelete(a)} aria-label="Mover para a lixeira" title="Mover para a lixeira" className="p-1.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                       <Trash2 size={15} />
                     </button>
                   </div>
