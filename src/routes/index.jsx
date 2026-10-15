@@ -21,6 +21,9 @@ import Post from "../pages/Blog/Post";
 const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
 const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
 const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
+const Favorites = lazyPage(() => import("../pages/Blog/Favorites"));
+const Showcase = lazyPage(() => import("../pages/Admin/Showcase"));
+const AdminComments = lazyPage(() => import("../pages/Admin/Comments"));
 const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
 const Security = lazyPage(() => import("../pages/Admin/Security"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
@@ -60,6 +63,7 @@ const router = createBrowserRouter(
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/seasons" element={<Seasons />} />
         <Route path="/seasons/:slug" element={<SeasonPage />} />
+        <Route path="/favoritos" element={<Favorites />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin/reset-password" element={<ResetPassword />} />
@@ -169,6 +173,24 @@ const router = createBrowserRouter(
           element={
             <PrivateRoute>
               <AdminSeasons />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/showcase"
+          element={
+            <PrivateRoute>
+              <Showcase />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/comments"
+          element={
+            <PrivateRoute>
+              <AdminComments />
             </PrivateRoute>
           }
         />

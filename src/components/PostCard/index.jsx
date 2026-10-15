@@ -1,12 +1,19 @@
 import { Link } from "react-router-dom";
-import { Layers } from "lucide-react";
+import { Layers, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../GeneratedCover";
+import FavoriteButton from "../FavoriteButton";
+
+// Coração sobre a capa: fora do <Link> (botão dentro de link não é válido)
+function CardFavorite({ post, className }) {
+  return <FavoriteButton post={post} variant="icon" location="card" className={`absolute z-10 ${className}`} />;
+}
 
 // Lista: capa pequena ao lado do texto
 function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
   return (
-    <article className="group">
+    <article className="group relative">
+      <CardFavorite post={post} className="top-0 left-0" />
       <Link
         to={`/blog/${post.slug || post.id}`}
         className="flex gap-4 sm:gap-6 items-start rounded-xl p-2 -m-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
@@ -68,11 +75,23 @@ function SeasonBadge({ label }) {
   );
 }
 
+// Selo da vitrine ("Fixado", "Destaque da semana")
+function ShowcaseBadge({ badge }) {
+  if (!badge) return null;
+  return (
+    <span className="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+      {badge === "Fixado" && <Pin size={12} className="shrink-0" />}
+      {badge}
+    </span>
+  );
+}
+
 // Grade: mesmo padrão do admin — card com borda, capa limpa e texto abaixo,
 // todos com a mesma altura na linha
-function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
+function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge }) {
   return (
-    <article className="group h-full">
+    <article className="group h-full relative">
+      <CardFavorite post={post} className="top-2 right-2" />
       <Link
         to={`/blog/${post.slug || post.id}`}
         className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden transition hover:border-blue-400 hover:shadow-md"
@@ -98,6 +117,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
             {date}
             {categoryLabel && <> • {categoryLabel}</>}
           </p>
+          <ShowcaseBadge badge={badge} />
           <SeasonBadge label={seasonLabel} />
           <h2 className="font-semibold text-lg leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {post.title}
@@ -113,10 +133,11 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
 }
 
 // variant: "grid" (padrão) | "list" | "compact"
-export default function PostCard({ post, variant = "grid", categoryLabel, seasonLabel }) {
+// badge: selo da vitrine na grade ("Fixado")
+export default function PostCard({ post, variant = "grid", categoryLabel, seasonLabel, badge }) {
   const coverSrc = normalizeImageUrl(post.coverImage);
   const date = new Date(post.publishedAt).toLocaleDateString("pt-BR");
-  const props = { post, coverSrc, date, categoryLabel, seasonLabel };
+  const props = { post, coverSrc, date, categoryLabel, seasonLabel, badge };
 
   if (variant === "list") return <ListCard {...props} />;
   if (variant === "compact") return <CompactCard {...props} />;

@@ -10,13 +10,31 @@ const PostsService = {
   // Retorna { posts, total, page, totalPages }
   async getPublished(page = 1, limit = 20, filters = {}) {
     const params = { page, limit };
-    const { categories = [], search = "", dateFrom = "", dateTo = "" } = filters;
+    const { categories = [], search = "", dateFrom = "", dateTo = "", excludePinned = false } = filters;
     if (categories.length) params.categories = categories.join(",");
+    // Home sem filtro: os fixados aparecem na vitrine e não repetem na lista
+    if (excludePinned) params.excludePinned = 1;
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
     const { data } = await api.get("/posts/published", { params });
     return data;
+  },
+
+  // Vitrine da home (cache curto na API/CDN)
+  async getPinned() {
+    const { data } = await api.get("/posts/pinned", { cacheable: true });
+    return normalizeArray(data);
+  },
+
+  async getHighlights() {
+    const { data } = await api.get("/posts/highlights", { cacheable: true });
+    return normalizeArray(data);
+  },
+
+  // Evento anônimo do leitor (favoritar, compartilhar). Nunca atrapalha a página.
+  engage(id, type, channel) {
+    return api.post(`/posts/public/${safeId(id)}/engage`, { type, channel }).catch(() => {});
   },
 
   async getPublicById(id) {
@@ -84,6 +102,26 @@ const PostsService = {
 
   async togglePublish(id, published) {
     const { data } = await api.put(`/posts/${safeId(id)}`, { published });
+    return data;
+  },
+
+  /* ================= VITRINE ================= */
+
+  // { maxPinned, highlightDays, pinned, highlights, ranking }
+  async getShowcase() {
+    const { data } = await api.get("/posts/showcase");
+    return data;
+  },
+
+  // ids na ordem da vitrine; [] desafixa todos
+  async setPinned(ids) {
+    const { data } = await api.put("/posts/showcase/pinned", { ids });
+    return data;
+  },
+
+  // "auto" | "force" | "hide"
+  async setHighlight(id, highlight) {
+    const { data } = await api.patch(`/posts/${safeId(id)}/highlight`, { highlight });
     return data;
   },
 

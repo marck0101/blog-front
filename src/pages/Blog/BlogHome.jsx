@@ -21,6 +21,9 @@ import SubscribeForm from "../../components/SubscribeForm";
 import SeasonCard from "../../components/SeasonCard";
 import { setPageContext, trackEvent } from "../../utils/analytics";
 import { useState } from "react";
+import { Flame, Pin } from "lucide-react";
+import { normalizeImageUrl } from "../../utils/imageUrl";
+import GeneratedCover from "../../components/GeneratedCover";
 
 // Múltiplos de 3: a grade tem 3 colunas e as linhas ficam completas
 const PAGE_SIZES = [6, 12, 24, 48];
@@ -31,6 +34,42 @@ const LAYOUT = {
   list: "space-y-6",
   compact: "divide-y divide-gray-200 dark:divide-gray-800 border-y border-gray-200 dark:border-gray-800",
 };
+
+// Destaques da semana: ranking numerado, compacto, para não competir com os fixados
+function WeeklyHighlights({ posts, categories }) {
+  return (
+    <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+      {posts.map((post, i) => {
+        const categoryLabel = categories.find((c) => c.slug === post.category)?.label;
+        const cover = normalizeImageUrl(post.coverImage);
+        return (
+          <li key={post._id}>
+            <Link
+              to={`/blog/${post.slug}`}
+              onClick={() => trackEvent("highlight_click", { post_slug: post.slug, position: i + 1 })}
+              className="group flex items-center gap-4 rounded-xl p-2 -m-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+            >
+              <span className="shrink-0 w-8 text-3xl font-bold text-gray-300 dark:text-gray-600 tabular-nums text-center">{i + 1}</span>
+              <div className="w-20 shrink-0 aspect-video rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
+                {cover ? (
+                  <img src={cover} alt="" width={160} height={90} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                ) : (
+                  <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
+                )}
+              </div>
+              <div className="min-w-0">
+                {categoryLabel && <p className="text-xs text-gray-500 dark:text-gray-300">{categoryLabel}</p>}
+                <h3 className="font-semibold leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {post.title}
+                </h3>
+              </div>
+            </Link>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 export default function BlogHome() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,10 +92,15 @@ export default function BlogHome() {
   // Seasons públicas (com episódio publicado): selo "Season" nos cards
   const [seasons, setSeasons] = useState([]);
   const [view, setView] = useViewMode("blog-view", ["grid", "list", "compact"], "grid");
+  // Vitrine (só na 1ª página sem filtro): fixados no painel e destaques da semana
+  const [pinned, setPinned] = useState([]);
+  const [highlights, setHighlights] = useState([]);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
     SeasonsService.getPublic().then(setSeasons).catch(() => {});
+    PostsService.getPinned().then(setPinned).catch(() => {});
+    PostsService.getHighlights().then(setHighlights).catch(() => {});
   }, []);
 
   const catsKey = activeCategories.join(",");
@@ -82,7 +126,10 @@ export default function BlogHome() {
     let mounted = true;
     setLoading(true);
 
-    PostsService.getPublished(page, pageSize, { categories: activeCategories, search })
+    // Sem filtro, os fixados ficam só na vitrine (em todas as páginas, para a
+    // paginação não pular nem repetir posts)
+    const excludePinned = activeCategories.length === 0 && !search;
+    PostsService.getPublished(page, pageSize, { categories: activeCategories, search, excludePinned })
       .then(({ posts: data, totalPages: pages, total }) => {
         if (!mounted) return;
         setPosts(data.map(normalizePost));
@@ -222,6 +269,39 @@ export default function BlogHome() {
           />
         </div>
       </section>
+
+      {/* Fixados: só na primeira página, sem filtro */}
+      {pinned.length > 0 && page === 1 && !hasActiveFilters && (
+        <section aria-labelledby="fixados" className="max-w-5xl mx-auto px-6 pt-10">
+          <h2 id="fixados" className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Pin size={20} className="text-amber-600 dark:text-amber-400" /> Comece por aqui
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {pinned.map((post) => (
+              <PostCard
+                key={post._id}
+                post={normalizePost(post)}
+                badge="Fixado"
+                categoryLabel={categories.find((c) => c.slug === post.category)?.label}
+                seasonLabel={seasons.find((s) => s.slug === post.season)?.title}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Destaques da semana: mais lidos dos últimos 7 dias (+ escolhidos no painel) */}
+      {highlights.length > 0 && page === 1 && !hasActiveFilters && (
+        <section aria-labelledby="destaques-semana" className="max-w-5xl mx-auto px-6 pt-10">
+          <div className="mb-4">
+            <h2 id="destaques-semana" className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <Flame size={20} className="text-orange-500" /> Destaques da semana
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-300">Os artigos mais lidos dos últimos 7 dias.</p>
+          </div>
+          <WeeklyHighlights posts={highlights} categories={categories} />
+        </section>
+      )}
 
       {/* Destaque das seasons: só na primeira página, sem filtro */}
       {seasons.length > 0 && page === 1 && !hasActiveFilters && (

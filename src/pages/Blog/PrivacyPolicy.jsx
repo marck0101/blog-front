@@ -61,6 +61,19 @@ export default function PrivacyPolicy() {
                 rastreio e links rastreados que indicam se o email foi aberto, quais
                 links foram clicados e se a inscrição foi cancelada por ele.
               </li>
+              <li>
+                <strong>Comentários</strong> — para comentar, você entra com sua conta
+                Google e recebemos seu nome, email e foto do perfil. Nome e foto aparecem
+                junto do comentário; o email não é exibido e serve só para a moderação.
+                Não temos acesso à sua senha nem a outros dados da conta.
+              </li>
+              <li>
+                <strong>Favoritos e compartilhamentos</strong> — os posts que você
+                favorita ficam salvos só no seu navegador. Ao favoritar ou usar um botão
+                de compartilhar, contamos o evento no post de forma anônima, sem
+                identificar quem fez. Links compartilhados levam parâmetros como
+                utm_medium=share para sabermos quantas visitas cada canal trouxe.
+              </li>
             </ul>
           </section>
 
@@ -71,6 +84,7 @@ export default function PrivacyPolicy() {
               <li>Personalizar o conteúdo enviado conforme suas categorias de interesse.</li>
               <li>Melhorar a experiência de navegação no site.</li>
               <li>Medir o desempenho dos emails (taxas de abertura e clique) e dos canais que trazem assinantes.</li>
+              <li>Exibir e moderar comentários e responder a eles.</li>
             </ul>
             <p>
               <strong>Não vendemos, alugamos nem compartilhamos</strong> seus dados
@@ -89,6 +103,12 @@ export default function PrivacyPolicy() {
               Cookies de preferência são armazenados localmente no seu navegador por
               tempo indeterminado e podem ser removidos a qualquer momento pelas
               configurações do navegador.
+            </p>
+            <p>
+              Comentários ficam publicados enquanto o post estiver no ar. Você pode
+              excluir o seu a qualquer momento pelo botão "Excluir" no próprio
+              comentário (entrando com a mesma conta Google) e sair da sessão de
+              comentários pelo botão "Sair". A sessão expira sozinha em 30 dias.
             </p>
           </section>
 
@@ -136,7 +156,8 @@ export default function PrivacyPolicy() {
             <ul>
               <li>
                 <strong>Essenciais</strong> — necessários para o funcionamento básico
-                do site (preferências de tema, aceite desta política).
+                do site (preferências de tema, aceite desta política, posts favoritos e
+                a sessão de quem entrou com Google para comentar).
               </li>
               <li>
                 <strong>Analíticos</strong> — coletam dados anônimos de navegação para

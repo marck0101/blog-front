@@ -20,6 +20,10 @@ import {
 } from "../../seo/site";
 import { readingMinutes } from "../../utils/readingTime";
 import { markEpisodeRead } from "../../utils/seasonProgress";
+import { recordShareVisit } from "../../utils/share";
+import FavoriteButton from "../../components/FavoriteButton";
+import ShareButtons from "../../components/ShareButtons";
+import Comments from "../../components/Comments";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -93,6 +97,8 @@ export default function Post() {
       { post_slug: post.slug, post_category: post.category },
       { pixel: "ViewContent", pixelParams: { content_name: post.title, content_category: post.category, content_type: "article" } }
     );
+    // Chegou por link compartilhado (utm_medium=share): conta para o canal
+    recordShareVisit(post);
   }, [post?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Profundidade de leitura do texto (não da página inteira, que inclui rodapé)
@@ -256,6 +262,11 @@ export default function Post() {
           • {minutes} min de leitura
         </p>
 
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <FavoriteButton post={post} location="post_top" />
+          <ShareButtons post={post} location="post_top" />
+        </div>
+
         <SeasonNav post={post} variant="badge" />
 
         <div
@@ -267,9 +278,16 @@ export default function Post() {
 
         <SeasonNav post={post} />
 
+        <div className="mt-10 py-5 border-y border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
+          <ShareButtons post={post} location="post_bottom" title="Gostou? Mande para alguém" />
+          <FavoriteButton post={post} location="post_bottom" />
+        </div>
+
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />
         </div>
+
+        <Comments key={post._id} post={post} />
       </main>
     </BlogLayout>
   );

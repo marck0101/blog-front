@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { AuthContext } from "../../context/AuthContext";
 import { resolveTheme, setThemePref, watchSystemTheme } from "../../utils/theme";
+import { usePendingComments } from "../../utils/pendingComments";
 import {
   LogOut,
   FileText,
@@ -16,6 +17,8 @@ import {
   BarChart3,
   Layers,
   Menu,
+  MessageSquare,
+  Pin,
   ShieldCheck,
   Moon,
   Sun,
@@ -31,6 +34,7 @@ const ADMIN_GROUPS = [
       { to: "/admin/posts", label: "Posts", icon: FileText, match: "prefix" },
       { to: "/admin/calendar", label: "Calendário", icon: CalendarDays, match: "exact" },
       { to: "/admin/seasons", label: "Seasons", icon: Layers, match: "exact" },
+      { to: "/admin/showcase", label: "Vitrine", icon: Pin, match: "exact" },
       { to: "/admin/trash", label: "Lixeira", icon: Trash, match: "exact" },
     ],
   },
@@ -39,6 +43,7 @@ const ADMIN_GROUPS = [
     links: [
       { to: "/admin/subscribers", label: "Assinantes", icon: Users, match: "exact" },
       { to: "/admin/campaigns", label: "Envios", icon: Mail, match: "prefix" },
+      { to: "/admin/comments", label: "Comentários", icon: MessageSquare, match: "exact", badge: "pendingComments" },
       { to: "/admin/metrics", label: "Métricas", icon: BarChart3, match: "exact" },
     ],
   },
@@ -74,6 +79,8 @@ export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
+  const pendingComments = usePendingComments();
+  const badges = { pendingComments };
 
   const [theme, setTheme] = useState(() => resolveTheme());
   // Guarda a rota em que o menu mobile foi aberto: ao navegar ele fecha sozinho
@@ -126,6 +133,14 @@ export default function Header() {
             >
               <link.icon size={18} className="shrink-0" />
               {link.label}
+              {link.badge && badges[link.badge] > 0 && (
+                <span
+                  className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-5 text-center tabular-nums"
+                  aria-label={`${badges[link.badge]} pendente(s)`}
+                >
+                  {badges[link.badge]}
+                </span>
+              )}
             </Link>
           ))}
         </div>

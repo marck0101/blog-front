@@ -7,6 +7,7 @@ import BarList from "../../components/BarList";
 import FilterChips from "../../components/FilterChips";
 import MetricsService from "../../services/metrics.service";
 import { formatRate, shortUrl } from "../../utils/metrics";
+import { SHARE_CHANNELS } from "../../utils/share";
 
 const PERIODS = [
   { value: "30", label: "30 dias" },
@@ -95,9 +96,77 @@ function WeeklyBars({ weekly }) {
   );
 }
 
+// Favoritos, compartilhamentos e comentários dos leitores no período
+function Engagement({ data }) {
+  const channelItems = (list) =>
+    list.map((c) => ({ key: c.channel, label: SHARE_CHANNELS[c.channel] || c.channel, value: c.count }));
+  const netFavorites = data.totals.favorites - data.totals.unfavorites;
+
+  return (
+    <>
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Engajamento nos posts</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-300">
+          Contagem anônima a partir desta versão do blog: favoritos ficam no navegador do leitor e só o +1/-1 chega aqui.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Tile
+          label="Favoritados"
+          value={data.totals.favorites.toLocaleString("pt-BR")}
+          detail={`${data.totals.unfavorites} removido(s) · saldo ${netFavorites > 0 ? "+" : ""}${netFavorites}`}
+        />
+        <Tile label="Compartilhamentos" value={data.totals.shares.toLocaleString("pt-BR")} detail="Cliques nos botões de compartilhar" />
+        <Tile
+          label="Visitas por compartilhamento"
+          value={data.totals.shareVisits.toLocaleString("pt-BR")}
+          detail={data.totals.shares > 0 ? `${(data.totals.shareVisits / data.totals.shares).toFixed(1)} visita(s) por compartilhamento` : "Quem abriu um link compartilhado"}
+        />
+        <Tile
+          label="Comentários"
+          value={data.comments.total.toLocaleString("pt-BR")}
+          detail={
+            <>
+              {data.comments.approved} aprovado(s) ·{" "}
+              <Link to="/admin/comments" className="underline">{data.comments.pending} pendente(s)</Link>
+            </>
+          }
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-4">
+        <Card title="Compartilhado por canal" subtitle="Botão usado no post">
+          <BarList items={channelItems(data.sharesByChannel)} empty="Nenhum compartilhamento no período." />
+        </Card>
+        <Card title="Visitas por canal" subtitle="Quem chegou por um link compartilhado (utm_medium=share)">
+          <BarList items={channelItems(data.visitsByChannel)} empty="Nenhuma visita por compartilhamento no período." />
+        </Card>
+        <Card title="Posts com mais engajamento" subtitle="Favoritos + compartilhamentos + visitas por compartilhamento">
+          <BarList
+            showDetail
+            items={data.posts
+              .filter((p) => p.favorites + p.shares + p.shareVisits > 0)
+              .slice(0, 8)
+              .map((p) => ({
+                key: String(p.id),
+                label: p.title,
+                value: p.favorites + p.shares + p.shareVisits,
+                href: `/blog/${p.slug}`,
+                detail: `${p.favorites} favorito(s) · ${p.shares} compartilhamento(s) · ${p.shareVisits} visita(s) · ${p.comments} comentário(s)`,
+              }))}
+            empty="Nenhum engajamento no período."
+          />
+        </Card>
+      </div>
+    </>
+  );
+}
+
 export default function Metrics() {
   const [days, setDays] = useState("30");
   const [data, setData] = useState(null);
+  const [engagement, setEngagement] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -105,6 +174,9 @@ export default function Metrics() {
     MetricsService.overview(Number(days))
       .then((d) => active && (setData(d), setError(null)))
       .catch(() => active && setError("Erro ao carregar métricas."));
+    MetricsService.engagement(Number(days))
+      .then((d) => active && setEngagement(d))
+      .catch(() => active && setEngagement(null));
     return () => {
       active = false;
     };
@@ -120,7 +192,7 @@ export default function Metrics() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Métricas</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-300">Assinantes que entram, de onde vêm e como respondem aos emails.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-300">Assinantes, emails e o engajamento dos leitores com os posts.</p>
           </div>
           <FilterChips options={PERIODS} selected={days} onChange={setDays} multiSelect={false} showAll={false} />
         </div>
@@ -269,6 +341,8 @@ export default function Metrics() {
                 />
               </Card>
             </div>
+
+            {engagement && <Engagement data={engagement} />}
 
             <p className="text-xs text-gray-500 dark:text-gray-300">
               Abertura depende de imagens carregadas (Apple Mail pode marcar sozinho; quem bloqueia imagens só conta

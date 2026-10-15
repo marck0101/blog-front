@@ -7,6 +7,12 @@ const MetricsService = {
     return data;
   },
 
+  // Favoritos, compartilhamentos por canal, visitas por compartilhamento e comentários
+  async engagement(days = 30) {
+    const { data } = await api.get("/metrics/engagement", { params: { days } });
+    return data;
+  },
+
   // { links: [{ url, clicks, uniqueClicks }], timeline: [{ day, opens }], automated }
   async campaign(id) {
     const { data } = await api.get(`/metrics/campaigns/${id}`);

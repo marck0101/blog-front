@@ -15,7 +15,7 @@ import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
 import usePageSize from "../../hooks/usePageSize";
 import Pagination from "../../components/Pagination";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Pin, Trash } from "lucide-react";
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
@@ -229,6 +229,33 @@ export default function PostsList() {
     });
   };
 
+  // Fixar/desafixar na home sem sair da lista (ordem e limite na Vitrine)
+  const handlePin = async (post) => {
+    try {
+      setLoadingId(post?._id);
+      const { pinned, maxPinned } = await PostsService.getShowcase();
+      const ids = pinned.map((p) => p._id);
+      const isPinned = ids.includes(post?._id);
+      if (!isPinned && ids.length >= maxPinned) {
+        showToast(`Limite de ${maxPinned} fixados. Desafixe um na Vitrine.`, "error");
+        return;
+      }
+      const next = isPinned ? ids.filter((id) => id !== post?._id) : [...ids, post?._id];
+      await PostsService.setPinned(next);
+      setPosts((prev) =>
+        prev.map((p) => {
+          const order = next.indexOf(p._id);
+          return { ...p, pinnedOrder: order === -1 ? null : order + 1 };
+        })
+      );
+      showToast(isPinned ? "Post desafixado da home" : "Post fixado na home");
+    } catch (err) {
+      showToast(err?.response?.data?.error || "Erro ao fixar o post", "error");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   const handleDeleteRequest = (post) => {
     setConfirmAction({
       title: "Mover post para a lixeira",
@@ -380,6 +407,19 @@ export default function PostsList() {
                     disabled={loadingId === post?._id}
                     onChange={() => handleToggleRequest(post)}
                   />
+                  {post?.published && (
+                    <button
+                      type="button"
+                      onClick={() => handlePin(post)}
+                      disabled={loadingId === post?._id}
+                      aria-pressed={Boolean(post?.pinnedOrder)}
+                      aria-label={post?.pinnedOrder ? "Desafixar da home" : "Fixar na home"}
+                      title={post?.pinnedOrder ? "Desafixar da home" : "Fixar na home"}
+                      className={post?.pinnedOrder ? "text-amber-600 dark:text-amber-400" : ""}
+                    >
+                      <Pin size={16} className="mt-1" fill={post?.pinnedOrder ? "currentColor" : "none"} />
+                    </button>
+                  )}
                   <Link to={`/admin/posts/${post?._id}`} aria-label="Editar" title="Editar">
                     <Pencil size={16} className="mt-1" />
                   </Link>
