@@ -183,6 +183,26 @@ const PostsService = {
     return data;
   },
 
+  /* ================= HISTÓRICO DE VERSÕES ================= */
+
+  // Mais nova primeiro: { version, summary, changes, reason, restoredFrom, author, createdAt }
+  async getRevisions(id) {
+    const { data } = await api.get(`/posts/${safeId(id)}/revisions`);
+    return normalizeArray(data);
+  },
+
+  // Versão completa, com o snapshot do post
+  async getRevision(id, version) {
+    const { data } = await api.get(`/posts/${safeId(id)}/revisions/${safeId(version)}`);
+    return data;
+  },
+
+  // Vira uma versão nova com o conteúdo da escolhida; devolve o post
+  async restoreRevision(id, version) {
+    const { data } = await api.post(`/posts/${safeId(id)}/revisions/${safeId(version)}/restore`);
+    return data;
+  },
+
   /* ================= IMAGENS ================= */
 
   async removeImage(id, imageUrl) {

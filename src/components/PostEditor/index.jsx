@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useNavigate } from "react-router-dom";
 import slugify from "slugify";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, History } from "lucide-react";
 import Header from "../Header";
 import SEO from "../SEO";
 import PostEmailSection from "../PostEmailSection";
@@ -14,6 +14,7 @@ import FilterChips from "../FilterChips";
 import SeasonFields from "../SeasonFields";
 import FaqFields from "../FaqFields";
 import PostPreview from "../PostPreview";
+import PostHistory from "../PostHistory";
 import PostSkeleton from "../PostSkeleton";
 import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
@@ -125,6 +126,7 @@ const timeLabel = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-
  * - rascunho local a cada 30 s (neste navegador), oferecido para restaurar
  * - barra fixa com Salvar / Pré-visualizar e atalho Ctrl+S
  * - confirmação antes de publicar com email ("enviar para N pessoas?")
+ * - histórico de versões (v1, v2…) com prévia e restauração
  */
 export default function PostEditor({ postId, initialPlannedAt = "" }) {
   const navigate = useNavigate();
@@ -146,6 +148,8 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const closePreview = useCallback(() => setShowPreview(false), []);
+  const [showHistory, setShowHistory] = useState(false);
+  const closeHistory = useCallback(() => setShowHistory(false), []);
   // Rascunho local mais novo que o salvo, oferecido ao abrir
   const [pendingDraft, setPendingDraft] = useState(null);
   const [localSavedAt, setLocalSavedAt] = useState(null);
@@ -172,6 +176,20 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
   }, []);
 
+  // Formulário passa a refletir o post salvo no servidor; devolve o snapshot salvo
+  const applySaved = useCallback((post) => {
+    const loaded = formFromPost(post);
+    setForm(loaded);
+    setWasPublished(loaded.status === "published");
+    setLinkedinResult(post.linkedin || null);
+    setGallery(post.gallery || []);
+    setCoverImage(post.coverImage || "");
+    setCoverFile(null);
+    const snap = JSON.stringify({ form: loaded, coverImage: post.coverImage || "", gallery: post.gallery || [] });
+    setSavedSnapshot(snap);
+    return snap;
+  }, []);
+
   /* LOAD */
   useEffect(() => {
     if (isNew) {
@@ -182,14 +200,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
     PostsService.getById(postId)
       .then((post) => {
         if (!post) throw new Error("Post não encontrado");
-        const loaded = formFromPost(post);
-        setForm(loaded);
-        setWasPublished(loaded.status === "published");
-        setLinkedinResult(post.linkedin || null);
-        setGallery(post.gallery || []);
-        setCoverImage(post.coverImage || "");
-        const snap = JSON.stringify({ form: loaded, coverImage: post.coverImage || "", gallery: post.gallery || [] });
-        setSavedSnapshot(snap);
+        const snap = applySaved(post);
 
         // Rascunho local só interessa se for mais novo que a última gravação e diferente
         const draft = readDraft(postId);
@@ -206,7 +217,18 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
         navigate("/admin/posts");
       })
       .finally(() => setLoading(false));
-  }, [postId, isNew, navigate, showToast]);
+  }, [postId, isNew, navigate, showToast, applySaved]);
+
+  /* HISTÓRICO: depois de restaurar, o editor recarrega o post do servidor */
+  const handleRestored = async (version) => {
+    const post = await PostsService.getById(postId);
+    applySaved(post);
+    clearDraft(postId);
+    setPendingDraft(null);
+    setLocalSavedAt(null);
+    setShowHistory(false);
+    showToast(`Versão v${version} restaurada`);
+  };
 
   /* RASCUNHO LOCAL: a cada 30 s, se houver alteração */
   const latest = useRef({ form, coverImage, gallery, dirty });
@@ -552,6 +574,15 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
               : "Tudo salvo"}
             <span className="hidden sm:inline text-gray-400"> · Ctrl+S salva</span>
           </p>
+          {!isNew && (
+            <button
+              type="button"
+              onClick={() => setShowHistory(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            >
+              <History size={16} /> <span className="hidden sm:inline">Histórico</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowPreview(true)}
@@ -576,6 +607,10 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
 
       {showPreview && (
         <PostPreview post={form} categoryLabel={categoryLabel} onClose={closePreview} />
+      )}
+
+      {showHistory && (
+        <PostHistory postId={postId} dirty={dirty} onClose={closeHistory} onRestored={handleRestored} />
       )}
 
       <ConfirmDialog
