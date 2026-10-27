@@ -164,8 +164,14 @@ export default function Login() {
     setError("");
     setBusy(true);
     try {
-      const { next } = await AuthService.login(email, password);
+      const { next, user: loggedIn } = await AuthService.login(email, password);
       setPassword("");
+      // Desenvolvimento com SKIP_2FA: a API já abriu a sessão
+      if (next === "done") {
+        login(loggedIn);
+        navigate("/admin", { replace: true });
+        return;
+      }
       setStep(next);
     } catch (err) {
       setError(err?.response?.status === 429 ? apiError(err) : "Credenciais inválidas");
