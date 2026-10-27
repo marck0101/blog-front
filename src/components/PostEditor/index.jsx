@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useNavigate } from "react-router-dom";
 import slugify from "slugify";
-import { ArrowLeft, Eye, X } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import Header from "../Header";
 import SEO from "../SEO";
 import PostEmailSection from "../PostEmailSection";
@@ -13,7 +13,7 @@ import CoverImageUpload from "../CoverImageUpload";
 import FilterChips from "../FilterChips";
 import SeasonFields from "../SeasonFields";
 import FaqFields from "../FaqFields";
-import PostFaq from "../PostFaq";
+import PostPreview from "../PostPreview";
 import PostSkeleton from "../PostSkeleton";
 import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
@@ -21,7 +21,6 @@ import UploadService from "../../services/upload.service";
 import SubscriberService from "../../services/subscriber.service";
 import { emptyLinkedIn } from "../../utils/linkedin";
 import { audienceToApi, emptyAudience } from "../../utils/campaignAudience";
-import { readingMinutes } from "../../utils/readingTime";
 import { SITE_URL, TITLE_MAX, DESCRIPTION_MAX, postTitle, postDescription, postFaq } from "../../seo/site";
 
 function CharCount({ value, max }) {
@@ -120,41 +119,6 @@ function clearDraft(postId) {
 
 const timeLabel = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-/** Prévia do post como o leitor vai ver (título, metadados e texto) */
-function PostPreview({ form, categoryLabel, onClose }) {
-  useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-[60] bg-black/70 flex items-stretch sm:items-center justify-center sm:p-6" role="dialog" aria-modal="true" aria-label="Pré-visualização do post">
-      <div className="bg-white dark:bg-gray-950 w-full max-w-4xl sm:rounded-xl flex flex-col max-h-full">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b">
-          <p className="text-sm text-gray-500 dark:text-gray-300">Pré-visualização · não salva nada</p>
-          <button type="button" onClick={onClose} aria-label="Fechar pré-visualização" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X size={18} />
-          </button>
-        </div>
-        <div className="overflow-y-auto px-6 py-8">
-          <article className="max-w-3xl mx-auto">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{form.title || "Sem título"}</h1>
-            <p className="text-gray-500 dark:text-gray-300 mt-2">
-              {categoryLabel || "Sem categoria"} • {new Date().toLocaleDateString("pt-BR")} • {readingMinutes(form.content)} min de leitura
-            </p>
-            <div
-              className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: form.content || "<p><em>Sem conteúdo ainda.</em></p>" }}
-            />
-            <PostFaq post={form} />
-          </article>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /**
  * Editor de post (criar e editar). postId vazio = post novo.
  * - aviso ao sair com alterações não salvas (navegação interna e fechar aba)
@@ -181,6 +145,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
   const [recipients, setRecipients] = useState(null);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const closePreview = useCallback(() => setShowPreview(false), []);
   // Rascunho local mais novo que o salvo, oferecido ao abrir
   const [pendingDraft, setPendingDraft] = useState(null);
   const [localSavedAt, setLocalSavedAt] = useState(null);
@@ -610,7 +575,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
       </div>
 
       {showPreview && (
-        <PostPreview form={form} categoryLabel={categoryLabel} onClose={() => setShowPreview(false)} />
+        <PostPreview post={form} categoryLabel={categoryLabel} onClose={closePreview} />
       )}
 
       <ConfirmDialog

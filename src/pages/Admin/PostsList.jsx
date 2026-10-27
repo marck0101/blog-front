@@ -15,6 +15,7 @@ import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
 import usePageSize from "../../hooks/usePageSize";
 import Pagination from "../../components/Pagination";
+import PostPreview from "../../components/PostPreview";
 import { Pencil, Pin, Trash } from "lucide-react";
 
 const PAGE_SIZES = [5, 10, 20, 50];
@@ -79,13 +80,8 @@ export default function PostsList() {
       .catch(() => {});
   }, []);
 
-  /* --- ESC fecha preview --- */
-  useEffect(() => {
-    if (!previewPost) return;
-    const onKey = (e) => { if (e.key === "Escape") setPreviewPost(null); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [previewPost]);
+  // Estável: a prévia registra o ESC com ele
+  const closePreview = useCallback(() => setPreviewPost(null), []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -532,31 +528,20 @@ export default function PostsList() {
 
       {/* Preview modal */}
       {previewPost && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
-          <div className="bg-white dark:bg-gray-900 max-w-4xl w-full rounded-xl flex flex-col max-h-[90vh]">
-            <div className="p-4 border-b flex justify-between">
-              <h2 className="font-bold">{previewPost?.title}</h2>
-              <button onClick={() => setPreviewPost(null)}>✕</button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6">
-              <div
-                className="post-content prose prose-sm max-w-none dark:prose-invert text-sm text-gray-700 dark:text-gray-300 max-h-48 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: previewPost?.content }}
-              />
-            </div>
-            <div className="border-t p-4 flex justify-end gap-3">
-              <button onClick={() => setPreviewPost(null)} className="px-4 py-2 rounded border">
-                Fechar
-              </button>
-              <button
-                onClick={() => navigate(`/admin/posts/${previewPost?._id}`)}
-                className="px-4 py-2 rounded bg-blue-600 text-white"
-              >
-                Editar
-              </button>
-            </div>
-          </div>
-        </div>
+        <PostPreview
+          post={previewPost}
+          categoryLabel={categoryLabel(previewPost.category)}
+          onClose={closePreview}
+          actions={
+            <button
+              type="button"
+              onClick={() => navigate(`/admin/posts/${previewPost._id}`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            >
+              <Pencil size={14} /> Editar
+            </button>
+          }
+        />
       )}
 
       <ConfirmDialog
