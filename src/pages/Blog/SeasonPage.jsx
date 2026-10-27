@@ -12,6 +12,8 @@ import GeneratedCover from "../../components/GeneratedCover";
 import { SeasonProgressBar } from "../../components/SeasonCard";
 import { setPageContext } from "../../utils/analytics";
 import { AUTHOR_NAME } from "../../seo/site";
+import PostFaq from "../../components/PostFaq";
+import { SeasonSchema } from "../../components/StructuredData";
 
 // /seasons/:slug — episódios publicados da season, na ordem de leitura
 export default function SeasonPage() {
@@ -76,6 +78,7 @@ export default function SeasonPage() {
         image={first?.coverImage}
         url={`/seasons/${season.slug}`}
       />
+      <SeasonSchema season={season} posts={posts} />
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <nav className="text-sm text-gray-500 dark:text-gray-300 mb-6">
@@ -155,6 +158,8 @@ export default function SeasonPage() {
             );
           })}
         </ol>
+
+        <PostFaq post={season} />
 
         <div className="mt-12">
           <SubscribeForm />

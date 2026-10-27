@@ -6,6 +6,7 @@ import {
   HOME_TITLE,
   HOME_DESCRIPTION,
   DEFAULT_IMAGE,
+  ROBOTS_INDEX,
 } from "../../seo/site";
 
 export default function SEO({
@@ -23,7 +24,7 @@ export default function SEO({
   const metaDescription = description || HOME_DESCRIPTION;
   const metaImage = image || DEFAULT_IMAGE;
   const metaUrl = url ? `${SITE_URL}${url}` : `${SITE_URL}/blog`;
-  const metaRobots = robots || "index, follow, max-image-preview:large";
+  const metaRobots = robots || ROBOTS_INDEX;
 
   return (
     <Helmet>

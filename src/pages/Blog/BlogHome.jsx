@@ -8,7 +8,8 @@ import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import SEO from "../../components/SEO";
 import { BlogSchema } from "../../components/StructuredData";
-import { AUTHOR_NAME, PORTFOLIO_URL } from "../../seo/site";
+import { AUTHOR_NAME, PORTFOLIO_URL, BLOG_FAQ } from "../../seo/site";
+import PostFaq from "../../components/PostFaq";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
 import SeasonsService from "../../services/seasons.service";
@@ -165,6 +166,13 @@ export default function BlogHome() {
   useEffect(() => {
     setPageContext({ page_type: "home" });
   }, []);
+
+  // Link "FAQ" do rodapé (/blog#faq) vindo de outra página: o FAQ fica abaixo da
+  // lista, então só rola quando os posts já ocuparam o espaço deles
+  useEffect(() => {
+    if (loading || window.location.hash !== "#faq") return;
+    document.getElementById("faq")?.scrollIntoView();
+  }, [loading]);
 
   useEffect(() => {
     const cleanup = load();
@@ -455,6 +463,8 @@ export default function BlogHome() {
             className="mt-10"
           />
         )}
+
+        <PostFaq items={BLOG_FAQ} className="mt-16 max-w-3xl" />
 
         <div className="mt-12">
           <SubscribeForm location="home" />

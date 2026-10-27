@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
  * Perguntas frequentes do post. Aparecem no fim do artigo e viram o schema
  * FAQPage (Google, ChatGPT, Perplexity…). Pares incompletos não são salvos.
  */
-export default function FaqFields({ value = [], onChange }) {
+export default function FaqFields({ value = [], onChange, where = "no fim do post", emptyLabel = "Este post ainda não tem FAQ." }) {
   const update = (index, patch) => onChange(value.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   const remove = (index) => onChange(value.filter((_, i) => i !== index));
   const move = (index, delta) => {
@@ -18,13 +18,13 @@ export default function FaqFields({ value = [], onChange }) {
       <div>
         <h2 className="font-semibold text-sm uppercase text-gray-600 dark:text-gray-300">FAQ (perguntas frequentes)</h2>
         <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
-          Aparece no fim do post e gera o schema de FAQ. Escreva perguntas que o leitor faria
+          Aparece {where} e gera o schema de FAQ. Escreva perguntas que o leitor faria
           e respostas diretas, de 1 a 3 frases.
         </p>
       </div>
 
       {value.length === 0 && (
-        <p className="text-xs text-amber-700 dark:text-amber-300">Este post ainda não tem FAQ.</p>
+        <p className="text-xs text-amber-700 dark:text-amber-300">{emptyLabel}</p>
       )}
 
       {value.map((item, i) => (

@@ -7,6 +7,8 @@
     { "source": "/rss.xml", "destination": "https://api.blog.marck0101.com.br/rss.xml" },
     { "source": "/blog", "destination": "/api/prerender" },
     { "source": "/blog/:slug", "destination": "/api/prerender?slug=:slug" },
+    { "source": "/seasons", "destination": "/api/prerender?page=seasons" },
+    { "source": "/seasons/:slug", "destination": "/api/prerender?season=:slug" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

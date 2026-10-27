@@ -1,12 +1,15 @@
-import { postFaq } from "../../seo/site";
+import { cleanFaq } from "../../seo/site";
 
-/** Perguntas frequentes no fim do post — o mesmo conteúdo do schema FAQPage */
-export default function PostFaq({ post }) {
-  const items = postFaq(post);
+/**
+ * Perguntas frequentes — o mesmo conteúdo do schema FAQPage da página.
+ * `post` (ou season) usa o campo faq; `items` recebe a lista direto (home, /seasons).
+ */
+export default function PostFaq({ post, items: list, className = "mt-12" }) {
+  const items = cleanFaq(list ?? post?.faq);
   if (items.length === 0) return null;
 
   return (
-    <section aria-labelledby="faq-title" className="mt-12">
+    <section id="faq" aria-labelledby="faq-title" className={`scroll-mt-24 ${className}`}>
       <h2 id="faq-title" className="text-2xl font-bold text-gray-900 dark:text-white">
         Perguntas frequentes
       </h2>

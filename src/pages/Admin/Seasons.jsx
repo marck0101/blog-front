@@ -5,8 +5,10 @@ import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import SeasonsService from "../../services/seasons.service";
+import FaqFields from "../../components/FaqFields";
+import { cleanFaq } from "../../seo/site";
 
-const EMPTY = { title: "", slug: "", description: "", order: 0 };
+const EMPTY = { title: "", slug: "", description: "", order: 0, faq: [] };
 
 // Barra empilhada: publicados / agendados / rascunhos sobre o total da season
 function SeasonProgress({ posts }) {
@@ -38,7 +40,13 @@ function SeasonForm({ season, onSaved, onCancel }) {
   const isEdit = Boolean(season);
   const [form, setForm] = useState(
     isEdit
-      ? { title: season.title, slug: season.slug, description: season.description || "", order: season.order ?? 0 }
+      ? {
+          title: season.title,
+          slug: season.slug,
+          description: season.description || "",
+          order: season.order ?? 0,
+          faq: (season.faq || []).map(({ question, answer }) => ({ question: question || "", answer: answer || "" })),
+        }
       : EMPTY
   );
   const [saving, setSaving] = useState(false);
@@ -50,7 +58,7 @@ function SeasonForm({ season, onSaved, onCancel }) {
     setSaving(true);
     setError(null);
     try {
-      const payload = { ...form, order: Number(form.order) || 0 };
+      const payload = { ...form, order: Number(form.order) || 0, faq: cleanFaq(form.faq) };
       if (!payload.slug) delete payload.slug; // gerado a partir do título
       const saved = isEdit
         ? await SeasonsService.update(season._id, payload)
@@ -128,6 +136,13 @@ function SeasonForm({ season, onSaved, onCancel }) {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
       </div>
+
+      <FaqFields
+        value={form.faq}
+        onChange={(faq) => setForm({ ...form, faq })}
+        where="na página da season"
+        emptyLabel="Esta season ainda não tem FAQ."
+      />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

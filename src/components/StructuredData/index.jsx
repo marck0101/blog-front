@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { blogHomeSchema, postSchema } from "../../seo/site";
+import { blogHomeSchema, postSchema, seasonsIndexSchema, seasonSchema } from "../../seo/site";
 
 function JsonLd({ data }) {
   return (
@@ -16,4 +16,13 @@ export function BlogSchema({ posts = [] }) {
 export function BlogPostSchema({ post }) {
   if (!post) return null;
   return <JsonLd data={postSchema(post)} />;
+}
+
+export function SeasonsIndexSchema({ seasons = [] }) {
+  return <JsonLd data={seasonsIndexSchema(seasons)} />;
+}
+
+export function SeasonSchema({ season, posts = [] }) {
+  if (!season) return null;
+  return <JsonLd data={seasonSchema(season, posts)} />;
 }

@@ -1,4 +1,5 @@
-// Vercel Serverless Function — pré-renderização de SEO para /blog e /blog/:slug.
+// Vercel Serverless Function — pré-renderização de SEO para /blog, /blog/:slug,
+// /seasons e /seasons/:slug.
 //
 // O app é uma SPA: sem isto, crawlers recebem um <head> genérico e um <div id="root">
 // vazio. Aqui buscamos o index.html estático, injetamos title/meta/canonical/JSON-LD
@@ -20,6 +21,14 @@ import {
   postFaq,
   postSchema,
   blogHomeSchema,
+  seasonUrl,
+  seasonsIndexSchema,
+  seasonSchema,
+  cleanFaq,
+  ROBOTS_INDEX,
+  BLOG_FAQ,
+  SEASONS_FAQ,
+  SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
 
 const API_URL = process.env.PRERENDER_API_URL || "https://api.blog.marck0101.com.br/api";
@@ -105,6 +114,16 @@ function formatDate(date) {
   return new Date(date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
+// FAQ em HTML puro (mesmo conteúdo da seção visível e do schema FAQPage)
+function faqHtml(items) {
+  const faq = cleanFaq(items);
+  if (!faq.length) return "";
+  return `<section>
+          <h2>Perguntas frequentes</h2>
+          ${faq.map((item) => `<h3>${esc(item.question)}</h3>\n          <p>${esc(item.answer)}</p>`).join("\n          ")}
+        </section>`;
+}
+
 function postPage(post) {
   const url = postUrl(post);
   const head = headTags({
@@ -113,7 +132,7 @@ function postPage(post) {
     url,
     image: post.coverImage || DEFAULT_IMAGE,
     type: "article",
-    robots: "index, follow, max-image-preview:large",
+    robots: ROBOTS_INDEX,
     schema: postSchema(post),
     extra: [
       post.publishedAt &&
@@ -130,14 +149,6 @@ function postPage(post) {
       .join("\n    "),
   });
 
-  const faq = postFaq(post);
-  const faqHtml = faq.length
-    ? `<section>
-          <h2>Perguntas frequentes</h2>
-          ${faq.map((item) => `<h3>${esc(item.question)}</h3>\n          <p>${esc(item.answer)}</p>`).join("\n          ")}
-        </section>`
-    : "";
-
   // Conteúdo vem do editor do próprio admin (mesmo HTML que o React renderiza).
   const body = `<noscript>
       <article>
@@ -145,7 +156,7 @@ function postPage(post) {
         <h1>${esc(post.title)}</h1>
         <p>Por <a href="${PORTFOLIO_URL}" rel="author">${esc(AUTHOR_NAME)}</a> · ${esc(post.category || "")} · <time datetime="${esc(post.publishedAt)}">${formatDate(post.publishedAt)}</time></p>
         ${post.content || ""}
-        ${faqHtml}
+        ${faqHtml(postFaq(post))}
       </article>
     </noscript>
     <script>window.__PRERENDERED_POST__=${safeJson(post)}</script>`;
@@ -160,7 +171,7 @@ function homePage(posts) {
     url: `${SITE_URL}/blog`,
     image: DEFAULT_IMAGE,
     type: "website",
-    robots: "index, follow, max-image-preview:large",
+    robots: ROBOTS_INDEX,
     schema: blogHomeSchema(posts),
   });
 
@@ -177,27 +188,95 @@ function homePage(posts) {
       <ul>
           ${items}
       </ul>
+      <p><a href="/seasons">Seasons: séries de artigos em sequência</a></p>
+      ${faqHtml(BLOG_FAQ)}
     </noscript>`;
 
   return { head, body };
 }
 
-function notFoundPage(slug) {
+function seasonsIndexPage(seasons) {
   const head = headTags({
-    title: `Post não encontrado | ${SITE_NAME}`,
+    title: `Seasons | ${AUTHOR_NAME}`,
+    description: SEASONS_DESCRIPTION,
+    url: `${SITE_URL}/seasons`,
+    image: DEFAULT_IMAGE,
+    type: "website",
+    robots: ROBOTS_INDEX,
+    schema: seasonsIndexSchema(seasons),
+  });
+
+  const items = seasons
+    .map(
+      (s) =>
+        `<li><a href="/seasons/${esc(s.slug)}">${esc(s.title)}</a> (${s.episodes} episódios)${s.description ? ` — ${esc(s.description)}` : ""}</li>`
+    )
+    .join("\n          ");
+
+  const body = `<noscript>
+      <p><a href="/blog">Blog</a> / Seasons</p>
+      <h1>Assuntos em sequência, do básico ao avançado</h1>
+      <p>${esc(SEASONS_DESCRIPTION)}</p>
+      <ul>
+          ${items}
+      </ul>
+      ${faqHtml(SEASONS_FAQ)}
+    </noscript>`;
+
+  return { head, body };
+}
+
+function seasonPage({ season, posts }) {
+  const description = season.description || `Season com ${posts.length} artigos sobre ${season.title}.`;
+  const head = headTags({
+    title: `${season.title} | Season | ${AUTHOR_NAME}`,
+    description,
+    url: seasonUrl(season),
+    image: posts[0]?.coverImage || DEFAULT_IMAGE,
+    type: "website",
+    robots: ROBOTS_INDEX,
+    schema: seasonSchema(season, posts),
+  });
+
+  const items = posts
+    .map(
+      (p, i) =>
+        `<li>Episódio ${i + 1}: <a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? ` — ${esc(p.excerpt)}` : ""}</li>`
+    )
+    .join("\n          ");
+
+  const body = `<noscript>
+      <p><a href="/blog">Blog</a> / <a href="/seasons">Seasons</a> / ${esc(season.title)}</p>
+      <h1>${esc(season.title)}</h1>
+      <p>${esc(description)}</p>
+      <ol>
+          ${items}
+      </ol>
+      ${faqHtml(season.faq)}
+    </noscript>`;
+
+  return { head, body };
+}
+
+// path: "blog" (post) ou "seasons"
+function notFoundPage(slug, path = "blog") {
+  const head = headTags({
+    title: `${path === "seasons" ? "Season não encontrada" : "Post não encontrado"} | ${SITE_NAME}`,
     description: HOME_DESCRIPTION,
-    url: `${SITE_URL}/blog/${encodeURIComponent(slug)}`,
+    url: `${SITE_URL}/${path}/${encodeURIComponent(slug)}`,
     image: DEFAULT_IMAGE,
     type: "website",
     robots: "noindex",
   });
   // Avisa o React que o post não existe — evita refazer a busca (e um 404 a mais no console)
-  const body = `<script>window.__PRERENDERED_NOT_FOUND__=${safeJson(slug)}</script>`;
+  const body = path === "blog" ? `<script>window.__PRERENDERED_NOT_FOUND__=${safeJson(slug)}</script>` : "";
   return { head, body };
 }
 
 export default async function handler(req, res) {
   const slug = typeof req.query.slug === "string" ? req.query.slug : "";
+  const seasonSlug = typeof req.query.season === "string" ? req.query.season : "";
+  const isSeasons = req.query.page === "seasons";
 
   let shell;
   try {
@@ -215,7 +294,17 @@ export default async function handler(req, res) {
     let page;
     let status = 200;
 
-    if (slug) {
+    if (seasonSlug) {
+      const data = await fetchJson(`${API_URL}/seasons/${encodeURIComponent(seasonSlug)}`);
+      if (data) {
+        page = seasonPage(data);
+      } else {
+        page = notFoundPage(seasonSlug, "seasons");
+        status = 404;
+      }
+    } else if (isSeasons) {
+      page = seasonsIndexPage((await fetchJson(`${API_URL}/seasons`)) || []);
+    } else if (slug) {
       const post = await fetchJson(`${API_URL}/posts/slug/${encodeURIComponent(slug)}`);
       if (post) {
         page = postPage(post);
