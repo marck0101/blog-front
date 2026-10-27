@@ -25,6 +25,7 @@ import FavoriteButton from "../../components/FavoriteButton";
 import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
+import PostFaq from "../../components/PostFaq";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -207,6 +208,7 @@ export default function Post() {
         title={postTitle(post)}
         description={postDescription(post)}
         image={post.coverImage}
+        imageAlt={post.coverImageAlt}
         url={`/blog/${post.slug}`}
         type="article"
         publishedAt={post.publishedAt}
@@ -276,6 +278,8 @@ export default function Post() {
           className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        <PostFaq post={post} />
 
         <SeasonNav post={post} />
 

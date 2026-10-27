@@ -12,6 +12,8 @@ import ImageManager from "../ImageManager";
 import CoverImageUpload from "../CoverImageUpload";
 import FilterChips from "../FilterChips";
 import SeasonFields from "../SeasonFields";
+import FaqFields from "../FaqFields";
+import PostFaq from "../PostFaq";
 import PostSkeleton from "../PostSkeleton";
 import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
@@ -20,7 +22,16 @@ import SubscriberService from "../../services/subscriber.service";
 import { emptyLinkedIn } from "../../utils/linkedin";
 import { audienceToApi, emptyAudience } from "../../utils/campaignAudience";
 import { readingMinutes } from "../../utils/readingTime";
-import { SITE_URL } from "../../seo/site";
+import { SITE_URL, TITLE_MAX, DESCRIPTION_MAX, postTitle, postDescription, postFaq } from "../../seo/site";
+
+function CharCount({ value, max }) {
+  const over = value.length > max;
+  return (
+    <span className={`text-xs ${over ? "text-red-600" : "text-gray-500"}`}>
+      {value.length}/{max}{over ? " — o Google vai cortar" : ""}
+    </span>
+  );
+}
 
 const AUTOSAVE_MS = 30_000;
 const draftKey = (postId) => `post-draft:${postId || "new"}`;
@@ -43,6 +54,8 @@ const emptyForm = (plannedAt = "") => ({
   emailAudience: emptyAudience("post-category"),
   linkedin: emptyLinkedIn(),
   seo: { title: "", description: "" },
+  coverImageAlt: "",
+  faq: [],
 });
 
 function formFromPost(post) {
@@ -73,6 +86,8 @@ function formFromPost(post) {
       comment: post.linkedin?.comment || "",
     },
     seo: { title: post.seo?.title || "", description: post.seo?.description || "" },
+    coverImageAlt: post.coverImageAlt || "",
+    faq: (post.faq || []).map(({ question, answer }) => ({ question: question || "", answer: answer || "" })),
   };
 }
 
@@ -132,6 +147,7 @@ function PostPreview({ form, categoryLabel, onClose }) {
               className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: form.content || "<p><em>Sem conteúdo ainda.</em></p>" }}
             />
+            <PostFaq post={form} />
           </article>
         </div>
       </div>
@@ -289,6 +305,9 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
         plannedAt: form.status === "published" ? null : form.plannedAt || null,
         gallery: gallery.filter(Boolean),
         coverImage: finalCoverUrl || "",
+        coverImageAlt: finalCoverUrl ? form.coverImageAlt.trim() : "",
+        // Pergunta sem resposta (ou o contrário) fica só no formulário
+        faq: postFaq(form).map(({ question, answer }) => ({ question: question.trim(), answer: answer.trim() })),
       };
       const saved = isNew ? await PostsService.create(payload) : await PostsService.update(postId, payload);
 
@@ -458,8 +477,12 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
               <RichTextEditor value={form.content} onChange={(content) => set({ content })} />
             </div>
 
+            <FaqFields value={form.faq} onChange={(faq) => set({ faq })} />
+
             <CoverImageUpload
               existingUrl={coverImage}
+              alt={form.coverImageAlt}
+              onAltChange={(coverImageAlt) => set({ coverImageAlt })}
               onFileSelect={(file) => {
                 setCoverFile(file);
                 if (!file) setCoverImage("");
@@ -477,6 +500,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
                 value={form.seo.title}
                 onChange={(e) => set({ seo: { ...form.seo, title: e.target.value } })}
               />
+              <CharCount value={postTitle({ title: form.title || "", seo: form.seo })} max={TITLE_MAX} />
               <label htmlFor="seoDescription" className="block text-xs text-gray-600 dark:text-gray-300">Descrição SEO (meta description)</label>
               <textarea id="seoDescription" name="seoDescription"
                 className="input"
@@ -484,6 +508,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
                 value={form.seo.description}
                 onChange={(e) => set({ seo: { ...form.seo, description: e.target.value } })}
               />
+              <CharCount value={postDescription({ excerpt: form.excerpt || "", content: form.content || "", seo: form.seo })} max={DESCRIPTION_MAX} />
               <p className="text-xs text-gray-500">Caso vazio, o título e o resumo do post são usados automaticamente.</p>
             </section>
 

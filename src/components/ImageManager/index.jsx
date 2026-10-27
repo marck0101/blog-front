@@ -2,6 +2,7 @@ import { uploadImage } from "../../services/uploadImage";
 import { generateUUID } from "../../utils/uuid";
 import { useState } from "react";
 import ImageDropzone from "../ImageDropzone";
+import AltTextInput from "../AltTextInput";
 
 export default function ImageManager({
   images,
@@ -69,8 +70,13 @@ export default function ImageManager({
     });
   };
 
-  const copyMarkdown = async (url) => {
-    const markdown = `![Imagem](${url})`;
+  // Imagens vindas do servidor não têm id; a URL identifica cada uma
+  const updateAlt = (url, alt) => {
+    setImages((prev) => prev.map((img) => (img.url === url ? { ...img, alt } : img)));
+  };
+
+  const copyMarkdown = async (url, alt) => {
+    const markdown = `![${alt || "Imagem"}](${url})`;
 
     // Clipboard API moderna (HTTPS / localhost)
     if (navigator.clipboard && window.isSecureContext) {
@@ -117,7 +123,7 @@ export default function ImageManager({
 
       {/* Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-        {images.map((img) => (
+        {images.map((img, index) => (
           <div
             key={img.id}
             className="relative border rounded-lg overflow-hidden bg-white dark:bg-gray-900"
@@ -130,11 +136,16 @@ export default function ImageManager({
               ×
             </button>
 
-            <img src={img.url} alt="" className="w-full h-40 object-cover" />
+            <img src={img.url} alt={img.alt || ""} className="w-full h-40 object-cover" />
 
             <div className="p-2 text-xs flex flex-col gap-1">
+              <AltTextInput
+                id={`gallery-alt-${index}`}
+                value={img.alt}
+                onChange={(alt) => updateAlt(img.url, alt)}
+              />
               <button
-                onClick={() => copyMarkdown(img.url)}
+                onClick={() => copyMarkdown(img.url, img.alt)}
                 className="text-blue-600 hover:underline text-left"
               >
                 Copiar Markdown

@@ -17,6 +17,7 @@ import {
   postUrl,
   postTitle,
   postDescription,
+  postFaq,
   postSchema,
   blogHomeSchema,
 } from "../src/seo/site.js";
@@ -120,10 +121,22 @@ function postPage(post) {
       post.updatedAt &&
         `<meta data-prerender property="article:modified_time" content="${esc(post.updatedAt)}" />`,
       `<meta data-prerender property="article:author" content="${esc(AUTHOR_NAME)}" />`,
+      post.coverImage && post.coverImageAlt &&
+        `<meta data-prerender property="og:image:alt" content="${esc(post.coverImageAlt)}" />`,
+      post.coverImage && post.coverImageAlt &&
+        `<meta data-prerender name="twitter:image:alt" content="${esc(post.coverImageAlt)}" />`,
     ]
       .filter(Boolean)
       .join("\n    "),
   });
+
+  const faq = postFaq(post);
+  const faqHtml = faq.length
+    ? `<section>
+          <h2>Perguntas frequentes</h2>
+          ${faq.map((item) => `<h3>${esc(item.question)}</h3>\n          <p>${esc(item.answer)}</p>`).join("\n          ")}
+        </section>`
+    : "";
 
   // Conteúdo vem do editor do próprio admin (mesmo HTML que o React renderiza).
   const body = `<noscript>
@@ -132,6 +145,7 @@ function postPage(post) {
         <h1>${esc(post.title)}</h1>
         <p>Por <a href="${PORTFOLIO_URL}" rel="author">${esc(AUTHOR_NAME)}</a> · ${esc(post.category || "")} · <time datetime="${esc(post.publishedAt)}">${formatDate(post.publishedAt)}</time></p>
         ${post.content || ""}
+        ${faqHtml}
       </article>
     </noscript>
     <script>window.__PRERENDERED_POST__=${safeJson(post)}</script>`;

@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
+import AltTextInput from "../AltTextInput";
 
-export default function CoverImageUpload({ existingUrl, onFileSelect }) {
+export default function CoverImageUpload({ existingUrl, onFileSelect, alt = "", onAltChange }) {
   const [preview, setPreview] = useState(null);
   const inputRef = useRef(null);
 
@@ -33,7 +34,7 @@ export default function CoverImageUpload({ existingUrl, onFileSelect }) {
         <div className="relative w-full max-w-md">
           <img
             src={current}
-            alt="Capa"
+            alt={alt || "Capa"}
             className="w-full h-48 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
           />
           <button
@@ -73,6 +74,10 @@ export default function CoverImageUpload({ existingUrl, onFileSelect }) {
       />
 
       <p className="text-xs text-gray-500">JPG, PNG ou WEBP • máx 2MB</p>
+
+      {current && onAltChange && (
+        <AltTextInput id="coverImageAlt" value={alt} onChange={onAltChange} className="max-w-md" />
+      )}
     </div>
   );
 }

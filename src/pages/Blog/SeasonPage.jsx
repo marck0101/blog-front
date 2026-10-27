@@ -134,7 +134,7 @@ export default function SeasonPage() {
                   )}
                   <div className="hidden sm:block w-40 shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
                     {cover ? (
-                      <img src={cover} alt="" width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                      <img src={cover} alt={post.coverImageAlt || ""} width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     ) : (
                       <GeneratedCover category={post.category} size="sm" />
                     )}

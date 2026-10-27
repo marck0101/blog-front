@@ -61,7 +61,7 @@ function WeeklyHighlights({ posts, categories }) {
               <span className="shrink-0 w-8 text-3xl font-bold text-gray-300 dark:text-gray-600 tabular-nums text-center">{i + 1}</span>
               <div className="w-20 shrink-0 aspect-video rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
                 {cover ? (
-                  <img src={cover} alt="" width={160} height={90} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  <img src={cover} alt={post.coverImageAlt || ""} width={160} height={90} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 ) : (
                   <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
                 )}

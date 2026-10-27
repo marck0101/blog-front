@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, useEditorState, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
@@ -27,6 +27,16 @@ import {
 } from "lucide-react";
 import PostsService from "../../services/posts.service";
 import { uploadImage } from "../../services/uploadImage";
+import AltTextInput from "../AltTextInput";
+
+// Imagens do texto com a posição no documento (para editar o alt de cada uma)
+function contentImages(editor) {
+  const images = [];
+  editor?.state.doc.descendants((node, pos) => {
+    if (node.type.name === "image") images.push({ pos, src: node.attrs.src, alt: node.attrs.alt || "" });
+  });
+  return images;
+}
 
 // Estende Image para suportar atributo `width`
 const ResizableImage = Image.extend({
@@ -75,6 +85,7 @@ export default function RichTextEditor({ value, onChange }) {
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState(null);
   const [selectedWidth, setSelectedWidth] = useState("100%");
+  const [selectedAlt, setSelectedAlt] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const editor = useEditor({
@@ -101,10 +112,21 @@ export default function RichTextEditor({ value, onChange }) {
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const images = useEditorState({ editor, selector: ({ editor: e }) => contentImages(e) }) || [];
+  const missingAlt = images.filter((img) => !img.alt.trim()).length;
+
+  // Só muda o atributo: o tamanho do documento não muda, as posições continuam valendo
+  const setImageAlt = (pos, alt) => {
+    const node = editor.state.doc.nodeAt(pos);
+    if (node?.type.name !== "image") return;
+    editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, alt }));
+  };
+
   const openModal = useCallback(async () => {
     setShowModal(true);
     setSelectedUrl(null);
     setSelectedWidth("100%");
+    setSelectedAlt("");
     setGalleryLoading(true);
     try {
       const { posts } = await PostsService.getAll(1, 100);
@@ -123,7 +145,7 @@ export default function RichTextEditor({ value, onChange }) {
 
   const handleInsert = () => {
     if (!selectedUrl || !editor) return;
-    editor.chain().focus().setImage({ src: selectedUrl, width: selectedWidth }).run();
+    editor.chain().focus().setImage({ src: selectedUrl, alt: selectedAlt.trim(), width: selectedWidth }).run();
     setShowModal(false);
   };
 
@@ -229,6 +251,32 @@ export default function RichTextEditor({ value, onChange }) {
         "
       />
 
+      {/* ── Alt das imagens do texto ── */}
+      {images.length > 0 && (
+        <details className="rounded-md border border-gray-300 dark:border-gray-700 p-3" open={missingAlt > 0}>
+          <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 select-none">
+            Texto alternativo das imagens{" "}
+            <span className={missingAlt ? "text-amber-600" : "text-green-600"}>
+              ({missingAlt ? `${missingAlt} de ${images.length} sem descrição` : "todas descritas"})
+            </span>
+          </summary>
+          <ul className="mt-3 space-y-3">
+            {images.map((img, i) => (
+              <li key={img.pos} className="flex gap-3 items-start">
+                <img src={img.src} alt="" className="w-20 h-14 object-cover rounded border shrink-0" />
+                <AltTextInput
+                  id={`content-image-alt-${i}`}
+                  label={`Imagem ${i + 1}`}
+                  value={img.alt}
+                  onChange={(alt) => setImageAlt(img.pos, alt)}
+                  className="flex-1 min-w-0"
+                />
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {/* ── Modal de galeria ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -317,6 +365,10 @@ export default function RichTextEditor({ value, onChange }) {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {selectedUrl && (
+                <AltTextInput id="newImageAlt" value={selectedAlt} onChange={setSelectedAlt} />
               )}
             </div>
 

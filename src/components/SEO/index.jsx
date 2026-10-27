@@ -12,6 +12,7 @@ export default function SEO({
   title,
   description,
   image,
+  imageAlt,
   url,
   type = "website",
   publishedAt,
@@ -39,6 +40,7 @@ export default function SEO({
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
+      {image && imageAlt && <meta property="og:image:alt" content={imageAlt} />}
       <meta property="og:url" content={metaUrl} />
 
       {/* Twitter Card */}
@@ -46,6 +48,7 @@ export default function SEO({
       <meta name="twitter:title" content={metaTitle} />
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={metaImage} />
+      {image && imageAlt && <meta name="twitter:image:alt" content={imageAlt} />}
 
       {/* Article-specific */}
       {type === "article" && publishedAt && (

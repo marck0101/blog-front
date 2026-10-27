@@ -47,8 +47,14 @@ export function postUrl(post) {
   return `${SITE_URL}/blog/${post.slug}`;
 }
 
+// Google corta o título em ~60 caracteres; o sufixo com o autor só entra se couber.
+export const TITLE_MAX = 60;
+export const DESCRIPTION_MAX = 160;
+
 export function postTitle(post) {
-  return post.seo?.title || `${post.title} | ${AUTHOR_NAME}`;
+  if (post.seo?.title) return post.seo.title;
+  const withAuthor = `${post.title} | ${AUTHOR_NAME}`;
+  return withAuthor.length <= TITLE_MAX ? withAuthor : post.title;
 }
 
 export function postDescription(post) {
@@ -95,27 +101,19 @@ export function blogHomeSchema(posts = []) {
   };
 }
 
-// Extrai pares pergunta/resposta de posts em formato FAQ: cada <h2> é uma
-// pergunta, os <p> seguintes (até o próximo <h2>) são a resposta.
-export function extractFaqPairs(html = "") {
-  const sections = String(html).split(/<h2[^>]*>/i).slice(1);
-  return sections
-    .map((section) => {
-      const [rawQuestion, ...rest] = section.split(/<\/h2>/i);
-      const question = stripHtml(rawQuestion).trim();
-      const answer = stripHtml(rest.join("</h2>")).trim();
-      if (!question || !answer) return null;
-      return { question, answer };
-    })
-    .filter(Boolean);
+// Perguntas frequentes do post (campo "faq" do admin), sem pares incompletos
+export function postFaq(post) {
+  return (post.faq || []).filter((item) => item?.question?.trim() && item?.answer?.trim());
 }
 
+// O mesmo FAQ que o leitor vê no fim do post (o Google exige que o conteúdo esteja visível)
 function faqPageSchema(post) {
-  const pairs = extractFaqPairs(post.content);
+  const pairs = postFaq(post);
   if (pairs.length === 0) return null;
 
   return {
     "@type": "FAQPage",
+    "@id": `${postUrl(post)}#faq`,
     mainEntity: pairs.map(({ question, answer }) => ({
       "@type": "Question",
       name: question,
@@ -135,7 +133,13 @@ export function postSchema(post) {
       "@id": `${url}#article`,
       headline: truncate(post.title, 110),
       description: postDescription(post),
-      image: post.coverImage ? [post.coverImage] : [DEFAULT_IMAGE],
+      image: post.coverImage
+        ? [
+            post.coverImageAlt
+              ? { "@type": "ImageObject", url: post.coverImage, caption: post.coverImageAlt }
+              : post.coverImage,
+          ]
+        : [DEFAULT_IMAGE],
       datePublished: post.publishedAt,
       dateModified: post.updatedAt || post.publishedAt,
       inLanguage: "pt-BR",
@@ -156,10 +160,8 @@ export function postSchema(post) {
     PERSON,
   ];
 
-  if (post.seo?.faqSchema) {
-    const faq = faqPageSchema(post);
-    if (faq) graph.push(faq);
-  }
+  const faq = faqPageSchema(post);
+  if (faq) graph.push(faq);
 
   return {
     "@context": "https://schema.org",

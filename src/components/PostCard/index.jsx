@@ -20,7 +20,7 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
       >
         <div className="w-28 sm:w-56 shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
           {coverSrc ? (
-            <img src={coverSrc} alt="" width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+            <img src={coverSrc} alt={post.coverImageAlt || ""} width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
             <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
           )}
@@ -100,7 +100,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge }) {
           {coverSrc ? (
             <img
               src={coverSrc}
-              alt=""
+              alt={post.coverImageAlt || ""}
               width={640}
               height={360}
               loading="lazy"
