@@ -7,6 +7,7 @@ export default function ConfirmDialog({
   type = "warning", // warning | danger | info
   onConfirm,
   onCancel,
+  children,
 }) {
   if (!open) return null;
 
@@ -27,6 +28,9 @@ export default function ConfirmDialog({
             </p>
           )}
         </div>
+
+        {/* Conteúdo extra opcional (ex.: "não perguntar de novo") */}
+        {children && <div className="px-5 pt-4">{children}</div>}
 
         <div className="p-5 flex justify-end gap-3">
           <button

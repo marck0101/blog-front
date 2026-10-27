@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -141,6 +141,35 @@ function EmailBadge({ email }) {
   );
 }
 
+// "Não perguntar de novo hoje" ao mover rascunhos: vale até a meia-noite (neste
+// navegador). No dia seguinte a confirmação volta, para um arraste sem querer não
+// passar batido. Sem localStorage, simplesmente pergunta sempre.
+const SKIP_CONFIRM_KEY = "calendar:skip-move-confirm-until";
+
+function readSkipUntil() {
+  try {
+    const until = Number(localStorage.getItem(SKIP_CONFIRM_KEY));
+    return until > Date.now() ? until : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSkipUntil(until) {
+  try {
+    if (until) localStorage.setItem(SKIP_CONFIRM_KEY, String(until));
+    else localStorage.removeItem(SKIP_CONFIRM_KEY);
+  } catch {
+    /* sem localStorage: segue perguntando */
+  }
+}
+
+const endOfToday = () => {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
+};
+
 // Só rascunho muda de dia arrastando (agendado tem data de publicação de verdade)
 const isDraggable = (post) => postStatusKey(post) === "draft";
 
@@ -196,6 +225,9 @@ export default function Calendar() {
   const [dropKey, setDropKey] = useState(null);
   const [pendingMove, setPendingMove] = useState(null); // { post, day }
   const [moving, setMoving] = useState(false);
+  // "Não perguntar de novo hoje": marcado no diálogo e válido até (timestamp)
+  const [rememberChoice, setRememberChoice] = useState(false);
+  const [skipUntil, setSkipUntil] = useState(readSkipUntil);
 
   useEffect(() => {
     if (!openDay) return;
@@ -306,10 +338,14 @@ export default function Calendar() {
     return () => { cancelled = true; };
   }, [fromKey, toKey]);
 
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  // action: { label, onClick } (ex.: Desfazer). Com ação, fica mais tempo na tela.
+  const toastTimer = useRef(null);
+  const showToast = (msg, type = "success", action = null) => {
+    clearTimeout(toastTimer.current);
+    setToast({ msg, type, action });
+    toastTimer.current = setTimeout(() => setToast(null), action ? 7000 : 3000);
   };
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const handlePublish = async (id) => {
     try {
@@ -332,27 +368,64 @@ export default function Calendar() {
     setDropKey(null);
   };
 
+  // plannedAt: "YYYY-MM-DD" (o backend grava ao meio-dia UTC, mesmo dia em todo o
+  // Brasil) ou o valor anterior, ao desfazer (null = volta a ficar sem data)
+  const savePlannedAt = async (post, plannedAt) => {
+    const saved = await PostsService.update(post._id, { plannedAt });
+    setPosts((prev) => prev.map((p) => (p._id === post._id ? { ...p, plannedAt: saved?.plannedAt ?? null } : p)));
+  };
+
+  // Move e oferece "Desfazer" (a rede de proteção quando a confirmação está desligada)
+  const moveDraft = async (post, day) => {
+    const previous = post.plannedAt ?? null;
+    try {
+      await savePlannedAt(post, toDateKey(day));
+      showToast(`Rascunho movido para ${day.toLocaleDateString("pt-BR")}`, "success", {
+        label: "Desfazer",
+        onClick: async () => {
+          setToast(null);
+          try {
+            await savePlannedAt(post, previous);
+            showToast("Data do rascunho restaurada");
+          } catch (err) {
+            showToast(err?.response?.data?.error || "Não foi possível desfazer", "error");
+          }
+        },
+      });
+    } catch (err) {
+      showToast(err?.response?.data?.error || "Erro ao mudar a data do rascunho", "error");
+    }
+  };
+
   const handleDrop = (day) => {
     const post = dragging;
     endDrag();
     if (!post || toDateKey(new Date(postDay(post))) === toDateKey(day)) return;
-    setPendingMove({ post, day });
+    // Confere a validade agora: a página pode ter ficado aberta depois da meia-noite
+    if (readSkipUntil()) moveDraft(post, day);
+    else {
+      setSkipUntil(null);
+      setRememberChoice(false);
+      setPendingMove({ post, day });
+    }
   };
 
   const confirmMove = async () => {
     const { post, day } = pendingMove;
     setMoving(true);
-    try {
-      // "YYYY-MM-DD": o backend grava ao meio-dia UTC (mesmo dia em todo o Brasil)
-      const saved = await PostsService.update(post._id, { plannedAt: toDateKey(day) });
-      setPosts((prev) => prev.map((p) => (p._id === post._id ? { ...p, plannedAt: saved?.plannedAt ?? p.plannedAt } : p)));
-      showToast(`Rascunho movido para ${day.toLocaleDateString("pt-BR")}`);
-    } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao mudar a data do rascunho", "error");
-    } finally {
-      setMoving(false);
-      setPendingMove(null);
+    if (rememberChoice) {
+      const until = endOfToday();
+      writeSkipUntil(until);
+      setSkipUntil(until);
     }
+    await moveDraft(post, day);
+    setMoving(false);
+    setPendingMove(null);
+  };
+
+  const resumeConfirm = () => {
+    writeSkipUntil(null);
+    setSkipUntil(null);
   };
 
   const handleDayClick = (day) => {
@@ -369,10 +442,15 @@ export default function Calendar() {
       <Header />
 
       {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
+        <div role="status" className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg flex items-center gap-4 ${
           toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
         }`}>
           {toast.msg}
+          {toast.action && (
+            <button type="button" onClick={toast.action.onClick} className="font-semibold underline underline-offset-2 hover:no-underline">
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
 
@@ -474,6 +552,15 @@ export default function Calendar() {
           <span className={`px-1.5 py-0.5 rounded ${STATUS_STYLE.undated}`}>tracejado</span> = rascunho sem data ·
           clique num dia vazio para criar um rascunho · arraste um rascunho para mudar o dia
         </p>
+
+        {skipUntil && (
+          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 text-sm text-amber-900 dark:text-amber-200">
+            <span>Movendo rascunhos sem confirmação até o fim do dia (com opção de desfazer).</span>
+            <button type="button" onClick={resumeConfirm} className="font-medium underline underline-offset-2 hover:no-underline">
+              Voltar a confirmar
+            </button>
+          </div>
+        )}
 
         {/* Grid */}
         <div className="rounded-xl border bg-white dark:bg-gray-900 overflow-hidden">
@@ -579,7 +666,23 @@ export default function Calendar() {
         cancelText="Manter como está"
         onCancel={() => !moving && setPendingMove(null)}
         onConfirm={() => !moving && confirmMove()}
-      />
+      >
+        <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            name="rememberMoveChoice"
+            className="mt-0.5"
+            checked={rememberChoice}
+            onChange={(e) => setRememberChoice(e.target.checked)}
+          />
+          <span>
+            Não perguntar de novo hoje
+            <span className="block text-xs text-gray-500 dark:text-gray-400">
+              Até a meia-noite, os rascunhos mudam de dia direto, com opção de desfazer. Amanhã a confirmação volta.
+            </span>
+          </span>
+        </label>
+      </ConfirmDialog>
 
       {openDay && (() => {
         const key = toDateKey(openDay);
