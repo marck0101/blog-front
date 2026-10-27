@@ -157,8 +157,10 @@ const PostsService = {
 
   /* ================= CALENDÁRIO / HEATMAP ================= */
 
+  // (ano, mês) ou ({ from, to }) com "YYYY-MM-DD" (semana ou período)
   async getCalendar(year, month) {
-    const { data } = await api.get("/posts/calendar", { params: { year, month } });
+    const params = typeof year === "object" ? year : { year, month };
+    const { data } = await api.get("/posts/calendar", { params });
     return data;
   },
 
