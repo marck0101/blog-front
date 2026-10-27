@@ -62,17 +62,45 @@ async function fetchJson(url) {
 const SHELL_ORIGIN = process.env.PRERENDER_SHELL_ORIGIN || SITE_URL;
 const SHELL_MARKER = "<!--prerender-head-->";
 
-async function getShell() {
-  if (shellCache) return shellCache;
-  const res = await fetch(`${SHELL_ORIGIN}/index.html`, { signal: AbortSignal.timeout(6000) });
+// O shell fica em memória por pouco tempo e só se os assets dele existirem: durante
+// um deploy, o domínio ainda pode servir o index.html do deploy anterior, cujos
+// /assets/index-*.js somem quando o novo assume (página em branco, 404 nos assets).
+const SHELL_TTL_MS = 60_000;
+
+async function fetchShell(bust) {
+  const url = `${SHELL_ORIGIN}/index.html${bust ? `?v=${Date.now()}` : ""}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(6000), cache: "no-store" });
   if (!res.ok) throw new Error(`index.html → ${res.status}`);
   const html = await res.text();
   // Nunca servir (nem cachear) algo que não seja o shell do app.
   if (!html.includes(SHELL_MARKER) || !html.includes('id="root"')) {
     throw new Error("index.html inválido (sem marcador de prerender)");
   }
-  shellCache = html;
-  return shellCache;
+  return html;
+}
+
+// O JS principal do shell responde no domínio público (o mesmo que o navegador usa)?
+async function assetsLive(html) {
+  const script = html.match(/<script[^>]+src="(\/assets\/[^"]+\.js)"/)?.[1];
+  if (!script) return true;
+  const res = await fetch(`${SHELL_ORIGIN}${script}`, { method: "HEAD", signal: AbortSignal.timeout(4000) });
+  return res.ok;
+}
+
+// { html, fresh }: fresh = false quando não deu para confirmar os assets (não cachear a resposta)
+async function getShell() {
+  if (shellCache && Date.now() - shellCache.at < SHELL_TTL_MS) return { html: shellCache.html, fresh: true };
+  shellCache = null;
+
+  for (const bust of [false, true]) {
+    const html = await fetchShell(bust);
+    if (await assetsLive(html).catch(() => false)) {
+      shellCache = { html, at: Date.now() };
+      return { html, fresh: true };
+    }
+  }
+  console.error("[prerender] assets do index.html não respondem (deploy em andamento?)");
+  return { html: await fetchShell(true), fresh: false };
 }
 
 function headTags({ title, description, url, image, type, robots, extra = "", schema }) {
@@ -319,15 +347,17 @@ export default async function handler(req, res) {
 
     res.setHeader(
       "Cache-Control",
-      status === 200
+      !shell.fresh
+        ? "no-store"
+        : status === 200
         ? "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
         : "public, max-age=0, s-maxage=60"
     );
-    res.status(status).send(render(shell, page.head, page.body));
+    res.status(status).send(render(shell.html, page.head, page.body));
   } catch (err) {
     // API fora do ar: entrega a SPA normal em vez de quebrar o site.
     console.error("[prerender]", err);
     res.setHeader("Cache-Control", "no-store");
-    res.status(200).send(shell);
+    res.status(200).send(shell.html);
   }
 }
