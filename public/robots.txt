@@ -1,6 +1,97 @@
+# ==========================================
+# ROBOTS.TXT - BLOG MARCK0101
+# SEO + GEO + INTELIGENCIA ARTIFICIAL
+# ==========================================
+
+# Rastreadores gerais
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
+
+# ==========================================
+# OPENAI - CHATGPT
+# ==========================================
+
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: OAI-AdsBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# ANTHROPIC - CLAUDE
+# ==========================================
+
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# GOOGLE - GEMINI E VERTEX AI
+# ==========================================
+
+User-agent: Google-Extended
+User-agent: Google-CloudVertexBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# PERPLEXITY AI
+# ==========================================
+
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# MICROSOFT - BING E COPILOT
+# ==========================================
+
+User-agent: bingbot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# APPLE - SIRI E APPLE INTELLIGENCE
+# ==========================================
+
+User-agent: Applebot
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# COMMON CRAWL
+# ==========================================
+
+User-agent: CCBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# META AI
+# ==========================================
+
+User-agent: meta-externalagent
+User-agent: meta-externalfetcher
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# ==========================================
+# SITEMAP XML
+# ==========================================
 
 Sitemap: https://blog.marck0101.com.br/sitemap.xml
