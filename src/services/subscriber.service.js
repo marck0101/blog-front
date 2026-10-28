@@ -1,5 +1,6 @@
 import api from "./api";
 import { memoRequest } from "../utils/memo";
+import { prerendered } from "../utils/prerendered";
 
 const SubscriberService = {
   async subscribe(payload) {
@@ -9,6 +10,7 @@ const SubscriberService = {
 
   // Compartilhada entre header, chips e formulários (lista fixa no backend)
   getCategories: memoRequest(async () => {
+    if (prerendered("categories")) return prerendered("categories");
     const { data } = await api.get("/categories", { cacheable: true });
     // Se a API estiver mal configurada (ex.: VITE_API_URL vazio) chega HTML, não array
     return Array.isArray(data) ? data : [];

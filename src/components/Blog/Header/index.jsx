@@ -5,15 +5,17 @@ import { useFavorites } from "../../../utils/favorites";
 import SubscriberService from "../../../services/subscriber.service";
 import SeasonsService from "../../../services/seasons.service";
 import ThemeToggle from "../../ThemeToggle";
+import { prerendered } from "../../../utils/prerendered";
 
 const VISIBLE_CATEGORIES_COUNT = 3;
 
 // activeNav: item ativo definido pela página ("" = Todos, "seasons" ou slug da
 // categoria). Sem ele, deduz pela URL.
 export default function BlogHeader({ activeNav }) {
-  const [categories, setCategories] = useState([]);
+  // Valores do prerender: o menu já nasce completo, sem itens surgindo depois
+  const [categories, setCategories] = useState(() => prerendered("categories") || []);
   // Link "Seasons" só aparece quando existe season com episódio publicado
-  const [hasSeasons, setHasSeasons] = useState(false);
+  const [hasSeasons, setHasSeasons] = useState(() => (prerendered("seasons") || []).length > 0);
   const { pathname } = useLocation();
   const onSeasons = pathname.startsWith("/seasons");
   const [scrolled, setScrolled] = useState(false);

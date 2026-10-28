@@ -1,14 +1,23 @@
 {
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
   "redirects": [
     { "source": "/", "destination": "/blog", "permanent": true }
   ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "https://api.blog.marck0101.com.br/sitemap.xml" },
     { "source": "/rss.xml", "destination": "https://api.blog.marck0101.com.br/rss.xml" },
+    { "source": "/llms.txt", "destination": "https://api.blog.marck0101.com.br/llms.txt" },
     { "source": "/blog", "destination": "/api/prerender" },
     { "source": "/blog/:slug", "destination": "/api/prerender?slug=:slug" },
     { "source": "/seasons", "destination": "/api/prerender?page=seasons" },
     { "source": "/seasons/:slug", "destination": "/api/prerender?season=:slug" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/)(?!.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ]
 }

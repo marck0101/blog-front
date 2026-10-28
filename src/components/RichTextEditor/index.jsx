@@ -39,6 +39,9 @@ function contentImages(editor) {
 }
 
 // Estende Image para suportar atributo `width`
+// width = largura exibida (style, ex.: "50%"); naturalWidth + height = tamanho real
+// em pixels (atributos width/height do <img>): o navegador reserva o espaço da
+// imagem antes de ela carregar e o texto não "pula" (CLS)
 const ResizableImage = Image.extend({
   addAttributes() {
     return {
@@ -51,9 +54,24 @@ const ResizableImage = Image.extend({
         },
         parseHTML: (element) => element.style.width || null,
       },
+      naturalWidth: {
+        default: null,
+        renderHTML: (attributes) => (attributes.naturalWidth ? { width: attributes.naturalWidth } : {}),
+        parseHTML: (element) => element.getAttribute("width"),
+      },
     };
   },
 });
+
+// Tamanho real da imagem (já está no cache do navegador: aparece na galeria)
+function imageSize(src) {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => resolve({ naturalWidth: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve({});
+    img.src = src;
+  });
+}
 
 const WIDTH_OPTIONS = ["25%", "50%", "75%", "100%"];
 
@@ -143,9 +161,10 @@ export default function RichTextEditor({ value, onChange }) {
     }
   }, []);
 
-  const handleInsert = () => {
+  const handleInsert = async () => {
     if (!selectedUrl || !editor) return;
-    editor.chain().focus().setImage({ src: selectedUrl, alt: selectedAlt.trim(), width: selectedWidth }).run();
+    const size = await imageSize(selectedUrl);
+    editor.chain().focus().setImage({ src: selectedUrl, alt: selectedAlt.trim(), width: selectedWidth, ...size }).run();
     setShowModal(false);
   };
 

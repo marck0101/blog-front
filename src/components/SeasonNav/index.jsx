@@ -5,6 +5,7 @@ import PostsService from "../../services/posts.service";
 import SeasonsService from "../../services/seasons.service";
 import { seasonStatus, useSeasonProgress } from "../../utils/seasonProgress";
 import { formatMinutes } from "../../utils/readingTime";
+import { prerendered } from "../../utils/prerendered";
 
 /**
  * SeasonNav — navegação entre episódios publicados da mesma season.
@@ -14,20 +15,28 @@ import { formatMinutes } from "../../utils/readingTime";
  * variant="full"  → anterior/próximo + lista de episódios no fim do post; no
  *                   último episódio, chamada para a próxima season ou a newsletter
  */
+// Episódios da season do post aberto, injetados pelo prerender
+function prerenderedEpisodes(season) {
+  const data = prerendered("seasonEpisodes");
+  return season && data?.season?.slug === season ? data : null;
+}
+
 export default function SeasonNav({ post, variant = "full" }) {
-  const [data, setData] = useState(null);
+  // Com o prerender, o selo do topo já aparece no primeiro render (não empurra o texto)
+  const [data, setData] = useState(() => prerenderedEpisodes(post?.season));
   // Outras seasons (para indicar a próxima no fim do último episódio)
-  const [allSeasons, setAllSeasons] = useState([]);
+  const [allSeasons, setAllSeasons] = useState(() => prerendered("seasons") || []);
   const progress = useSeasonProgress();
 
   useEffect(() => {
     if (!post?.season) return;
+    if (data?.season?.slug === post.season) return;
     let cancelled = false;
     PostsService.getSeasonEpisodes(post.season)
       .then((res) => { if (!cancelled) setData(res); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [post?.season]);
+  }, [post?.season]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!post?.season || variant !== "full") return;

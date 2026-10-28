@@ -3,6 +3,8 @@ import { Layers, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../GeneratedCover";
 import FavoriteButton from "../FavoriteButton";
+import CoverImage from "../CoverImage";
+import { GRID_SIZES } from "../../utils/coverSrcSet";
 
 // Coração sobre a capa: fora do <Link> (botão dentro de link não é válido)
 function CardFavorite({ post, className }) {
@@ -20,7 +22,7 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
       >
         <div className="w-28 sm:w-56 shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
           {coverSrc ? (
-            <img src={coverSrc} alt={post.coverImageAlt || ""} width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+            <CoverImage src={coverSrc} alt={post.coverImageAlt || ""} width={320} height={180} sizes="(min-width: 640px) 224px, 112px" className="w-full h-full object-cover" />
           ) : (
             <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
           )}
@@ -88,7 +90,7 @@ function ShowcaseBadge({ badge }) {
 
 // Grade: mesmo padrão do admin — card com borda, capa limpa e texto abaixo,
 // todos com a mesma altura na linha
-function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge }) {
+function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, priority }) {
   return (
     <article className="group h-full relative">
       <CardFavorite post={post} className="top-2 right-2" />
@@ -98,13 +100,13 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge }) {
       >
         <div className="aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
           {coverSrc ? (
-            <img
+            <CoverImage
               src={coverSrc}
               alt={post.coverImageAlt || ""}
               width={640}
               height={360}
-              loading="lazy"
-              decoding="async"
+              sizes={GRID_SIZES}
+              priority={priority}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
@@ -134,10 +136,11 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge }) {
 
 // variant: "grid" (padrão) | "list" | "compact"
 // badge: selo da vitrine na grade ("Fixado")
-export default function PostCard({ post, variant = "grid", categoryLabel, seasonLabel, badge }) {
+// priority: card visível ao abrir a página — a capa carrega já (LCP)
+export default function PostCard({ post, variant = "grid", categoryLabel, seasonLabel, badge, priority = false }) {
   const coverSrc = normalizeImageUrl(post.coverImage);
   const date = new Date(post.publishedAt).toLocaleDateString("pt-BR");
-  const props = { post, coverSrc, date, categoryLabel, seasonLabel, badge };
+  const props = { post, coverSrc, date, categoryLabel, seasonLabel, badge, priority };
 
   if (variant === "list") return <ListCard {...props} />;
   if (variant === "compact") return <CompactCard {...props} />;

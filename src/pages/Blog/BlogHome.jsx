@@ -1,6 +1,6 @@
 import BlogLayout from "../../layouts/BlogLayout";
 import authorPhoto from "../../assets/author.webp";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
@@ -25,6 +25,8 @@ import { useState } from "react";
 import { Flame, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../../components/GeneratedCover";
+import CoverImage from "../../components/CoverImage";
+import { markHomeUsed, prerendered, prerenderedHome } from "../../utils/prerendered";
 
 // Múltiplos de 3: a grade tem 3 colunas e as linhas ficam completas
 const PAGE_SIZES = [6, 12, 24, 48];
@@ -45,6 +47,21 @@ const LAYOUT = {
   compact: "divide-y divide-gray-200 dark:divide-gray-800 border-y border-gray-200 dark:border-gray-800",
 };
 
+// Card da lista: só o que o PostCard mostra
+function normalizePost(post) {
+  return {
+    id: post._id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    category: post.category,
+    season: post.season || null,
+    coverImage: post.coverImage || null,
+    coverImageAlt: post.coverImageAlt || "",
+    publishedAt: post.publishedAt || post.createdAt,
+  };
+}
+
 // Destaques da semana: ranking numerado, compacto, para não competir com os fixados
 function WeeklyHighlights({ posts, categories }) {
   return (
@@ -62,7 +79,7 @@ function WeeklyHighlights({ posts, categories }) {
               <span className="shrink-0 w-8 text-3xl font-bold text-gray-300 dark:text-gray-600 tabular-nums text-center">{i + 1}</span>
               <div className="w-20 shrink-0 aspect-video rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
                 {cover ? (
-                  <img src={cover} alt={post.coverImageAlt || ""} width={160} height={90} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  <CoverImage src={cover} alt={post.coverImageAlt || ""} width={160} height={90} sizes="80px" className="w-full h-full object-cover" />
                 ) : (
                   <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
                 )}
@@ -94,26 +111,37 @@ export default function BlogHome() {
   // Ordem na URL (/blog?ordem=antigos): volta igual ao recarregar ou compartilhar
   const sort = SORTS.find((s) => s.value === searchParams.get("ordem")) || SORTS[0];
 
-  const [posts, setPosts] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = usePageSize("blog-page-size", PAGE_SIZES, 12);
-  const [loading, setLoading] = useState(true);
+
+  // Primeiro carregamento de /blog sem filtro: lista, vitrine, categorias e
+  // seasons já vêm no HTML (api/prerender.js) — nada "pula" quando a API responde
+  const [initial] = useState(() =>
+    page === 1 && activeCategories.length === 0 && !search && sort.value === "recentes"
+      ? prerenderedHome()
+      : null
+  );
+  const skipFirstLoad = useRef(Boolean(initial));
+
+  const [posts, setPosts] = useState(() => initial?.posts.slice(0, pageSize).map(normalizePost) ?? []);
+  const [totalPages, setTotalPages] = useState(() => (initial ? Math.max(1, Math.ceil(initial.total / pageSize)) : 1));
+  const [total, setTotal] = useState(() => initial?.total ?? 0);
+  const [loading, setLoading] = useState(!initial);
   const [toast, setToast] = useState(null);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(() => prerendered("categories") || []);
   // Seasons públicas (com episódio publicado): selo "Season" nos cards
-  const [seasons, setSeasons] = useState([]);
+  const [seasons, setSeasons] = useState(() => prerendered("seasons") || []);
   const [view, setView] = useViewMode("blog-view", ["grid", "list", "compact"], "grid");
   // Vitrine (só na 1ª página sem filtro): fixados no painel e destaques da semana
-  const [pinned, setPinned] = useState([]);
-  const [highlights, setHighlights] = useState([]);
+  const [pinned, setPinned] = useState(() => initial?.pinned || []);
+  const [highlights, setHighlights] = useState(() => initial?.highlights || []);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
     SeasonsService.getPublic().then(setSeasons).catch(() => {});
+    if (initial) return;
     PostsService.getPinned().then(setPinned).catch(() => {});
     PostsService.getHighlights().then(setHighlights).catch(() => {});
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const catsKey = activeCategories.join(",");
 
@@ -121,18 +149,6 @@ export default function BlogHome() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-
-  const normalizePost = (post) => ({
-    id: post._id,
-    title: post.title,
-    slug: post.slug,
-    excerpt: post.excerpt,
-    content: post.content,
-    category: post.category,
-    season: post.season || null,
-    coverImage: post.coverImage || null,
-    publishedAt: post.publishedAt || post.createdAt,
-  });
 
   const load = useCallback(() => {
     let mounted = true;
@@ -175,6 +191,12 @@ export default function BlogHome() {
   }, [loading]);
 
   useEffect(() => {
+    // A primeira página já veio do prerender; mudar filtro, página ou tamanho busca
+    if (skipFirstLoad.current) {
+      skipFirstLoad.current = false;
+      markHomeUsed();
+      return;
+    }
     const cleanup = load();
     return cleanup;
   }, [load]);
@@ -239,6 +261,8 @@ export default function BlogHome() {
   const clearFilters = () => setSearchParams({});
 
   const hasActiveFilters = activeCategories.length > 0 || Boolean(search);
+  // Vitrine no topo: a capa do 1º fixado é a maior imagem visível; senão, a do 1º da lista
+  const showcaseOnTop = (pinned.length > 0 || highlights.length > 0) && page === 1 && !hasActiveFilters;
 
   // Labels das categorias ativas (para título dinâmico e empty state)
   const activeCatLabels = activeCategories
@@ -307,11 +331,12 @@ export default function BlogHome() {
             <Pin size={20} className="text-amber-600 dark:text-amber-400" /> Comece por aqui
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {pinned.map((post) => (
+            {pinned.map((post, i) => (
               <PostCard
                 key={post._id}
                 post={normalizePost(post)}
                 badge="Fixado"
+                priority={i === 0}
                 categoryLabel={categories.find((c) => c.slug === post.category)?.label}
                 seasonLabel={seasons.find((s) => s.slug === post.season)?.title}
               />
@@ -439,11 +464,12 @@ export default function BlogHome() {
 
         {!loading && posts.length > 0 && (
           <div className={LAYOUT[view]}>
-            {posts.map((post) => (
+            {posts.map((post, i) => (
               <PostCard
                 key={post.id}
                 post={post}
                 variant={view}
+                priority={i === 0 && !showcaseOnTop}
                 categoryLabel={categories.find((c) => c.slug === post.category)?.label}
                 seasonLabel={seasons.find((s) => s.slug === post.season)?.title}
               />

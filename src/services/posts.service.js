@@ -9,7 +9,8 @@ const PostsService = {
 
   // Retorna { posts, total, page, totalPages }
   async getPublished(page = 1, limit = 20, filters = {}) {
-    const params = { page, limit };
+    // fields=card: a lista só mostra título, resumo e capa — sem o conteúdo inteiro
+    const params = { page, limit, fields: "card" };
     const { categories = [], search = "", dateFrom = "", dateTo = "", excludePinned = false, sort = "" } = filters;
     // recent (padrão) | oldest | popular | az
     if (sort && sort !== "recent") params.sort = sort;

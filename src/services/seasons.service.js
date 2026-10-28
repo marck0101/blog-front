@@ -1,5 +1,6 @@
 import api from "./api";
 import { memoRequest } from "../utils/memo";
+import { prerendered } from "../utils/prerendered";
 
 const SeasonsService = {
   /* ================= BLOG PÚBLICO ================= */
@@ -8,6 +9,7 @@ const SeasonsService = {
   // [{ slug, title, description, episodes, coverImage, firstSlug, lastPublishedAt }]
   // Compartilhada entre header, home, breadcrumb e /seasons
   getPublic: memoRequest(async () => {
+    if (prerendered("seasons")) return prerendered("seasons");
     const { data } = await api.get("/seasons", { cacheable: true });
     return Array.isArray(data) ? data : [];
   }),

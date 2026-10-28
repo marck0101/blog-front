@@ -20,6 +20,22 @@ const analyticsAllowed = () => {
   }
 };
 
+// Navegador do autor não entra nas métricas (filtro por IP não pega celular nem
+// rede móvel): marcado ao entrar no painel (indicador "user" do AuthContext) ou
+// abrindo qualquer página com ?notrack=1 — útil no celular. ?notrack=0 desfaz.
+const OPTOUT_KEY = "analytics-optout";
+
+const isAuthorBrowser = () => {
+  try {
+    const param = new URLSearchParams(window.location.search).get("notrack");
+    if (param === "1" || localStorage.getItem("user")) localStorage.setItem(OPTOUT_KEY, "1");
+    else if (param === "0") localStorage.removeItem(OPTOUT_KEY);
+    return localStorage.getItem(OPTOUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
 /* ================= CLARITY ================= */
 
 let clarityLoaded = false;
@@ -110,7 +126,7 @@ export function syncAnalytics(pathname) {
   if (!isProdHost()) return;
 
   // Admin mostra emails de assinantes: nunca medir/gravar
-  const enabled = !pathname.startsWith("/admin") && analyticsAllowed();
+  const enabled = !pathname.startsWith("/admin") && analyticsAllowed() && !isAuthorBrowser();
 
   syncClarity(enabled);
   syncGA(enabled);

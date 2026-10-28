@@ -30,6 +30,7 @@ import {
   SEASONS_FAQ,
   SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
+import { coverSrcSet, GRID_SIZES } from "../src/utils/coverSrcSet.js";
 
 const API_URL = process.env.PRERENDER_API_URL || "https://api.blog.marck0101.com.br/api";
 
@@ -54,6 +55,40 @@ async function fetchJson(url) {
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`${url} → ${res.status}`);
   return res.json();
+}
+
+// Dado complementar (menu, vitrine): se falhar, o React busca no navegador
+function fetchOptional(url) {
+  return fetchJson(url).catch((err) => {
+    console.error("[prerender]", err.message);
+    return null;
+  });
+}
+
+// Categorias e seasons: header, chips e breadcrumb saem completos no primeiro render
+async function sharedData() {
+  const [categories, seasons] = await Promise.all([
+    fetchOptional(`${API_URL}/categories`),
+    fetchOptional(`${API_URL}/seasons`),
+  ]);
+  return {
+    ...(Array.isArray(categories) && { categories }),
+    ...(Array.isArray(seasons) && { seasons }),
+  };
+}
+
+// Lido por src/utils/prerendered.js antes do React montar
+function dataScript(data) {
+  return `<script>window.__PRERENDERED_DATA__=${safeJson(data)}</script>`;
+}
+
+// Capa candidata a LCP: o download começa junto com o JS, sem esperar React + API
+function imagePreload(url) {
+  if (!url) return "";
+  const srcset = coverSrcSet(url);
+  return srcset
+    ? `<link rel="preload" as="image" href="${esc(url)}" imagesrcset="${esc(srcset)}" imagesizes="${esc(GRID_SIZES)}" fetchpriority="high" />`
+    : `<link rel="preload" as="image" href="${esc(url)}" fetchpriority="high" />`;
 }
 
 // Busca o index.html pelo domínio público — o host interno da função (*.vercel.app)
@@ -192,7 +227,9 @@ function postPage(post) {
   return { head, body };
 }
 
-function homePage(posts) {
+// home: { posts, pinned }; preload só sem filtro, quando a vitrine aparece
+function homePage(home, withPreload) {
+  const posts = [...home.pinned, ...home.posts];
   const head = headTags({
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
@@ -201,6 +238,8 @@ function homePage(posts) {
     type: "website",
     robots: ROBOTS_INDEX,
     schema: blogHomeSchema(posts),
+    // Com fixados, a capa do 1º é a maior imagem visível ao abrir (ver BlogHome)
+    extra: withPreload ? imagePreload(home.pinned[0]?.coverImage) : "",
   });
 
   const items = posts
@@ -321,6 +360,9 @@ export default async function handler(req, res) {
   try {
     let page;
     let status = 200;
+    // Em paralelo com a busca principal de cada rota
+    const shared = sharedData();
+    const data = {};
 
     if (seasonSlug) {
       const data = await fetchJson(`${API_URL}/seasons/${encodeURIComponent(seasonSlug)}`);
@@ -336,14 +378,35 @@ export default async function handler(req, res) {
       const post = await fetchJson(`${API_URL}/posts/slug/${encodeURIComponent(slug)}`);
       if (post) {
         page = postPage(post);
+        // Selo da season no topo do post (SeasonNav)
+        if (post.season) {
+          const episodes = await fetchOptional(`${API_URL}/posts/season/${encodeURIComponent(post.season)}`);
+          if (episodes) data.seasonEpisodes = episodes;
+        }
       } else {
         page = notFoundPage(slug);
         status = 404;
       }
     } else {
-      const data = await fetchJson(`${API_URL}/posts/published?page=1&limit=50`);
-      page = homePage(data?.posts || []);
+      // limit 48 = maior opção de "itens por página" da BlogHome: serve qualquer escolha
+      const [list, pinned, highlights] = await Promise.all([
+        fetchJson(`${API_URL}/posts/published?page=1&limit=48&excludePinned=1&fields=card`),
+        fetchOptional(`${API_URL}/posts/pinned`),
+        fetchOptional(`${API_URL}/posts/highlights`),
+      ]);
+      // Lista e vitrine só valem para /blog sem filtro (com ?categoria=, ?q=… a
+      // BlogHome busca no navegador). Sem fixados/destaques (falha da API), idem.
+      const defaultView = !["categoria", "q", "pagina", "ordem"].some((key) => key in req.query);
+      // Card não usa o conteúdo; garante isso mesmo com uma API que ignore fields=card
+      const posts = (list?.posts || []).map(({ content, ...card }) => card); // eslint-disable-line no-unused-vars
+      if (defaultView && Array.isArray(pinned) && Array.isArray(highlights)) {
+        data.home = { posts, total: list?.total || 0, pinned, highlights };
+      }
+      page = homePage({ posts, pinned: pinned || [] }, defaultView);
     }
+
+    Object.assign(data, await shared);
+    page.body += `\n    ${dataScript(data)}`;
 
     res.setHeader(
       "Cache-Control",

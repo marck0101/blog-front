@@ -26,6 +26,7 @@ import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
+import { prerendered } from "../../utils/prerendered";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -59,8 +60,9 @@ export default function Post() {
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
   // Nomes para exibir: "Negócios" em vez do slug, título da season no breadcrumb
-  const [categories, setCategories] = useState([]);
-  const [seasons, setSeasons] = useState([]);
+  // Do prerender quando houver: breadcrumb e categoria não mudam depois do primeiro render
+  const [categories, setCategories] = useState(() => prerendered("categories") || []);
+  const [seasons, setSeasons] = useState(() => prerendered("seasons") || []);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
