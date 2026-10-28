@@ -159,7 +159,8 @@ html.dark .admin-content h3 {
   color: rgb(255 255 255);
 }
 
-html.dark label { color: rgb(209 213 219) !important; }
+/* Label com fundo de cor (ex.: chip selecionado da newsletter) mantém o text-white */
+html.dark label:not(.text-white) { color: rgb(209 213 219) !important; }
 html.dark .text-gray-700 { color: rgb(209 213 219) !important; }
 html.dark .text-gray-900 { color: rgb(255 255 255) !important; }
 
