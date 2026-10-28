@@ -121,9 +121,51 @@ function syncPixel(enabled, pathname) {
   }
 }
 
+/* ================= CARREGAMENTO ADIADO ================= */
+
+// GA4 + Pixel + Clarity somam ~400 KB e, baixados junto com a página, disputam a
+// rede com a capa do LCP no celular. Só entram na primeira interação ou 3 s
+// depois do load, o que vier antes (em rede rápida o load sai antes do próprio
+// LCP, então "logo após o load" não bastava). O GA4 manda o page_view ao
+// carregar; LCP/CLS do web-vitals vêm de entradas "buffered", então nada se
+// perde por começar depois. Custo: visita de menos de ~3 s sem nenhum toque
+// não é registrada.
+const LOAD_DELAY = 3000;
+let pageReady = false;
+let pendingPath = null;
+
+function whenPageReady(run) {
+  const events = ["pointerdown", "keydown", "scroll", "touchstart"];
+  let done = false;
+  const go = () => {
+    if (done) return;
+    done = true;
+    events.forEach((e) => window.removeEventListener(e, go, true));
+    run();
+  };
+  events.forEach((e) => window.addEventListener(e, go, { capture: true, passive: true, once: true }));
+  const later = () => setTimeout(go, LOAD_DELAY);
+  if (document.readyState === "complete") later();
+  else window.addEventListener("load", later, { once: true });
+}
+
 /** Liga/desliga as ferramentas conforme a rota atual e o consentimento. */
 export function syncAnalytics(pathname) {
   if (!isProdHost()) return;
+  if (!pageReady) {
+    if (pendingPath === null) {
+      whenPageReady(() => {
+        pageReady = true;
+        applyAnalytics(pendingPath);
+      });
+    }
+    pendingPath = pathname; // vale a rota em que o visitante estiver ao liberar
+    return;
+  }
+  applyAnalytics(pathname);
+}
+
+function applyAnalytics(pathname) {
 
   // Admin mostra emails de assinantes: nunca medir/gravar
   const enabled = !pathname.startsWith("/admin") && analyticsAllowed() && !isAuthorBrowser();
