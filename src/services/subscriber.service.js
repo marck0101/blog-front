@@ -8,6 +8,12 @@ const SubscriberService = {
     return data;
   },
 
+  // c = envio de onde veio o link (atribui a saída a ele nas métricas)
+  async unsubscribe(token, campaignId) {
+    const { data } = await api.post(`/subscribers/unsubscribe/${encodeURIComponent(token)}`, campaignId ? { c: campaignId } : {});
+    return data;
+  },
+
   // Compartilhada entre header, chips e formulários (lista fixa no backend)
   getCategories: memoRequest(async () => {
     if (prerendered("categories")) return prerendered("categories");

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { CONSENT_EVENT, syncAnalytics } from "../../utils/analytics";
+import { CONSENT_EVENT, isPrivatePath, syncAnalytics } from "../../utils/analytics";
 import { captureAttribution } from "../../utils/attribution";
 
 // Fica dentro do BrowserRouter: reavalia Clarity/GA4 a cada troca de rota
@@ -9,7 +9,7 @@ export default function AnalyticsTracker() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (!pathname.startsWith("/admin")) captureAttribution();
+    if (!isPrivatePath(pathname)) captureAttribution();
     syncAnalytics(pathname);
     const onConsent = () => syncAnalytics(pathname);
     window.addEventListener(CONSENT_EVENT, onConsent);

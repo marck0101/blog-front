@@ -165,10 +165,13 @@ export function syncAnalytics(pathname) {
   applyAnalytics(pathname);
 }
 
-function applyAnalytics(pathname) {
+// Páginas que nunca são medidas/gravadas: o admin mostra emails de assinantes;
+// o cancelamento de inscrição trabalha com o token secreto do assinante
+export const PRIVATE_PATHS = ["/admin", "/cancelar-inscricao"];
+export const isPrivatePath = (pathname) => PRIVATE_PATHS.some((p) => pathname.startsWith(p));
 
-  // Admin mostra emails de assinantes: nunca medir/gravar
-  const enabled = !pathname.startsWith("/admin") && analyticsAllowed() && !isAuthorBrowser();
+function applyAnalytics(pathname) {
+  const enabled = !isPrivatePath(pathname) && analyticsAllowed() && !isAuthorBrowser();
 
   syncClarity(enabled);
   syncGA(enabled);

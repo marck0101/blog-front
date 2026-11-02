@@ -22,6 +22,7 @@ const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
 const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
 const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
 const Favorites = lazyPage(() => import("../pages/Blog/Favorites"));
+const Unsubscribe = lazyPage(() => import("../pages/Blog/Unsubscribe"));
 const Showcase = lazyPage(() => import("../pages/Admin/Showcase"));
 const AdminComments = lazyPage(() => import("../pages/Admin/Comments"));
 const Audiences = lazyPage(() => import("../pages/Admin/Audiences"));
@@ -65,6 +66,7 @@ const router = createBrowserRouter(
         <Route path="/seasons" element={<Seasons />} />
         <Route path="/seasons/:slug" element={<SeasonPage />} />
         <Route path="/favoritos" element={<Favorites />} />
+        <Route path="/cancelar-inscricao" element={<Unsubscribe />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin/reset-password" element={<ResetPassword />} />
