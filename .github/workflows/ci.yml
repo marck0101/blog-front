@@ -1,0 +1,28 @@
+# CI-01: todo push e PR roda testes e build. PR vermelho = não fazer merge.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # mesma da Vercel
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      # Lint ainda tem erros antigos (ver docs/BACKLOG.md no blog-backend, CI-01):
+      # mostra, mas não bloqueia. Quando zerar, tirar o continue-on-error.
+      - run: npm run lint
+        continue-on-error: true
+      # "critical" e não "high": 4 alertas altos aceitos do gRPC dentro do Firestore,
+      # que não entra no build (ver commit da SEC-06). Voltar para high quando sumirem.
+      - run: npm audit --omit=dev --audit-level=critical
