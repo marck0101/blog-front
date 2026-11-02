@@ -6,6 +6,7 @@ import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import CommentsService from "../../services/comments.service";
 import { notifyPendingCommentsChanged } from "../../utils/pendingComments";
+import { errorText } from "../../utils/apiError";
 
 const TABS = [
   { value: "pending", label: "Pendentes" },
@@ -194,7 +195,7 @@ export default function Comments() {
       showToast(message);
       return true;
     } catch (err) {
-      showToast(err?.response?.data?.error || "Não foi possível concluir", "error");
+      showToast(errorText(err) || "Não foi possível concluir", "error");
       return false;
     } finally {
       setBusy(false);

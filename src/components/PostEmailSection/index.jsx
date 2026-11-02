@@ -4,6 +4,7 @@ import { Mail, FlaskConical } from "lucide-react";
 import AudiencePicker from "../AudiencePicker";
 import RecipientStatus from "../RecipientStatus";
 import CampaignService from "../../services/campaign.service";
+import { errorText } from "../../utils/apiError";
 
 const defaultSubject = (title) => `Novo artigo: ${title || "título do post"} | marck0101`;
 
@@ -126,7 +127,7 @@ export default function PostEmailSection({ value, onChange, post, categories, al
       );
       setTestResult({ ok: true, message });
     } catch (err) {
-      setTestResult({ ok: false, message: err?.response?.data?.error || "Erro ao enviar teste." });
+      setTestResult({ ok: false, message: errorText(err) || "Erro ao enviar teste." });
     } finally {
       setTesting(false);
     }

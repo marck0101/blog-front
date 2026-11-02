@@ -4,6 +4,7 @@ import PostFaq from "../PostFaq";
 import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
 import { safeHtml } from "../../utils/safeHtml";
+import { errorText } from "../../utils/apiError";
 
 const FIELD_LABELS = {
   title: "título",
@@ -85,7 +86,7 @@ export default function PostHistory({ postId, dirty, onClose, onRestored }) {
       await PostsService.restoreRevision(postId, selected);
       await onRestored(selected);
     } catch (err) {
-      setError(err?.response?.data?.error || "Erro ao restaurar a versão.");
+      setError(errorText(err) || "Erro ao restaurar a versão.");
     } finally {
       setRestoring(false);
     }

@@ -5,6 +5,7 @@ import SEO from "../../components/SEO";
 import { AuthContext } from "../../context/AuthContext";
 import AuthService from "../../services/auth.service";
 import { RecoveryCodes } from "./Login";
+import { errorText } from "../../utils/apiError";
 
 const LOW_CODES = 3;
 
@@ -31,7 +32,7 @@ export default function Security() {
       setSecurity((s) => ({ ...s, recoveryCodesLeft: codes.length }));
       setCode("");
     } catch (err) {
-      setError(err?.response?.data?.message || "Código incorreto");
+      setError(errorText(err) || "Código incorreto");
     } finally {
       setBusy(false);
     }

@@ -23,6 +23,7 @@ import SubscriberService from "../../services/subscriber.service";
 import { emptyLinkedIn } from "../../utils/linkedin";
 import { audienceToApi, emptyAudience } from "../../utils/campaignAudience";
 import { SITE_URL, TITLE_MAX, DESCRIPTION_MAX, postTitle, postDescription, postFaq } from "../../seo/site";
+import { errorText } from "../../utils/apiError";
 
 function CharCount({ value, max }) {
   const over = value.length > max;
@@ -320,7 +321,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
         navigate(`/admin/posts/${saved._id}`, { replace: true });
       }
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao salvar", "error");
+      showToast(errorText(err) || "Erro ao salvar", "error");
     } finally {
       setSaving(false);
     }

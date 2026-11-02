@@ -8,6 +8,7 @@ import FilterChips from "../../components/FilterChips";
 import AudiencesService from "../../services/audiences.service";
 import SubscriberService from "../../services/subscriber.service";
 import { parseContacts } from "../../utils/parseContacts";
+import { errorText } from "../../utils/apiError";
 
 const CHUNK = 500;
 const num = (n) => (n || 0).toLocaleString("pt-BR");
@@ -29,7 +30,7 @@ function AudienceForm({ audience, onSaved, onCancel }) {
         : await AudiencesService.create({ name, description });
       onSaved(saved);
     } catch (err) {
-      setError(err?.response?.data?.error || "Erro ao salvar o público");
+      setError(errorText(err) || "Erro ao salvar o público");
     } finally {
       setSaving(false);
     }
@@ -157,7 +158,7 @@ function ImportModal({ audience, categories, onClose, onDone }) {
       onDone();
     } catch (err) {
       setError(
-        `${err?.response?.data?.error || "Erro na importação"}. ${
+        `${errorText(err) || "Erro na importação"}. ${
           total.created + total.added > 0 ? "Parte da lista já foi importada; importar de novo não duplica ninguém." : ""
         }`
       );
@@ -358,7 +359,7 @@ export default function Audiences() {
       await load();
       showToast("Público movido para a lixeira. Dá para restaurar em Lixeira → Públicos.");
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao mover para a lixeira", "error");
+      showToast(errorText(err) || "Erro ao mover para a lixeira", "error");
     }
   };
 

@@ -20,6 +20,7 @@ import PostsService from "../../services/posts.service";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import CampaignService from "../../services/campaign.service";
 import { POST_STATUS, isOverdue, postStatusKey } from "../../utils/postStatus";
+import { errorText } from "../../utils/apiError";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -359,7 +360,7 @@ export default function Calendar() {
       );
       showToast("Post publicado com sucesso!");
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao publicar post", "error");
+      showToast(errorText(err) || "Erro ao publicar post", "error");
     }
   };
 
@@ -388,12 +389,12 @@ export default function Calendar() {
             await savePlannedAt(post, previous);
             showToast("Data do rascunho restaurada");
           } catch (err) {
-            showToast(err?.response?.data?.error || "Não foi possível desfazer", "error");
+            showToast(errorText(err) || "Não foi possível desfazer", "error");
           }
         },
       });
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao mudar a data do rascunho", "error");
+      showToast(errorText(err) || "Erro ao mudar a data do rascunho", "error");
     }
   };
 

@@ -4,6 +4,7 @@ import { Eye, EyeOff, ShieldCheck, Smartphone, KeyRound, Copy, Download } from "
 import { AuthContext } from "../../context/AuthContext";
 import AuthService from "../../services/auth.service";
 import SEO from "../../components/SEO";
+import { errorText } from "../../utils/apiError";
 
 // Erros que a API manda na volta do Google (?error=…)
 const GOOGLE_ERRORS = {
@@ -16,7 +17,7 @@ const GOOGLE_ERRORS = {
 // 429 = muitas tentativas; 5xx = falha do servidor (não é "código incorreto")
 function apiError(err, fallback) {
   const status = err?.response?.status;
-  const message = err?.response?.data?.message;
+  const message = errorText(err);
   if (status === 429) return message || "Muitas tentativas. Tente novamente mais tarde.";
   if (!status || status >= 500) return message || "Erro no servidor. Tente de novo em instantes.";
   return message || fallback;

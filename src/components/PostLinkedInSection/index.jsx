@@ -5,6 +5,7 @@ import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import { DEFAULT_COMMENT, LINK_TOKEN, linkedinArticleUrl, slugFromTitle } from "../../utils/linkedin";
+import { errorText } from "../../utils/apiError";
 
 const MAX_CHARS = 3000;
 // O feed mostra só o começo do texto; o resto fica atrás do "…mais"
@@ -23,7 +24,7 @@ function ConnectionBar({ status, onRefresh }) {
       const url = await LinkedInService.getConnectUrl("/admin");
       window.open(url, "_blank", "noopener");
     } catch (err) {
-      alert(err?.response?.data?.error || "Erro ao conectar com o LinkedIn");
+      alert(errorText(err) || "Erro ao conectar com o LinkedIn");
     } finally {
       setBusy(false);
     }
@@ -234,7 +235,7 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
     try {
       set({ imageUrl: await UploadService.uploadCover(file) });
     } catch (err) {
-      alert(err?.response?.data?.error || "Erro ao enviar imagem");
+      alert(errorText(err) || "Erro ao enviar imagem");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

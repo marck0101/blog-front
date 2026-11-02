@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import AuthService from "../../services/auth.service";
 import SEO from "../../components/SEO";
+import { errorText } from "../../utils/apiError";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -37,7 +38,7 @@ export default function ResetPassword() {
       navigate("/admin/login");
     } catch (err) {
       setError(
-        err?.response?.data?.message || "Não foi possível redefinir a senha"
+        errorText(err) || "Não foi possível redefinir a senha"
       );
     } finally {
       setLoading(false);

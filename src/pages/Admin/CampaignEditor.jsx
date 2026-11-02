@@ -21,6 +21,7 @@ import {
   audienceToApi,
   emptyAudience,
 } from "../../utils/campaignAudience";
+import { errorText } from "../../utils/apiError";
 
 
 const escapeHtml = (value = "") =>
@@ -181,7 +182,7 @@ function PostPicker({ linkedPost, onPick, onUnlink, onUseFull }) {
   );
 }
 
-const errorMessage = (err, fallback) => err?.response?.data?.error || fallback;
+const errorMessage = (err, fallback) => errorText(err) || fallback;
 
 function SendReport({ campaign, busy, onResume, onRetryFailed, onDuplicate }) {
   const { stats } = campaign;

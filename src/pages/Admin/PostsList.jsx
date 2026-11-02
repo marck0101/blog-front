@@ -17,6 +17,7 @@ import usePageSize from "../../hooks/usePageSize";
 import Pagination from "../../components/Pagination";
 import PostPreview from "../../components/PostPreview";
 import { Pencil, Pin, Trash } from "lucide-react";
+import { errorText } from "../../utils/apiError";
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
@@ -196,7 +197,7 @@ export default function PostsList() {
       );
       showToast(newStatus ? "Post publicado com sucesso" : "Post movido para rascunho");
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao alterar status do post", "error");
+      showToast(errorText(err) || "Erro ao alterar status do post", "error");
     } finally {
       setLoadingId(null);
     }
@@ -246,7 +247,7 @@ export default function PostsList() {
       );
       showToast(isPinned ? "Post desafixado da home" : "Post fixado na home");
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao fixar o post", "error");
+      showToast(errorText(err) || "Erro ao fixar o post", "error");
     } finally {
       setLoadingId(null);
     }

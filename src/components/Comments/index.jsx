@@ -4,6 +4,7 @@ import CommentsService from "../../services/comments.service";
 import authorPhoto from "../../assets/author.webp";
 import { AUTHOR_NAME } from "../../seo/site";
 import { trackEvent } from "../../utils/analytics";
+import { errorText } from "../../utils/apiError";
 
 const BODY_MAX = 2000;
 
@@ -197,7 +198,7 @@ export default function Comments({ post }) {
       if (status === 401) setConfig((c) => ({ ...c, reader: null }));
       setNotice({
         type: "error",
-        text: err?.response?.data?.error || err?.response?.data?.message || "Não foi possível enviar. Tente de novo.",
+        text: errorText(err) || "Não foi possível enviar. Tente de novo.",
       });
     } finally {
       setSending(false);

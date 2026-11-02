@@ -5,6 +5,7 @@ import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PostsService from "../../services/posts.service";
 import { normalizeImageUrl } from "../../utils/imageUrl";
+import { errorText } from "../../utils/apiError";
 
 const HIGHLIGHT_OPTIONS = [
   { value: "auto", label: "Auto", title: "Entra se estiver entre os mais lidos da semana" },
@@ -169,7 +170,7 @@ export default function Showcase() {
       await load();
       showToast(message);
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao salvar os fixados", "error");
+      showToast(errorText(err) || "Erro ao salvar os fixados", "error");
     } finally {
       setSaving(false);
     }

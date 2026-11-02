@@ -11,6 +11,7 @@ import Pagination from "../../components/Pagination";
 import usePageSize from "../../hooks/usePageSize";
 import SubscriberService from "../../services/subscriber.service";
 import AudiencesService from "../../services/audiences.service";
+import { errorText } from "../../utils/apiError";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Ativos" },
@@ -69,7 +70,7 @@ function SubscriberForm({ subscriber, categories, onSaved, onCancel }) {
       }
       onSaved();
     } catch (err) {
-      setError(err?.response?.data?.error || "Erro ao salvar assinante.");
+      setError(errorText(err) || "Erro ao salvar assinante.");
     } finally {
       setSaving(false);
     }

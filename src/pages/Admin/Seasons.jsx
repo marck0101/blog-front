@@ -7,6 +7,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import SeasonsService from "../../services/seasons.service";
 import FaqFields from "../../components/FaqFields";
 import { cleanFaq } from "../../seo/site";
+import { errorText } from "../../utils/apiError";
 
 const EMPTY = { title: "", slug: "", description: "", order: 0, faq: [] };
 
@@ -65,7 +66,7 @@ function SeasonForm({ season, onSaved, onCancel }) {
         : await SeasonsService.create(payload);
       onSaved(saved, isEdit);
     } catch (err) {
-      setError(err?.response?.data?.error || "Erro ao salvar a season");
+      setError(errorText(err) || "Erro ao salvar a season");
     } finally {
       setSaving(false);
     }
@@ -185,7 +186,7 @@ export default function AdminSeasons() {
       showToast("Season excluída");
       load();
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao excluir", "error");
+      showToast(errorText(err) || "Erro ao excluir", "error");
     }
   };
 

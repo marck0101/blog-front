@@ -12,6 +12,7 @@ import TypedConfirmDialog from "../../components/TypedConfirmDialog";
 import { POST_STATUS, postStatusKey } from "../../utils/postStatus";
 import { Eye, RotateCcw, Trash2, Users } from "lucide-react";
 import { safeHtml } from "../../utils/safeHtml";
+import { errorText } from "../../utils/apiError";
 
 // Status que o post tinha antes de ir para a lixeira
 const previousKey = (post) => postStatusKey({ ...post, deletedAt: null });
@@ -80,7 +81,7 @@ function AudiencesTrash() {
       setAudiences((prev) => prev.filter((a) => a._id !== audience._id));
       showToast(`"${audience.name}" voltou para Públicos`);
     } catch (err) {
-      showToast(err?.response?.data?.error || "Erro ao restaurar", "error");
+      showToast(errorText(err) || "Erro ao restaurar", "error");
     }
   };
 
@@ -94,7 +95,7 @@ function AudiencesTrash() {
     const failed = results.find((r) => r.status === "rejected");
     showToast(
       failed
-        ? failed.reason?.response?.data?.error || `${removedIds.size} excluído(s), com erro nos demais`
+        ? errorText(failed.reason) || `${removedIds.size} excluído(s), com erro nos demais`
         : target.all
         ? "Públicos da lixeira excluídos"
         : "Público excluído de vez",
