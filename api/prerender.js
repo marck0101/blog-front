@@ -77,9 +77,15 @@ async function sharedData() {
   };
 }
 
+// Dados para o React como bloco JSON (não executável): a CSP não precisa liberar
+// script inline (SEC-02). Lido por src/utils/prerendered.js (readBlock).
+function jsonBlock(id, data) {
+  return `<script type="application/json" id="${id}">${safeJson(data)}</script>`;
+}
+
 // Lido por src/utils/prerendered.js antes do React montar
 function dataScript(data) {
-  return `<script>window.__PRERENDERED_DATA__=${safeJson(data)}</script>`;
+  return jsonBlock("prerendered-data", data);
 }
 
 // Capa candidata a LCP: o download começa junto com o JS, sem esperar React + API
@@ -225,7 +231,7 @@ function postPage(post) {
         ${faqHtml(postFaq(post))}
       </article>
     </noscript>
-    <script>window.__PRERENDERED_POST__=${safeJson(post)}</script>`;
+    ${jsonBlock("prerendered-post", post)}`;
 
   return { head, body };
 }
@@ -339,7 +345,7 @@ function notFoundPage(slug, path = "blog") {
     robots: "noindex",
   });
   // Avisa o React que o post não existe — evita refazer a busca (e um 404 a mais no console)
-  const body = path === "blog" ? `<script>window.__PRERENDERED_NOT_FOUND__=${safeJson(slug)}</script>` : "";
+  const body = path === "blog" ? jsonBlock("prerendered-not-found", slug) : "";
   return { head, body };
 }
 

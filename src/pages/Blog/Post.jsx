@@ -26,7 +26,7 @@ import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
-import { prerendered } from "../../utils/prerendered";
+import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 
 const READ_MARKS = [25, 50, 75, 100];
@@ -43,13 +43,13 @@ function percentSeen(el) {
 // Post injetado por api/prerender.js no primeiro carregamento — evita o fetch
 // duplicado e o "Carregando..." que causava layout shift.
 function getPrerenderedPost(slug) {
-  const data = window.__PRERENDERED_POST__;
+  const data = readBlock("prerendered-post");
   return data && data.slug === slug ? data : null;
 }
 
 // Prerender já respondeu 404 para este slug — não buscar de novo na API
 function isPrerenderedNotFound(slug) {
-  return window.__PRERENDERED_NOT_FOUND__ === slug;
+  return readBlock("prerendered-not-found") === slug;
 }
 
 export default function Post() {
