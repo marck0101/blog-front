@@ -7,6 +7,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import CommentsService from "../../services/comments.service";
 import { notifyPendingCommentsChanged } from "../../utils/pendingComments";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 const TABS = [
   { value: "pending", label: "Pendentes" },
@@ -159,12 +160,7 @@ export default function Comments() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const [toDelete, setToDelete] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const showToast = useToast();
 
   const load = useCallback(
     () =>
@@ -217,17 +213,6 @@ export default function Comments() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div
-          role="status"
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
 
       <ConfirmDialog
         open={Boolean(toDelete)}

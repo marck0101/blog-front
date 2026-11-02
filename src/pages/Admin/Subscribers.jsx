@@ -12,6 +12,7 @@ import usePageSize from "../../hooks/usePageSize";
 import SubscriberService from "../../services/subscriber.service";
 import AudiencesService from "../../services/audiences.service";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Ativos" },
@@ -164,6 +165,7 @@ const PAGE_SIZES = [5, 10, 20, 50];
 
 export default function Subscribers() {
   const navigate = useNavigate();
+  const showToast = useToast();
   // ?list=<id>: chega filtrado vindo de Públicos
   const [searchParams] = useSearchParams();
   const [listFilter, setListFilter] = useState(() => searchParams.get("list") || "all");
@@ -213,8 +215,8 @@ export default function Subscribers() {
     setExporting(true);
     try {
       await SubscriberService.exportCsv(filterParams());
-    } catch {
-      alert("Erro ao exportar assinantes.");
+    } catch (err) {
+      showToast(errorText(err) || "Erro ao exportar assinantes.", "error");
     } finally {
       setExporting(false);
     }
@@ -259,8 +261,9 @@ export default function Subscribers() {
       await SubscriberService.remove(id);
       setConfirm(null);
       load();
-    } catch {
-      alert("Erro ao remover assinante.");
+      showToast("Assinante removido");
+    } catch (err) {
+      showToast(errorText(err) || "Erro ao remover assinante.", "error");
     } finally {
       setActionLoading(null);
     }
@@ -272,8 +275,9 @@ export default function Subscribers() {
     try {
       await AudiencesService.removeMember(listFilter, sub._id);
       load();
-    } catch {
-      alert("Erro ao tirar do público.");
+      showToast(`${sub.email} saiu do público (continua assinante)`);
+    } catch (err) {
+      showToast(errorText(err) || "Erro ao tirar do público.", "error");
     } finally {
       setActionLoading(null);
     }
@@ -285,8 +289,9 @@ export default function Subscribers() {
     try {
       await SubscriberService.update(sub._id, { status: newStatus });
       load();
-    } catch {
-      alert("Erro ao atualizar status.");
+      showToast(newStatus === "active" ? `${sub.email} reativado` : `Inscrição de ${sub.email} cancelada`);
+    } catch (err) {
+      showToast(errorText(err) || "Erro ao atualizar status.", "error");
     } finally {
       setActionLoading(null);
     }
@@ -299,8 +304,9 @@ export default function Subscribers() {
         tier: sub.tier === "member" ? "free" : "member",
       });
       load();
-    } catch {
-      alert("Erro ao atualizar plano.");
+      showToast(sub.tier === "member" ? `${sub.email} agora é gratuito` : `${sub.email} agora é membro`);
+    } catch (err) {
+      showToast(errorText(err) || "Erro ao atualizar plano.", "error");
     } finally {
       setActionLoading(null);
     }
@@ -359,7 +365,11 @@ export default function Subscribers() {
             key={formTarget === "new" ? `new-${categories.length}` : formTarget._id}
             subscriber={formTarget === "new" ? null : formTarget}
             categories={categories}
-            onSaved={() => { setFormTarget(null); load(); }}
+            onSaved={() => {
+              showToast(formTarget === "new" ? "Assinante cadastrado" : "Assinante atualizado");
+              setFormTarget(null);
+              load();
+            }}
             onCancel={() => setFormTarget(null)}
           />
         )}

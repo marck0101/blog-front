@@ -24,6 +24,7 @@ import { emptyLinkedIn } from "../../utils/linkedin";
 import { audienceToApi, emptyAudience } from "../../utils/campaignAudience";
 import { SITE_URL, TITLE_MAX, DESCRIPTION_MAX, postTitle, postDescription, postFaq } from "../../seo/site";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 function CharCount({ value, max }) {
   const over = value.length > max;
@@ -135,7 +136,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
+  const showToast = useToast();
   const [form, setForm] = useState(() => emptyForm(initialPlannedAt));
   const [gallery, setGallery] = useState([]);
   const [coverImage, setCoverImage] = useState("");
@@ -167,11 +168,6 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
     () => (coverFile ? URL.createObjectURL(coverFile) : coverImage),
     [coverFile, coverImage]
   );
-
-  const showToast = useCallback((message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
@@ -373,14 +369,6 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div className={`fixed top-6 right-6 z-[70] px-4 py-3 rounded-lg text-sm shadow-lg ${
-          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          {toast.message}
-        </div>
-      )}
 
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-28">
         <Link to="/admin/posts" className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-300 hover:underline">

@@ -13,6 +13,7 @@ import { POST_STATUS, postStatusKey } from "../../utils/postStatus";
 import { Eye, RotateCcw, Trash2, Users } from "lucide-react";
 import { safeHtml } from "../../utils/safeHtml";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 // Status que o post tinha antes de ir para a lixeira
 const previousKey = (post) => postStatusKey({ ...post, deletedAt: null });
@@ -50,15 +51,10 @@ const num = (n) => (n || 0).toLocaleString("pt-BR");
 // Públicos na lixeira: restaurar devolve com as mesmas pessoas
 function AudiencesTrash() {
   const [audiences, setAudiences] = useState(null);
-  const [toast, setToast] = useState(null);
+  const showToast = useToast();
   const [confirmRestore, setConfirmRestore] = useState(null);
   const [confirmRemove, setConfirmRemove] = useState(null); // público | { all: true }
   const [busy, setBusy] = useState(false);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
 
   const load = useCallback(
     () =>
@@ -68,7 +64,7 @@ function AudiencesTrash() {
           setAudiences([]);
           showToast("Erro ao carregar a lixeira", "error");
         }),
-    []
+    [showToast]
   );
 
   useEffect(() => {
@@ -105,14 +101,6 @@ function AudiencesTrash() {
 
   return (
     <>
-      {toast && (
-        <div className={`fixed top-6 right-6 z-[60] px-4 py-3 rounded-lg text-sm shadow-lg ${
-          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          {toast.message}
-        </div>
-      )}
-
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <p className="text-sm text-gray-500 dark:text-gray-300">
           Públicos na lixeira não aparecem nos envios. As pessoas continuam ligadas a eles: restaurar devolve o público completo.
@@ -220,16 +208,11 @@ function PostsTrash() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewPost, setPreviewPost] = useState(null);
-  const [toast, setToast] = useState(null);
+  const showToast = useToast();
   const [confirmRestore, setConfirmRestore] = useState(null); // { post, close }
   const [confirmRemove, setConfirmRemove] = useState(null); // { post, close } | { all: true }
   const [busy, setBusy] = useState(false);
   const [categories, setCategories] = useState([]);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const loadTrash = useCallback(async () => {
     try {
@@ -240,7 +223,7 @@ function PostsTrash() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     loadTrash();
@@ -321,14 +304,6 @@ function PostsTrash() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div className={`fixed top-6 right-6 z-[60] px-4 py-3 rounded-lg text-sm shadow-lg ${
-          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          {toast.message}
-        </div>
-      )}
 
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
         <h1 className="text-2xl font-bold mb-4">Lixeira</h1>

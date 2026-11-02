@@ -6,6 +6,8 @@ import UploadService from "../../services/upload.service";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import { DEFAULT_COMMENT, LINK_TOKEN, linkedinArticleUrl, slugFromTitle } from "../../utils/linkedin";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
+import ConfirmDialog from "../ConfirmDialog";
 
 const MAX_CHARS = 3000;
 // O feed mostra só o começo do texto; o resto fica atrás do "…mais"
@@ -17,6 +19,8 @@ const feedUrl = (postUrn) => `https://www.linkedin.com/feed/update/${postUrn}/`;
 // sendo escrito; ao voltar para esta aba, o status é recarregado.
 function ConnectionBar({ status, onRefresh }) {
   const [busy, setBusy] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const showToast = useToast();
 
   const connect = async () => {
     setBusy(true);
@@ -24,16 +28,21 @@ function ConnectionBar({ status, onRefresh }) {
       const url = await LinkedInService.getConnectUrl("/admin");
       window.open(url, "_blank", "noopener");
     } catch (err) {
-      alert(errorText(err) || "Erro ao conectar com o LinkedIn");
+      showToast(errorText(err) || "Erro ao conectar com o LinkedIn", "error");
     } finally {
       setBusy(false);
     }
   };
 
   const disconnect = async () => {
-    if (!confirm("Desconectar o LinkedIn? Posts agendados não sairão no LinkedIn até reconectar.")) return;
-    await LinkedInService.disconnect();
-    onRefresh();
+    setConfirmDisconnect(false);
+    try {
+      await LinkedInService.disconnect();
+      showToast("LinkedIn desconectado");
+      onRefresh();
+    } catch (err) {
+      showToast(errorText(err) || "Erro ao desconectar o LinkedIn", "error");
+    }
   };
 
   if (!status) return <p className="text-sm text-gray-400">Verificando conexão...</p>;
@@ -79,9 +88,18 @@ function ConnectionBar({ status, onRefresh }) {
           Renovar agora
         </button>
       )}
-      <button type="button" onClick={disconnect} className="text-gray-400 hover:text-red-600 hover:underline">
+      <button type="button" onClick={() => setConfirmDisconnect(true)} className="text-gray-400 hover:text-red-600 hover:underline">
         Desconectar
       </button>
+      <ConfirmDialog
+        open={confirmDisconnect}
+        title="Desconectar o LinkedIn?"
+        description="Posts agendados não sairão no LinkedIn até você reconectar."
+        confirmText="Desconectar"
+        type="danger"
+        onConfirm={disconnect}
+        onCancel={() => setConfirmDisconnect(false)}
+      />
     </div>
   );
 }
@@ -193,6 +211,9 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
   const [status, setStatus] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  // Tentativa anterior interrompida: texto do servidor, pede para conferir o perfil
+  const [retryWarning, setRetryWarning] = useState("");
+  const showToast = useToast();
   const inputRef = useRef(null);
 
   const refreshStatus = useCallback(() => {
@@ -235,7 +256,7 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
     try {
       set({ imageUrl: await UploadService.uploadCover(file) });
     } catch (err) {
-      alert(errorText(err) || "Erro ao enviar imagem");
+      showToast(errorText(err) || "Erro ao enviar imagem", "error");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -244,22 +265,23 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
 
   // Artigo já publicado: salva o que está no editor e publica no LinkedIn
   const shareNow = async (force = false) => {
-    if (!value.text.trim()) return alert("Escreva o texto do LinkedIn antes.");
+    if (!value.text.trim()) return showToast("Escreva o texto do LinkedIn antes.", "error");
     setSharing(true);
     try {
       await PostsService.update(post._id, { linkedin: { ...value, enabled: true } });
       set({ enabled: true });
       const res = await LinkedInService.share(post._id, force);
       onResult({ status: "posted", postUrn: res.postUrn, postedAt: new Date().toISOString(), error: "" });
+      showToast("Publicado no LinkedIn. Lembre de fixar o comentário com o link.");
     } catch (err) {
       const data = err?.response?.data;
       if (data?.needsConfirm) {
-        if (confirm(`${data.error}\n\nO post NÃO apareceu no seu perfil? Clique OK para publicar de novo.`)) {
-          setSharing(false);
-          return shareNow(true);
-        }
+        // Tentativa interrompida: só repete depois de a pessoa conferir o perfil (R-LI-03)
+        setRetryWarning(data.error);
       } else {
-        onResult({ ...result, status: "failed", error: data?.error || "Erro ao publicar no LinkedIn" });
+        const error = errorText(err) || "Erro ao publicar no LinkedIn";
+        onResult({ ...result, status: "failed", error });
+        showToast(error, "error");
       }
     } finally {
       setSharing(false);
@@ -406,6 +428,19 @@ export default function PostLinkedInSection({ value, onChange, result, onResult,
       {!alreadyPublished && result?.status === "failed" && (
         <p className="text-sm text-red-600 dark:text-red-400">Última tentativa falhou: {result.error}</p>
       )}
+      <ConfirmDialog
+        open={Boolean(retryWarning)}
+        title="Publicar de novo no LinkedIn?"
+        description={`${retryWarning} Abra seu perfil: se o post NÃO apareceu lá, publique de novo.`}
+        confirmText="Não apareceu, publicar"
+        cancelText="Vou conferir antes"
+        type="warning"
+        onConfirm={() => {
+          setRetryWarning("");
+          shareNow(true);
+        }}
+        onCancel={() => setRetryWarning("")}
+      />
     </section>
   );
 }

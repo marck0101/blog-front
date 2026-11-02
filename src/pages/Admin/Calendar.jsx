@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -20,6 +20,7 @@ import PostsService from "../../services/posts.service";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import CampaignService from "../../services/campaign.service";
 import { POST_STATUS, isOverdue, postStatusKey } from "../../utils/postStatus";
+import { useToast } from "../../hooks/useToast";
 import { errorText } from "../../utils/apiError";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -218,7 +219,8 @@ export default function Calendar() {
   const [posts, setPosts] = useState([]);
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
+  // action: { label, onClick } (ex.: Desfazer) fica mais tempo na tela
+  const showToast = useToast();
   // Dia aberto no painel com a lista completa (quando não cabe na célula)
   const [openDay, setOpenDay] = useState(null);
   // Arrastar rascunho: o post em movimento, o dia sob o cursor e a mudança a confirmar
@@ -339,15 +341,6 @@ export default function Calendar() {
     return () => { cancelled = true; };
   }, [fromKey, toKey]);
 
-  // action: { label, onClick } (ex.: Desfazer). Com ação, fica mais tempo na tela.
-  const toastTimer = useRef(null);
-  const showToast = (msg, type = "success", action = null) => {
-    clearTimeout(toastTimer.current);
-    setToast({ msg, type, action });
-    toastTimer.current = setTimeout(() => setToast(null), action ? 7000 : 3000);
-  };
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-
   const handlePublish = async (id) => {
     try {
       await PostsService.publishNow(id);
@@ -383,8 +376,8 @@ export default function Calendar() {
       await savePlannedAt(post, toDateKey(day));
       showToast(`Rascunho movido para ${day.toLocaleDateString("pt-BR")}`, "success", {
         label: "Desfazer",
+        // O aviso fecha sozinho ao clicar na ação (ToastProvider)
         onClick: async () => {
-          setToast(null);
           try {
             await savePlannedAt(post, previous);
             showToast("Data do rascunho restaurada");
@@ -441,19 +434,6 @@ export default function Calendar() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div role="status" className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg flex items-center gap-4 ${
-          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          {toast.msg}
-          {toast.action && (
-            <button type="button" onClick={toast.action.onClick} className="font-semibold underline underline-offset-2 hover:no-underline">
-              {toast.action.label}
-            </button>
-          )}
-        </div>
-      )}
 
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}

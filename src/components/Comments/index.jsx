@@ -5,6 +5,7 @@ import authorPhoto from "../../assets/author.webp";
 import { AUTHOR_NAME } from "../../seo/site";
 import { trackEvent } from "../../utils/analytics";
 import { errorText } from "../../utils/apiError";
+import ConfirmDialog from "../ConfirmDialog";
 
 const BODY_MAX = 2000;
 
@@ -115,6 +116,7 @@ export default function Comments({ post }) {
   const [draft, setDraft] = useState(() => readDraft(post.slug));
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState(null); // { type: "ok" | "error", text }
+  const [toRemove, setToRemove] = useState(null); // comentário esperando confirmação
   const sectionRef = useRef(null);
   const textareaRef = useRef(null);
   const reader = config?.reader;
@@ -205,13 +207,15 @@ export default function Comments({ post }) {
     }
   };
 
-  const remove = async (comment) => {
-    if (!window.confirm("Excluir seu comentário? Isso não pode ser desfeito.")) return;
+  const remove = async () => {
+    const comment = toRemove;
+    setToRemove(null);
     try {
       await CommentsService.removeMine(comment.id);
       setComments((list) => list.filter((c) => c.id !== comment.id && String(c.parent) !== String(comment.id)));
-    } catch {
-      setNotice({ type: "error", text: "Não foi possível excluir. Tente de novo." });
+      setNotice({ type: "ok", text: "Comentário excluído." });
+    } catch (err) {
+      setNotice({ type: "error", text: errorText(err) || "Não foi possível excluir. Tente de novo." });
     }
   };
 
@@ -316,18 +320,32 @@ export default function Comments({ post }) {
               comment={thread}
               canReply={Boolean(reader) && thread.status === "approved"}
               onReply={startReply}
-              onDelete={remove}
+              onDelete={setToRemove}
             />
             {thread.replies.length > 0 && (
               <div className="ml-6 sm:ml-12 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-4">
                 {thread.replies.map((reply) => (
-                  <CommentItem key={reply.id} comment={reply} canReply={false} onDelete={remove} />
+                  <CommentItem key={reply.id} comment={reply} canReply={false} onDelete={setToRemove} />
                 ))}
               </div>
             )}
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(toRemove)}
+        title="Excluir seu comentário?"
+        description={
+          toRemove?.parent
+            ? "Isso não pode ser desfeito."
+            : "Isso não pode ser desfeito. As respostas a ele também saem."
+        }
+        confirmText="Excluir"
+        type="danger"
+        onConfirm={remove}
+        onCancel={() => setToRemove(null)}
+      />
     </section>
   );
 }

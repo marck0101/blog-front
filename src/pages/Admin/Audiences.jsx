@@ -9,6 +9,7 @@ import AudiencesService from "../../services/audiences.service";
 import SubscriberService from "../../services/subscriber.service";
 import { parseContacts } from "../../utils/parseContacts";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 const CHUNK = 500;
 const num = (n) => (n || 0).toLocaleString("pt-BR");
@@ -327,12 +328,7 @@ export default function Audiences() {
   const [importing, setImporting] = useState(null);
   const [toDelete, setToDelete] = useState(null);
   const [trashCount, setTrashCount] = useState(0);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const showToast = useToast();
 
   const load = useCallback(() => {
     AudiencesService.getTrash()
@@ -367,17 +363,6 @@ export default function Audiences() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div
-          role="status"
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
 
       <ConfirmDialog
         open={Boolean(toDelete)}

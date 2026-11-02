@@ -8,6 +8,7 @@ import SeasonsService from "../../services/seasons.service";
 import FaqFields from "../../components/FaqFields";
 import { cleanFaq } from "../../seo/site";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 const EMPTY = { title: "", slug: "", description: "", order: 0, faq: [] };
 
@@ -162,19 +163,14 @@ export default function AdminSeasons() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | season
   const [toDelete, setToDelete] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const showToast = useToast();
 
   const load = useCallback(() => {
     SeasonsService.getAdmin()
       .then(setSeasons)
       .catch(() => showToast("Erro ao carregar seasons", "error"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [showToast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -215,14 +211,6 @@ export default function AdminSeasons() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          {toast.message}
-        </div>
-      )}
 
       <ConfirmDialog
         open={Boolean(toDelete)}

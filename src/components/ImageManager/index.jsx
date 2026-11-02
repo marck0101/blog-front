@@ -3,6 +3,7 @@ import { generateUUID } from "../../utils/uuid";
 import { useState } from "react";
 import ImageDropzone from "../ImageDropzone";
 import AltTextInput from "../AltTextInput";
+import { useToast } from "../../hooks/useToast";
 
 export default function ImageManager({
   images,
@@ -11,7 +12,7 @@ export default function ImageManager({
   setCoverImage,
 }) {
   const [uploading, setUploading] = useState(false);
-  const [toast, setToast] = useState(null);
+  const showToast = useToast();
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -27,11 +28,6 @@ export default function ImageManager({
     }
 
     return true;
-  };
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 2500);
   };
 
   const handleUpload = async (file) => {
@@ -167,17 +163,6 @@ export default function ImageManager({
       </div>
 
       {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success"
-              ? "bg-green-600 text-white"
-              : "bg-red-600 text-white"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
     </div>
   );
 }

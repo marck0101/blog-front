@@ -6,6 +6,7 @@ import SEO from "../../components/SEO";
 import PostsService from "../../services/posts.service";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 const HIGHLIGHT_OPTIONS = [
   { value: "auto", label: "Auto", title: "Entra se estiver entre os mais lidos da semana" },
@@ -143,12 +144,7 @@ export default function Showcase() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const showToast = useToast();
 
   const load = useCallback(() => {
     return PostsService.getShowcase()
@@ -202,17 +198,6 @@ export default function Showcase() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div
-          role="status"
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
 
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

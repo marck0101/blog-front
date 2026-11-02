@@ -27,6 +27,7 @@ import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../../components/GeneratedCover";
 import CoverImage from "../../components/CoverImage";
 import { markHomeUsed, prerendered, prerenderedHome } from "../../utils/prerendered";
+import { useToast } from "../../hooks/useToast";
 
 // Múltiplos de 3: a grade tem 3 colunas e as linhas ficam completas
 const PAGE_SIZES = [6, 12, 24, 48];
@@ -126,7 +127,7 @@ export default function BlogHome() {
   const [totalPages, setTotalPages] = useState(() => (initial ? Math.max(1, Math.ceil(initial.total / pageSize)) : 1));
   const [total, setTotal] = useState(() => initial?.total ?? 0);
   const [loading, setLoading] = useState(!initial);
-  const [toast, setToast] = useState(null);
+  const showToast = useToast();
   const [categories, setCategories] = useState(() => prerendered("categories") || []);
   // Seasons públicas (com episódio publicado): selo "Season" nos cards
   const [seasons, setSeasons] = useState(() => prerendered("seasons") || []);
@@ -144,11 +145,6 @@ export default function BlogHome() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const catsKey = activeCategories.join(",");
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const load = useCallback(() => {
     let mounted = true;
@@ -273,16 +269,6 @@ export default function BlogHome() {
     <BlogLayout>
       <SEO url="/blog" />
       <BlogSchema posts={posts} />
-
-      {toast && (
-        <div
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-            toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
 
       {/* Hero */}
       <section className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">

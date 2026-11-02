@@ -18,6 +18,7 @@ import Pagination from "../../components/Pagination";
 import PostPreview from "../../components/PostPreview";
 import { Pencil, Pin, Trash } from "lucide-react";
 import { errorText } from "../../utils/apiError";
+import { useToast } from "../../hooks/useToast";
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
@@ -41,7 +42,7 @@ export default function PostsList() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingId, setLoadingId] = useState(null);
-  const [toast, setToast] = useState(null);
+  const showToast = useToast();
   const [confirmAction, setConfirmAction] = useState(null);
   const [previewPost, setPreviewPost] = useState(null);
   const [page, setPage] = useState(1);
@@ -84,11 +85,6 @@ export default function PostsList() {
   // Estável: a prévia registra o ESC com ele
   const closePreview = useCallback(() => setPreviewPost(null), []);
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
   /* --- load posts --- */
   const load = useCallback(() => {
     setLoading(true);
@@ -110,7 +106,7 @@ export default function PostsList() {
         showToast("Erro ao carregar posts", "error");
       })
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo, showToast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -277,14 +273,6 @@ export default function PostsList() {
     <>
       <SEO robots="noindex, nofollow" />
       <Header />
-
-      {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
-          toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          {toast.message}
-        </div>
-      )}
 
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
         <div className="flex items-center justify-between mb-6">
