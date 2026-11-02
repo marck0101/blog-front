@@ -13,6 +13,7 @@ import CampaignService from "../../services/campaign.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostsService from "../../services/posts.service";
 import AudiencePicker from "../../components/AudiencePicker";
+import { safeHtml } from "../../utils/safeHtml";
 import {
   CAMPAIGN_STATUS,
   audienceLabel,
@@ -505,7 +506,7 @@ export default function CampaignEditor() {
             <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
               <div
                 className="prose dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: campaign.content }}
+                dangerouslySetInnerHTML={{ __html: safeHtml(campaign.content) }}
               />
             </div>
           </>

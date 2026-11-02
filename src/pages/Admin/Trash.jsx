@@ -11,6 +11,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import TypedConfirmDialog from "../../components/TypedConfirmDialog";
 import { POST_STATUS, postStatusKey } from "../../utils/postStatus";
 import { Eye, RotateCcw, Trash2, Users } from "lucide-react";
+import { safeHtml } from "../../utils/safeHtml";
 
 // Status que o post tinha antes de ir para a lixeira
 const previousKey = (post) => postStatusKey({ ...post, deletedAt: null });
@@ -402,7 +403,7 @@ function PostsTrash() {
               <div className="flex-1 overflow-y-auto p-6">
                 <article
                   className="post-content prose dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: previewPost.content || "<p><em>Sem conteúdo.</em></p>" }}
+                  dangerouslySetInnerHTML={{ __html: safeHtml(previewPost.content) || "<p><em>Sem conteúdo.</em></p>" }}
                 />
               </div>
               <div className="border-t p-4 flex flex-wrap justify-between gap-3">

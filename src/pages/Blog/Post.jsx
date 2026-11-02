@@ -27,6 +27,7 @@ import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
 import { prerendered } from "../../utils/prerendered";
+import { safeHtml } from "../../utils/safeHtml";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -278,7 +279,7 @@ export default function Post() {
           ref={contentRef}
           onClick={handleContentClick}
           className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: safeHtml(post.content) }}
         />
 
         <PostFaq post={post} />

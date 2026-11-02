@@ -212,13 +212,16 @@ function postPage(post) {
       .join("\n    "),
   });
 
-  // Conteúdo vem do editor do próprio admin (mesmo HTML que o React renderiza).
+  // Conteúdo vem do editor do próprio admin, já limpo pela API ao salvar (SEC-01).
+  // Sem <noscript> dentro: um "</noscript>" fecharia a tag antes da hora e o que
+  // viesse depois rodaria como página.
+  const content = String(post.content || "").replace(/<\/?noscript\b[^>]*>/gi, "");
   const body = `<noscript>
       <article>
         <p><a href="/blog">Blog</a> / ${esc(post.title)}</p>
         <h1>${esc(post.title)}</h1>
         <p>Por <a href="${PORTFOLIO_URL}" rel="author">${esc(AUTHOR_NAME)}</a> · ${esc(post.category || "")} · <time datetime="${esc(post.publishedAt)}">${formatDate(post.publishedAt)}</time></p>
-        ${post.content || ""}
+        ${content}
         ${faqHtml(postFaq(post))}
       </article>
     </noscript>

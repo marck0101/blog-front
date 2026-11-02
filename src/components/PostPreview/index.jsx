@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import PostFaq from "../PostFaq";
 import { AUTHOR_NAME } from "../../seo/site";
 import { readingMinutes } from "../../utils/readingTime";
+import { safeHtml } from "../../utils/safeHtml";
 
 /**
  * Prévia do post em tela cheia, montada como a página pública (src/pages/Blog/Post.jsx):
@@ -49,7 +50,7 @@ export default function PostPreview({ post, categoryLabel, onClose, actions = nu
           </p>
           <div
             className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: post.content || "<p><em>Sem conteúdo ainda.</em></p>" }}
+            dangerouslySetInnerHTML={{ __html: safeHtml(post.content) || "<p><em>Sem conteúdo ainda.</em></p>" }}
           />
           <PostFaq post={post} />
         </article>

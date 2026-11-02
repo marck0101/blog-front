@@ -3,6 +3,7 @@ import { History, RotateCcw, X } from "lucide-react";
 import PostFaq from "../PostFaq";
 import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
+import { safeHtml } from "../../utils/safeHtml";
 
 const FIELD_LABELS = {
   title: "título",
@@ -190,7 +191,7 @@ export default function PostHistory({ postId, dirty, onClose, onRestored }) {
               {snapshot.excerpt && <p className="mt-3 text-gray-500 dark:text-gray-300">{snapshot.excerpt}</p>}
               <div
                 className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: snapshot.content || "<p><em>Sem conteúdo.</em></p>" }}
+                dangerouslySetInnerHTML={{ __html: safeHtml(snapshot.content) || "<p><em>Sem conteúdo.</em></p>" }}
               />
               <PostFaq post={snapshot} />
             </article>
