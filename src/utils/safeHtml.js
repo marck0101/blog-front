@@ -4,7 +4,11 @@ import DOMPurify from "dompurify";
 // (app/utils/sanitizeHtml.js). Aqui é a segunda camada, na hora de exibir —
 // cobre conteúdo antigo e versões do histórico gravadas antes da limpeza.
 // target="_blank" fica (o DOMPurify tira por padrão); rel noopener vem do backend.
-const OPTIONS = { ADD_ATTR: ["target"], FORBID_TAGS: ["style", "form"] };
+// Campos de formulário saem: um post não pode exibir um "digite sua senha" falso.
+const OPTIONS = {
+  ADD_ATTR: ["target"],
+  FORBID_TAGS: ["style", "form", "input", "textarea", "select", "button", "option"],
+};
 
 // O mesmo conteúdo é exibido várias vezes (cada render da página): guarda os últimos
 const cache = new Map();

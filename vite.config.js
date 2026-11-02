@@ -13,4 +13,9 @@ export default defineConfig({
       "@": "/src",
     },
   },
+  // npm test: utilitários e componentes, com DOM simulado (jsdom)
+  test: {
+    environment: "jsdom",
+    include: ["src/**/*.test.{js,jsx}", "api/**/*.test.js"],
+  },
 });
