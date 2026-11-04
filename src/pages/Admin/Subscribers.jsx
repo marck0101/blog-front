@@ -595,7 +595,7 @@ export default function Subscribers() {
         title="Excluir assinante?"
         description={
           confirm &&
-          `${confirm.sub.email}${confirm.sub.tier === "member" ? " é membro e" : ""} será removido definitivamente. Para só parar de enviar, use "Cancelar inscrição".`
+          `${confirm.sub.email}${confirm.sub.tier === "member" ? " é membro e" : ""} será excluído definitivamente: o email sai do cadastro e do histórico dos envios (os números dos envios continuam). Para só parar de enviar, use "Cancelar inscrição".`
         }
         confirmText="Excluir"
         type="danger"
