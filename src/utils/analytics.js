@@ -25,7 +25,7 @@ const analyticsAllowed = () => {
 // abrindo qualquer página com ?notrack=1 — útil no celular. ?notrack=0 desfaz.
 const OPTOUT_KEY = "analytics-optout";
 
-const isAuthorBrowser = () => {
+export const isAuthorBrowser = () => {
   try {
     const param = new URLSearchParams(window.location.search).get("notrack");
     if (param === "1" || localStorage.getItem("user")) localStorage.setItem(OPTOUT_KEY, "1");

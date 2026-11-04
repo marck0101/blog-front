@@ -21,6 +21,7 @@ import {
 import { readingMinutes } from "../../utils/readingTime";
 import { markEpisodeRead } from "../../utils/seasonProgress";
 import { recordShareVisit } from "../../utils/share";
+import { recordPostView } from "../../utils/postViews";
 import FavoriteButton from "../../components/FavoriteButton";
 import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
@@ -102,6 +103,8 @@ export default function Post() {
       { post_slug: post.slug, post_category: post.category },
       { pixel: "ViewContent", pixelParams: { content_name: post.title, content_category: post.category, content_type: "article" } }
     );
+    // Leitura do post (contador do blog: Vitrine, destaques, "Continue lendo")
+    recordPostView(post);
     // Chegou por link compartilhado (utm_medium=share): conta para o canal
     recordShareVisit(post);
   }, [post?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
