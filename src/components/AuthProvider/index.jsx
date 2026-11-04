@@ -1,7 +1,6 @@
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
-import AuthService from "../services/auth.service";
-
-export const AuthContext = createContext();
+import { useCallback, useEffect, useRef, useState } from "react";
+import AuthService from "../../services/auth.service";
+import { AuthContext } from "../../context/authContext";
 
 // O token da sessão fica num cookie httpOnly (o JavaScript não o lê).
 // Aqui guardamos só um indicador para exibição (nome/email), sem valor de acesso:
@@ -25,7 +24,7 @@ function writeHint(user) {
   }
 }
 
-export function AuthProvider({ children }) {
+export default function AuthProvider({ children }) {
   const [user, setUser] = useState(readHint);
   // unknown = ainda não conferiu | authenticated | anonymous
   const [status, setStatus] = useState("unknown");

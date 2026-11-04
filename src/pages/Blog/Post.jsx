@@ -56,10 +56,18 @@ function isPrerenderedNotFound(slug) {
 export default function Post() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [post, setPost] = useState(() => getPrerenderedPost(slug));
-  const [loading, setLoading] = useState(
-    () => !getPrerenderedPost(slug) && !isPrerenderedNotFound(slug)
-  );
+  // Resultado da última busca: { slug pedido, post } (post null = não existe).
+  // Começa com o que o prerender já mandou, quando há.
+  const [result, setResult] = useState(() => {
+    if (getPrerenderedPost(slug)) return { slug, post: getPrerenderedPost(slug) };
+    if (isPrerenderedNotFound(slug)) return { slug, post: null };
+    return null;
+  });
+  const post = result?.post ?? null;
+  // Carregando = ainda não há resposta para este endereço. No endereço antigo
+  // redirecionado (BIZ-04), o post recebido já é o do endereço novo.
+  const hasAnswer = (r) => r?.slug === slug || r?.post?.slug === slug;
+  const loading = Boolean(slug) && !hasAnswer(result);
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
   // Nomes para exibir: "Negócios" em vez do slug, título da season no breadcrumb
@@ -73,31 +81,28 @@ export default function Post() {
   }, []);
 
   useEffect(() => {
-    if (!slug) {
-      setLoading(false);
-      return;
-    }
+    if (!slug || hasAnswer(result)) return;
 
-    if (post?.slug === slug) return;
-    if (isPrerenderedNotFound(slug)) return;
-
-    setLoading(true);
-
+    // Navegou para outro post antes de chegar a resposta: a antiga é descartada
+    let current = true;
     PostsService.getBySlug(slug)
       .then((postData) => {
         if (postData) return postData;
         // Links antigos por ID; um slug comum daria 400 na rota por ID
         return /^[a-f0-9]{24}$/i.test(slug) ? PostsService.getPublicById(slug) : null;
       })
+      .catch(() => null)
       .then((postData) => {
-        setPost(postData || null);
+        if (!current) return;
+        setResult({ slug, post: postData || null });
         // Endereço antigo (ou link por id): a barra de endereço passa a mostrar o atual
         if (postData?.slug && postData.slug !== slug) {
           navigate(`/blog/${postData.slug}${window.location.search}`, { replace: true });
         }
-      })
-      .catch(() => setPost(null))
-      .finally(() => setLoading(false));
+      });
+    return () => {
+      current = false;
+    };
   }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Visualização do post: GA4 (com categoria), Pixel ViewContent (públicos por

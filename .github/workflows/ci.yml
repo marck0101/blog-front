@@ -19,10 +19,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      # Lint ainda tem erros antigos (ver docs/BACKLOG.md no blog-backend, CI-01):
-      # mostra, mas não bloqueia. Quando zerar, tirar o continue-on-error.
-      - run: npm run lint
-        continue-on-error: true
+      # Lint zerado em 03/11/2026: erro ou aviso novo barra o PR
+      - run: npm run lint -- --max-warnings 0
       # "critical" e não "high": 4 alertas altos aceitos do gRPC dentro do Firestore,
       # que não entra no build (ver commit da SEC-06). Voltar para high quando sumirem.
       - run: npm audit --omit=dev --audit-level=critical

@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, ShieldCheck, Smartphone, KeyRound, Copy, Download } from "lucide-react";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context/authContext";
 import AuthService from "../../services/auth.service";
 import SEO from "../../components/SEO";
 import { errorText } from "../../utils/apiError";

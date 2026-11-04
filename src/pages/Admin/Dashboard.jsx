@@ -116,9 +116,10 @@ export default function Dashboard() {
     () => sessionStorage.getItem(BANNER_KEY) === "1"
   );
 
-  const [heatmapData, setHeatmapData] = useState({});
   const [heatmapYear, setHeatmapYear] = useState(new Date().getFullYear());
-  const [heatmapLoading, setHeatmapLoading] = useState(true);
+  // Dados de qual ano: carregando = ainda não chegaram os do ano escolhido
+  const [heatmap, setHeatmap] = useState({ year: null, data: {} });
+  const heatmapLoading = heatmap.year !== heatmapYear;
 
   const [performance, setPerformance] = useState(null);
   const [performanceLoading, setPerformanceLoading] = useState(true);
@@ -140,11 +141,14 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    setHeatmapLoading(true);
+    // Trocou de ano antes de chegar a resposta: a antiga não sobrescreve a nova
+    let current = true;
     PostsService.getHeatmap(heatmapYear)
-      .then(setHeatmapData)
-      .catch(() => setHeatmapData({}))
-      .finally(() => setHeatmapLoading(false));
+      .catch(() => ({}))
+      .then((data) => current && setHeatmap({ year: heatmapYear, data }));
+    return () => {
+      current = false;
+    };
   }, [heatmapYear]);
 
   const dismissBanner = () => {
@@ -351,7 +355,7 @@ export default function Dashboard() {
             <div className="h-24 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
           ) : (
             <PublicationHeatmap
-              data={heatmapData}
+              data={heatmap.data}
               year={heatmapYear}
               onYearChange={setHeatmapYear}
             />

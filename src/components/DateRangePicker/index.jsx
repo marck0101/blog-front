@@ -27,11 +27,15 @@ export default function DateRangePicker({ from = "", to = "", onChange }) {
   const [endDate, setEndDate] = useState(to ? parseISO(to) : null);
   const ref = useRef(null);
 
-  // Sincroniza quando o pai limpa os filtros externamente
-  useEffect(() => {
+  // O pai mudou o período (ex.: "limpar filtros"): a seleção acompanha. Ajuste
+  // durante o render, no lugar de um efeito, evita um render a mais
+  // (react.dev/learn/you-might-not-need-an-effect).
+  const [syncedRange, setSyncedRange] = useState({ from, to });
+  if (syncedRange.from !== from || syncedRange.to !== to) {
+    setSyncedRange({ from, to });
     setStartDate(from ? parseISO(from) : null);
     setEndDate(to ? parseISO(to) : null);
-  }, [from, to]);
+  }
 
   // Fecha ao clicar fora
   useEffect(() => {

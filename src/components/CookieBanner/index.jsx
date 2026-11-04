@@ -1,17 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CONSENT_EVENT } from "../../utils/analytics";
 
-export default function CookieBanner() {
-  const [visible, setVisible] = useState(false);
+const CONSENT_KEY = "cookiesAccepted";
 
-  useEffect(() => {
-    if (!localStorage.getItem("cookiesAccepted")) {
-      setVisible(true);
-    }
-  }, []);
+// Já respondeu ao banner? Sem localStorage (navegação privada restrita), pergunta.
+function hasAnswered() {
+  try {
+    return Boolean(localStorage.getItem(CONSENT_KEY));
+  } catch {
+    return false;
+  }
+}
+
+export default function CookieBanner() {
+  // Lido uma vez, no primeiro render (sem efeito: não renderiza duas vezes)
+  const [visible, setVisible] = useState(() => !hasAnswered());
 
   const accept = (level) => {
-    localStorage.setItem("cookiesAccepted", level);
+    try {
+      localStorage.setItem(CONSENT_KEY, level);
+    } catch {
+      /* sem localStorage: vale só nesta visita */
+    }
     window.dispatchEvent(new Event(CONSENT_EVENT));
     setVisible(false);
   };

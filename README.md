@@ -31,7 +31,7 @@ npm run dev               # http://localhost:5173 (painel em /admin)
 ```powershell
 npm test              # Vitest + jsdom + Testing Library (o mesmo que a CI)
 npm run test:watch    # roda de novo a cada alteração
-npm run lint          # ESLint (ainda há erros antigos: ver CI-01 no BACKLOG)
+npm run lint          # ESLint: zero erros e zero avisos (a CI barra o PR se aparecer algum)
 npm run build         # build de produção em dist/
 ```
 
@@ -52,9 +52,9 @@ Variáveis `VITE_*` entram no código que vai para o navegador: **nunca coloque 
 src/
   pages/Blog/       páginas públicas (home, post, seasons, favoritos, cancelar inscrição)
   pages/Admin/      telas do painel (posts, calendário, envios, assinantes, métricas…)
-  components/       componentes (editor, ConfirmDialog, ToastProvider, SEO…)
+  components/       componentes (editor, ConfirmDialog, ToastProvider, AuthProvider, SEO…)
   hooks/            useToast (aviso de resultado), useSEO, usePageSize, useViewMode
-  context/          sessão do admin (AuthContext) e aviso (toastContext)
+  context/          objetos de contexto: sessão do admin (authContext) e aviso (toastContext)
   services/         chamadas à API, uma por recurso (posts.service.js…)
   utils/            regras de tela: status do post, HTML seguro, erro da API, análises
   seo/              textos e dados estruturados do site
@@ -70,6 +70,14 @@ vercel.json         cabeçalhos de segurança, CSP, redirecionamentos e reescrit
 - **Erro da API**: `errorText(err) || "texto padrão da tela"` (`src/utils/apiError.js`).
 - **HTML de post/envio na tela**: sempre `safeHtml(...)` (`src/utils/safeHtml.js`).
 - **Dados do prerender**: `readBlock(id)` / `prerendered(key)` (`src/utils/prerendered.js`).
+- **Dados da API numa tela**: guarde junto **de qual busca** eles vieram e derive o
+  "carregando" disso (`loading = dados.key !== buscaAtual`), em vez de um `setLoading(true)`
+  dentro do `useEffect`. Evita render a mais e resposta atrasada sobrescrevendo a atual.
+  Exemplos: `BlogHome` (lista), `Post` (post), `Dashboard` (heatmap).
+- **Valor que vem das props ou do armazenamento**: calcule no `useState(() => …)` ou ajuste
+  durante o render; não copie com `useEffect`. Exemplos: `CookieBanner`, `DateRangePicker`.
+- **Contexto**: o objeto (`createContext`) fica em `src/context/`, o componente
+  Provider em `src/components/` — senão o recarregamento do Vite (Fast Refresh) quebra.
 
 ## Deploy
 

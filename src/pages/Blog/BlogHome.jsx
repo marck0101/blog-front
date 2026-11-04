@@ -1,6 +1,6 @@
 import BlogLayout from "../../layouts/BlogLayout";
 import authorPhoto from "../../assets/author.webp";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
@@ -21,7 +21,6 @@ import usePageSize from "../../hooks/usePageSize";
 import SubscribeForm from "../../components/SubscribeForm";
 import SeasonCard from "../../components/SeasonCard";
 import { setPageContext, trackEvent } from "../../utils/analytics";
-import { useState } from "react";
 import { Flame, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../../components/GeneratedCover";
@@ -121,12 +120,24 @@ export default function BlogHome() {
       ? prerenderedHome()
       : null
   );
-  const skipFirstLoad = useRef(Boolean(initial));
+  // A busca que a tela pede agora (filtros, página, tamanho, ordem)
+  const catsKey = activeCategories.join(",");
+  const queryKey = JSON.stringify([catsKey, search, page, pageSize, sort.api]);
 
-  const [posts, setPosts] = useState(() => initial?.posts.slice(0, pageSize).map(normalizePost) ?? []);
-  const [totalPages, setTotalPages] = useState(() => (initial ? Math.max(1, Math.ceil(initial.total / pageSize)) : 1));
-  const [total, setTotal] = useState(() => initial?.total ?? 0);
-  const [loading, setLoading] = useState(!initial);
+  // Lista na tela e de qual busca ela veio. Carregando = ainda não chegou a da
+  // busca atual (sem estado "loading" separado que possa ficar dessincronizado)
+  const [listing, setListing] = useState(() =>
+    initial
+      ? {
+          key: queryKey,
+          posts: initial.posts.slice(0, pageSize).map(normalizePost),
+          totalPages: Math.max(1, Math.ceil(initial.total / pageSize)),
+          total: initial.total,
+        }
+      : { key: null, posts: [], totalPages: 1, total: 0 }
+  );
+  const { posts, totalPages, total } = listing;
+  const loading = listing.key !== queryKey;
   const showToast = useToast();
   const [categories, setCategories] = useState(() => prerendered("categories") || []);
   // Seasons públicas (com episódio publicado): selo "Season" nos cards
@@ -144,36 +155,42 @@ export default function BlogHome() {
     PostsService.getHighlights().then(setHighlights).catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const catsKey = activeCategories.join(",");
+  // Busca a lista sempre que a busca pedida muda. A primeira página sem filtro já
+  // veio do prerender (listing.key === queryKey): nada a buscar.
+  const sortApi = sort.api;
+  const listingKey = listing.key;
+  useEffect(() => {
+    if (listingKey === queryKey) return;
 
-  const load = useCallback(() => {
-    let mounted = true;
-    setLoading(true);
-
+    // Mudou de filtro/página antes da resposta: a antiga é descartada
+    let current = true;
+    const categoriesFilter = catsKey ? catsKey.split(",") : [];
     // Sem filtro, os fixados ficam só na vitrine (em todas as páginas, para a
     // paginação não pular nem repetir posts)
-    const excludePinned = activeCategories.length === 0 && !search;
-    PostsService.getPublished(page, pageSize, { categories: activeCategories, search, excludePinned, sort: sort.api })
-      .then(({ posts: data, totalPages: pages, total }) => {
-        if (!mounted) return;
-        setPosts(data.map(normalizePost));
-        setTotalPages(pages || 1);
-        setTotal(total ?? data.length);
+    const excludePinned = categoriesFilter.length === 0 && !search;
+    PostsService.getPublished(page, pageSize, { categories: categoriesFilter, search, excludePinned, sort: sortApi })
+      .then(({ posts: data, totalPages: pages, total: count }) => {
+        if (!current) return;
+        setListing({ key: queryKey, posts: data.map(normalizePost), totalPages: pages || 1, total: count ?? data.length });
         // "search" = evento recomendado do GA4; busca sem resultado = pauta que falta
         if (search && page === 1) {
-          trackEvent("search", { search_term: search, results_count: total ?? data.length });
+          trackEvent("search", { search_term: search, results_count: count ?? data.length });
         }
       })
       .catch(() => {
-        if (mounted) {
-          setPosts([]);
-          showToast("Erro ao carregar posts", "error");
-        }
-      })
-      .finally(() => mounted && setLoading(false));
+        if (!current) return;
+        setListing({ key: queryKey, posts: [], totalPages: 1, total: 0 });
+        showToast("Erro ao carregar posts", "error");
+      });
+    return () => {
+      current = false;
+    };
+  }, [queryKey, listingKey, catsKey, search, page, pageSize, sortApi, showToast]);
 
-    return () => { mounted = false; };
-  }, [catsKey, search, page, pageSize, sort.api]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A home pré-renderizada vale só para o primeiro carregamento (utils/prerendered)
+  useEffect(() => {
+    if (initial) markHomeUsed();
+  }, [initial]);
 
   useEffect(() => {
     setPageContext({ page_type: "home" });
@@ -185,17 +202,6 @@ export default function BlogHome() {
     if (loading || window.location.hash !== "#faq") return;
     document.getElementById("faq")?.scrollIntoView();
   }, [loading]);
-
-  useEffect(() => {
-    // A primeira página já veio do prerender; mudar filtro, página ou tamanho busca
-    if (skipFirstLoad.current) {
-      skipFirstLoad.current = false;
-      markHomeUsed();
-      return;
-    }
-    const cleanup = load();
-    return cleanup;
-  }, [load]);
 
   // Chip clicado → toggle no array, atualiza URL com múltiplos params
   const handleCategoryChange = (newCats) => {
