@@ -4,6 +4,7 @@ import { AlertCircle, Info } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import BarList from "../../components/BarList";
+import ContentPerformance from "../../components/ContentPerformance";
 import FilterChips from "../../components/FilterChips";
 import MetricsService from "../../services/metrics.service";
 import { formatRate, shortUrl } from "../../utils/metrics";
@@ -341,6 +342,8 @@ export default function Metrics() {
                 />
               </Card>
             </div>
+
+            <ContentPerformance />
 
             {engagement && <Engagement data={engagement} />}
 

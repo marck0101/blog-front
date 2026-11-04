@@ -66,6 +66,45 @@ body {
   border-radius: 0.75rem;
 }
 
+/* Celular: nada do texto do post pode ser mais largo que a tela. Um único
+   elemento largo (URL de referência ABNT, tabela, código) faz o Chrome do
+   Android afastar o zoom da página inteira. */
+.post-content {
+  overflow-wrap: break-word;
+}
+
+/* URL inteira como texto do link ("Disponível em: https://…") quebra em qualquer ponto */
+.post-content a {
+  overflow-wrap: anywhere;
+}
+
+/* Tabela e código largos rolam dentro do próprio bloco */
+.post-content table,
+.post-content pre {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.post-content iframe,
+.post-content video {
+  max-width: 100%;
+}
+
+/* Justificado (formatação ABNT do editor) abre buracos entre as palavras em
+   coluna estreita: no celular vira alinhado à esquerda. O estilo vem inline
+   do TipTap, por isso o !important. No desktop continua justificado, com
+   hifenização para os espaços ficarem regulares. */
+.post-content [style*="justify"] {
+  hyphens: auto;
+}
+
+@media (max-width: 639px) {
+  .post-content [style*="justify"] {
+    text-align: left !important;
+  }
+}
+
 /* Dark mode para conteúdo do post gerado pelo TipTap */
 .dark .post-content p,
 .dark .post-content li,
