@@ -1,6 +1,7 @@
 // Dados que api/prerender.js injeta no HTML (window.__PRERENDERED_DATA__):
 //   categories, seasons → em todas as páginas pré-renderizadas
 //   home: { posts, total, pinned, highlights } → só em /blog
+//   seasonEpisodes, related: { postId, posts } → só em /blog/:slug
 // Com eles o primeiro render já sai completo: sem esperar a API e sem a página
 // "pular" quando as seções chegam (CLS).
 const data = typeof window !== "undefined" ? window.__PRERENDERED_DATA__ || {} : {};

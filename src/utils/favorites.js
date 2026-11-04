@@ -49,6 +49,7 @@ const snapshot = (post) => ({
   category: post.category,
   coverImage: post.coverImage || null,
   publishedAt: post.publishedAt || post.createdAt,
+  readingMinutes: post.readingMinutes || null,
   savedAt: new Date().toISOString(),
 });
 

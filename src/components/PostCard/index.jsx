@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Layers, Pin } from "lucide-react";
+import { Clock, Layers, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../GeneratedCover";
 import FavoriteButton from "../FavoriteButton";
@@ -28,10 +28,13 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-gray-500 dark:text-gray-300">
-            {date}
-            {categoryLabel && <> • {categoryLabel}</>}
-          </p>
+          <div className="flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-300">
+            <p className="min-w-0 truncate">
+              {date}
+              {categoryLabel && <> • {categoryLabel}</>}
+            </p>
+            <ReadingTime minutes={post.readingMinutes} />
+          </div>
           {seasonLabel && <div className="mt-1"><SeasonBadge label={seasonLabel} /></div>}
           <h2 className="mt-1 font-semibold text-base sm:text-xl leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {post.title}
@@ -61,8 +64,21 @@ function CompactCard({ post, date, categoryLabel }) {
         {categoryLabel && (
           <span className="hidden sm:inline shrink-0 text-xs text-gray-500 dark:text-gray-300">{categoryLabel}</span>
         )}
+        <ReadingTime minutes={post.readingMinutes} className="hidden sm:inline-flex text-xs text-gray-500 dark:text-gray-300" />
       </Link>
     </article>
+  );
+}
+
+// Reloginho + minutos à direita da linha de data/categoria (ajuda a decidir o clique)
+function ReadingTime({ minutes, className = "" }) {
+  if (!minutes) return null;
+  return (
+    <span className={`inline-flex items-center gap-1 shrink-0 tabular-nums ${className}`} title={`${minutes} min de leitura`}>
+      <Clock size={13} aria-hidden="true" />
+      <span className="sr-only">Tempo de leitura: </span>
+      {minutes} min
+    </span>
   );
 }
 
@@ -115,10 +131,13 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, pri
         </div>
 
         <div className="p-4 flex-1 flex flex-col gap-1.5">
-          <p className="text-xs text-gray-500 dark:text-gray-300">
-            {date}
-            {categoryLabel && <> • {categoryLabel}</>}
-          </p>
+          <div className="flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-300">
+            <p className="min-w-0 truncate">
+              {date}
+              {categoryLabel && <> • {categoryLabel}</>}
+            </p>
+            <ReadingTime minutes={post.readingMinutes} />
+          </div>
           <ShowcaseBadge badge={badge} />
           <SeasonBadge label={seasonLabel} />
           <h2 className="font-semibold text-lg leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">

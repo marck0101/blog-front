@@ -275,6 +275,9 @@ export function postSchema(post) {
       "@id": `${url}#article`,
       headline: truncate(post.title, 110),
       description: postDescription(post),
+      // Resposta direta (BLUF): a conclusão que buscadores e IAs podem citar
+      ...(post.directAnswer?.trim() ? { abstract: post.directAnswer.trim() } : {}),
+      ...(post.tags?.length ? { keywords: post.tags.map((t) => t.replace(/-/g, " ")).join(", ") } : {}),
       image: post.coverImage
         ? [
             post.coverImageAlt

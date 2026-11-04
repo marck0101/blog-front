@@ -94,6 +94,12 @@ const PostsService = {
     return data;
   },
 
+  // Tags já usadas nos posts: [{ tag, count }], mais usadas primeiro
+  async getTags() {
+    const { data } = await api.get("/posts/tags");
+    return normalizeArray(data);
+  },
+
   async getById(id) {
     const { data } = await api.get(`/posts/${safeId(id)}`);
     return data || null;

@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
@@ -15,6 +15,7 @@ import SeasonsService from "../../services/seasons.service";
 import {
   AUTHOR_NAME,
   PORTFOLIO_URL,
+  SITE_URL,
   postTitle,
   postDescription,
 } from "../../seo/site";
@@ -26,6 +27,7 @@ import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
+import DirectAnswer from "../../components/DirectAnswer";
 import { prerendered } from "../../utils/prerendered";
 
 const READ_MARKS = [25, 50, 75, 100];
@@ -46,6 +48,24 @@ function getPrerenderedPost(slug) {
   return data && data.slug === slug ? data : null;
 }
 
+// Link do texto para outra página do blog: o endereço que o React Router abre
+// sem recarregar (também aceita o link absoluto blog.marck0101.com.br/...).
+// Admin, API e arquivos (sitemap, rss) seguem como link normal.
+const INTERNAL_PATH = /^\/(blog|seasons|favoritos|privacidade)(\/|$)/;
+
+function internalPath(href) {
+  if (!href) return null;
+  let url;
+  try {
+    url = new URL(href, window.location.href);
+  } catch {
+    return null;
+  }
+  const sameSite = url.origin === window.location.origin || url.origin === SITE_URL;
+  if (!sameSite || !INTERNAL_PATH.test(url.pathname) || /\.[a-z0-9]+$/i.test(url.pathname)) return null;
+  return url.pathname + url.search + url.hash;
+}
+
 // Prerender já respondeu 404 para este slug — não buscar de novo na API
 function isPrerenderedNotFound(slug) {
   return window.__PRERENDERED_NOT_FOUND__ === slug;
@@ -53,6 +73,7 @@ function isPrerenderedNotFound(slug) {
 
 export default function Post() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [post, setPost] = useState(() => getPrerenderedPost(slug));
   const [loading, setLoading] = useState(
     () => !getPrerenderedPost(slug) && !isPrerenderedNotFound(slug)
@@ -157,8 +178,26 @@ export default function Post() {
   }, [post?.slug, post?.season, post?.content]);
 
   // Cliques em links de contato dentro do texto do post (ex.: CTA de WhatsApp)
+  // Links internos no meio do texto: navegação do app (sem recarregar) + evento
+  // para medir a interlinkagem. Ctrl/Cmd+clique e target=_blank abrem em outra aba.
+  const openInternalLink = (e, link) => {
+    if (!link || e.defaultPrevented || e.button !== 0) return false;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || link.target === "_blank") return false;
+    const path = internalPath(link.getAttribute("href"));
+    if (!path) return false;
+    e.preventDefault();
+    trackEvent("internal_link_click", {
+      link_location: "post_content",
+      post_slug: post.slug,
+      target_path: path,
+    });
+    navigate(path);
+    return true;
+  };
+
   const handleContentClick = (e) => {
     const link = e.target.closest?.("a[href]");
+    if (openInternalLink(e, link)) return;
     const method = contactMethod(link?.getAttribute("href"));
     if (!method) return;
     trackEvent(
@@ -273,6 +312,8 @@ export default function Post() {
         </div>
 
         <SeasonNav post={post} variant="badge" />
+
+        <DirectAnswer text={post.directAnswer} />
 
         <div
           ref={contentRef}

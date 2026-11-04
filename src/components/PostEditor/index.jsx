@@ -13,6 +13,7 @@ import CoverImageUpload from "../CoverImageUpload";
 import FilterChips from "../FilterChips";
 import SeasonFields from "../SeasonFields";
 import FaqFields from "../FaqFields";
+import PostLinksSection from "../PostLinksSection";
 import PostPreview from "../PostPreview";
 import PostHistory from "../PostHistory";
 import PostSkeleton from "../PostSkeleton";
@@ -34,12 +35,15 @@ function CharCount({ value, max }) {
 }
 
 const AUTOSAVE_MS = 30_000;
+// Mesmo limite do backend (blogpost.model)
+const DIRECT_ANSWER_MAX = 400;
 const draftKey = (postId) => `post-draft:${postId || "new"}`;
 
 const emptyForm = (plannedAt = "") => ({
   title: "",
   slug: "",
   excerpt: "",
+  directAnswer: "",
   content: "",
   // Sem categoria pré-escolhida: obrigatória, para o post não sair na errada
   category: "",
@@ -56,6 +60,8 @@ const emptyForm = (plannedAt = "") => ({
   seo: { title: "", description: "" },
   coverImageAlt: "",
   faq: [],
+  tags: [],
+  relatedPosts: [],
 });
 
 function formFromPost(post) {
@@ -63,6 +69,7 @@ function formFromPost(post) {
     title: post.title || "",
     slug: post.slug || "",
     excerpt: post.excerpt || "",
+    directAnswer: post.directAnswer || "",
     content: post.content || "",
     category: post.category || "",
     season: post.season || "",
@@ -88,6 +95,9 @@ function formFromPost(post) {
     seo: { title: post.seo?.title || "", description: post.seo?.description || "" },
     coverImageAlt: post.coverImageAlt || "",
     faq: (post.faq || []).map(({ question, answer }) => ({ question: question || "", answer: answer || "" })),
+    tags: post.tags || [],
+    // A API manda { _id, title, slug, status } (populate); id solto = post que saiu
+    relatedPosts: (post.relatedPosts || []).filter((p) => p && typeof p === "object"),
   };
 }
 
@@ -295,6 +305,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
         coverImageAlt: finalCoverUrl ? form.coverImageAlt.trim() : "",
         // Pergunta sem resposta (ou o contrário) fica só no formulário
         faq: postFaq(form).map(({ question, answer }) => ({ question: question.trim(), answer: answer.trim() })),
+        relatedPosts: form.relatedPosts.map((p) => p._id),
       };
       const saved = isNew ? await PostsService.create(payload) : await PostsService.update(postId, payload);
 
@@ -460,11 +471,34 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
             </div>
 
             <div>
+              <label htmlFor="directAnswer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Resposta direta <span className="font-normal text-gray-500">(opcional)</span>
+              </label>
+              <div className="relative">
+                <textarea id="directAnswer" name="directAnswer"
+                  className="input"
+                  placeholder="A conclusão do artigo em 1–3 frases. Aparece em destaque abaixo do título e é o trecho que Google e IAs citam."
+                  value={form.directAnswer}
+                  maxLength={DIRECT_ANSWER_MAX}
+                  rows={3}
+                  onChange={(e) => set({ directAnswer: e.target.value.slice(0, DIRECT_ANSWER_MAX) })}
+                />
+                <span className={`absolute bottom-2 right-3 text-xs ${
+                  form.directAnswer.length === DIRECT_ANSWER_MAX ? "text-red-500" : form.directAnswer.length > 320 ? "text-orange-500" : "text-gray-400"
+                }`}>
+                  {form.directAnswer.length}/{DIRECT_ANSWER_MAX}
+                </span>
+              </div>
+            </div>
+
+            <div>
               <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Conteúdo</p>
               <RichTextEditor value={form.content} onChange={(content) => set({ content })} />
             </div>
 
             <FaqFields value={form.faq} onChange={(faq) => set({ faq })} />
+
+            <PostLinksSection tags={form.tags} relatedPosts={form.relatedPosts} onChange={set} postId={postId} />
 
             <CoverImageUpload
               existingUrl={coverImage}

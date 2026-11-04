@@ -59,6 +59,7 @@ function normalizePost(post) {
     coverImage: post.coverImage || null,
     coverImageAlt: post.coverImageAlt || "",
     publishedAt: post.publishedAt || post.createdAt,
+    readingMinutes: post.readingMinutes || null,
   };
 }
 
