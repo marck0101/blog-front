@@ -349,6 +349,24 @@ function notFoundPage(slug, path = "blog") {
   return { head, body };
 }
 
+// Parâmetros que a reescrita do vercel.json usa para escolher a página (não são do visitante)
+const ROUTING_PARAMS = ["slug", "season", "page"];
+
+/**
+ * Endereço antigo de um post (R-POST-17 no backend): a API devolve o post com o
+ * slug atual. Devolve o caminho para o 301 (mantém UTMs e outros parâmetros do
+ * visitante) ou null se o endereço pedido já é o atual.
+ */
+export function postRedirectPath(requestedSlug, post, query = {}) {
+  if (!post?.slug || post.slug === requestedSlug) return null;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (!ROUTING_PARAMS.includes(key)) params.append(key, String(value));
+  }
+  const search = params.toString();
+  return `/blog/${encodeURIComponent(post.slug)}${search ? `?${search}` : ""}`;
+}
+
 export default async function handler(req, res) {
   const slug = typeof req.query.slug === "string" ? req.query.slug : "";
   const seasonSlug = typeof req.query.season === "string" ? req.query.season : "";
@@ -385,6 +403,13 @@ export default async function handler(req, res) {
       page = seasonsIndexPage((await fetchJson(`${API_URL}/seasons`)) || []);
     } else if (slug) {
       const post = await fetchJson(`${API_URL}/posts/slug/${encodeURIComponent(slug)}`);
+      const redirectTo = postRedirectPath(slug, post, req.query);
+      if (redirectTo) {
+        // 301: o Google transfere o endereço antigo para o novo; a CDN guarda 10 min
+        res.setHeader("Cache-Control", "public, max-age=0, s-maxage=600");
+        res.setHeader("Location", redirectTo);
+        return res.status(301).end();
+      }
       if (post) {
         page = postPage(post);
         // Selo da season no topo do post (SeasonNav)

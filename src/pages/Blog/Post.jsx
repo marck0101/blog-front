@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
@@ -55,6 +55,7 @@ function isPrerenderedNotFound(slug) {
 
 export default function Post() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [post, setPost] = useState(() => getPrerenderedPost(slug));
   const [loading, setLoading] = useState(
     () => !getPrerenderedPost(slug) && !isPrerenderedNotFound(slug)
@@ -88,7 +89,13 @@ export default function Post() {
         // Links antigos por ID; um slug comum daria 400 na rota por ID
         return /^[a-f0-9]{24}$/i.test(slug) ? PostsService.getPublicById(slug) : null;
       })
-      .then((postData) => setPost(postData || null))
+      .then((postData) => {
+        setPost(postData || null);
+        // Endereço antigo (ou link por id): a barra de endereço passa a mostrar o atual
+        if (postData?.slug && postData.slug !== slug) {
+          navigate(`/blog/${postData.slug}${window.location.search}`, { replace: true });
+        }
+      })
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
   }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
