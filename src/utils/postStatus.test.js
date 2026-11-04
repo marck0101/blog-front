@@ -1,5 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isOverdue, postDayKey, postStatusKey } from "./postStatus";
+import { firstSchedulableDay, isOverdue, postDayKey, postStatusKey } from "./postStatus";
+
+// R-POST-16: mesma regra do backend (post.rules.firstSchedulableDay)
+describe("firstSchedulableDay", () => {
+  it("antes das 9h de Brasília: hoje", () => {
+    expect(firstSchedulableDay(new Date("2026-11-10T11:30:00Z"))).toBe("2026-11-10");
+  });
+  it("depois das 9h: amanhã, inclusive virando o mês", () => {
+    expect(firstSchedulableDay(new Date("2026-11-10T13:00:00Z"))).toBe("2026-11-11");
+    expect(firstSchedulableDay(new Date("2026-11-30T20:00:00Z"))).toBe("2026-12-01");
+  });
+  it("22h de Brasília (já é o dia seguinte em UTC): amanhã", () => {
+    expect(firstSchedulableDay(new Date("2026-11-11T01:00:00Z"))).toBe("2026-11-11");
+  });
+});
 
 // Status do post nas telas (SISTEMA.md, seção 2.1)
 describe("postStatusKey", () => {

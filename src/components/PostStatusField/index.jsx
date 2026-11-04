@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CalendarClock, AlertTriangle } from "lucide-react";
 import PostsService from "../../services/posts.service";
-import { localDateKey, postDayKey } from "../../utils/postStatus";
+import { firstSchedulableDay, localDateKey, postDayKey } from "../../utils/postStatus";
 
 const todayInput = () => localDateKey(new Date());
 
@@ -91,6 +91,8 @@ export default function PostStatusField({
   alreadyPublished = false,
   stacked = false, // coluna lateral do editor: opções uma embaixo da outra
 }) {
+  // Agendado só para um dia em que a rotina das 9h ainda vai rodar (R-POST-16)
+  const firstDay = firstSchedulableDay();
   const options = [
     { value: "draft", label: "Rascunho", hint: "Ainda escrevendo. Não vai ao ar sozinho." },
     { value: "planned", label: "Agendado", hint: "Pronto. Vai ao ar sozinho na data escolhida." },
@@ -140,7 +142,7 @@ export default function PostStatusField({
             <input id="plannedAt" name="plannedAt"
               type="date"
               value={plannedAt}
-              min={status === "planned" ? todayInput() : undefined}
+              min={status === "planned" ? firstDay : undefined}
               onChange={(e) => onChange({ plannedAt: e.target.value })}
               className={`input ${stacked ? "w-full" : "w-48"}`}
             />
@@ -157,10 +159,27 @@ export default function PostStatusField({
           {plannedAt && (
             <DateConflict dayKey={plannedAt} postId={postId} onPick={(day) => onChange({ plannedAt: day })} />
           )}
+          {status === "planned" && plannedAt && plannedAt < firstDay && (
+            <div role="alert" className="flex items-start gap-2 mt-2 p-3 rounded-lg border border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800 text-xs text-red-800 dark:text-red-300">
+              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p>
+                  {plannedAt === localDateKey(new Date())
+                    ? "A publicação automática de hoje já rodou (9h)."
+                    : "Essa data já passou."}{" "}
+                  Para ir ao ar hoje, use “{publishLabel}”.
+                </p>
+                <button type="button" onClick={() => onChange({ plannedAt: firstDay })} className="font-semibold underline hover:no-underline">
+                  Agendar para {formatDay(firstDay)}
+                </button>
+              </div>
+            </div>
+          )}
           {status === "planned" && (
             <p className="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300 mt-2">
               <CalendarClock size={14} />
               Publica automaticamente por volta das 9h desse dia e envia o email configurado abaixo.
+              {firstDay !== todayInput() && " A rotina de hoje já rodou: a data mais cedo é amanhã."}
             </p>
           )}
         </div>

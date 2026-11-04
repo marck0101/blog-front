@@ -51,6 +51,24 @@ export function postStatusDate(post) {
   return "";
 }
 
+// Rotina diária que publica os agendados: 12h UTC = 9h em Brasília (vercel.json
+// do backend). Mesma regra de firstSchedulableDay em app/controllers/posts/post.rules.js.
+const DAILY_JOB_UTC_HOUR = 12;
+const brDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" });
+
+/**
+ * Primeiro dia que dá para agendar (R-POST-16): hoje, se a rotina das 9h ainda
+ * não rodou; senão amanhã. "YYYY-MM-DD".
+ */
+export function firstSchedulableDay(now = new Date()) {
+  const today = brDay.format(now);
+  const todaysJob = new Date(`${today}T${String(DAILY_JOB_UTC_HOUR).padStart(2, "0")}:00:00.000Z`);
+  if (now < todaysJob) return today;
+  const tomorrow = new Date(`${today}T12:00:00.000Z`);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  return tomorrow.toISOString().slice(0, 10);
+}
+
 // "YYYY-MM-DD" do date input → sem fuso (evita voltar um dia)
 export const toDateInput = (d) => (d ? new Date(d).toISOString().split("T")[0] : "");
 
