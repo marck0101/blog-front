@@ -14,12 +14,53 @@ import {
   Eye,
   Search,
   TrendingUp,
+  MailWarning,
 } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import PublicationHeatmap from "../../components/PublicationHeatmap";
 import DashboardService from "../../services/dashboard.service";
 import PostsService from "../../services/posts.service";
+
+// Quantos avisos listar pelo nome antes de resumir em "e mais N"
+const NOTICES_SHOWN = 3;
+
+/**
+ * Avisos de post publicado que não saíram (BIZ-03 / R-EMAIL-03): não são
+ * enviados sozinhos depois. Sem botão de fechar — some quando o aviso é enviado.
+ */
+export function UnsentNotices({ notices }) {
+  if (!notices?.length) return null;
+  const shown = notices.slice(0, NOTICES_SHOWN);
+  const rest = notices.length - shown.length;
+  return (
+    <div role="status" className="flex items-start gap-3 p-4 mb-6 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 text-sm">
+      <MailWarning size={18} className="shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="space-y-1">
+        <p>
+          <strong>{notices.length}</strong> aviso{notices.length > 1 ? "s" : ""} de post publicado não{" "}
+          {notices.length > 1 ? "foram enviados" : "foi enviado"} aos assinantes (o público estava vazio
+          ou o email não estava configurado na publicação). Eles não saem sozinhos depois.
+        </p>
+        <ul className="list-disc pl-5">
+          {shown.map((n) => (
+            <li key={n._id}>
+              <Link to={`/admin/campaigns/${n._id}`} className="font-semibold underline hover:no-underline">
+                {n.postTitle}
+              </Link>{" "}
+              → conferir o público e enviar
+            </li>
+          ))}
+          {rest > 0 && (
+            <li>
+              <Link to="/admin/campaigns" className="underline hover:no-underline">e mais {rest} em Envios</Link>
+            </li>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
 function StatCardSkeleton() {
   return (
@@ -144,6 +185,8 @@ export default function Dashboard() {
             </button>
           </div>
         )}
+
+        <UnsentNotices notices={stats?.unsentNotices} />
 
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
