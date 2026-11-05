@@ -1,7 +1,6 @@
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AuthContext } from "./auth-context";
 import AuthService from "../services/auth.service";
-
-export const AuthContext = createContext();
 
 // O token da sessão fica num cookie httpOnly (o JavaScript não o lê).
 // Aqui guardamos só um indicador para exibição (nome/email), sem valor de acesso:

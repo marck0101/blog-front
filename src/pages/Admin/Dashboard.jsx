@@ -77,7 +77,9 @@ export default function Dashboard() {
 
   const [heatmapData, setHeatmapData] = useState({});
   const [heatmapYear, setHeatmapYear] = useState(new Date().getFullYear());
-  const [heatmapLoading, setHeatmapLoading] = useState(true);
+  // Ano cuja resposta já chegou: diferente do ano escolhido = carregando
+  const [heatmapLoadedYear, setHeatmapLoadedYear] = useState(null);
+  const heatmapLoading = heatmapLoadedYear !== heatmapYear;
 
   const [performance, setPerformance] = useState(null);
   const [performanceLoading, setPerformanceLoading] = useState(true);
@@ -99,11 +101,15 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    setHeatmapLoading(true);
+    // Trocou de ano antes da resposta chegar: a resposta antiga é descartada
+    let active = true;
     PostsService.getHeatmap(heatmapYear)
-      .then(setHeatmapData)
-      .catch(() => setHeatmapData({}))
-      .finally(() => setHeatmapLoading(false));
+      .then((data) => active && setHeatmapData(data))
+      .catch(() => active && setHeatmapData({}))
+      .finally(() => active && setHeatmapLoadedYear(heatmapYear));
+    return () => {
+      active = false;
+    };
   }, [heatmapYear]);
 
   const dismissBanner = () => {

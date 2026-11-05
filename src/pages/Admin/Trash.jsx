@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PostsService from "../../services/posts.service";
 import AudiencesService from "../../services/audiences.service";
 import SubscriberService from "../../services/subscriber.service";
 import Header from "../../components/Header";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import SEO from "../../components/SEO";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
@@ -14,6 +16,19 @@ import { Eye, RotateCcw, Trash2, Users } from "lucide-react";
 
 // Status que o post tinha antes de ir para a lixeira
 const previousKey = (post) => postStatusKey({ ...post, deletedAt: null });
+
+// Posts da lixeira vêm todos de uma vez: ordena aqui mesmo
+const POST_SORTS = [
+  { value: "deleted_recent", label: "Removidos recentemente" },
+  { value: "deleted_oldest", label: "Removidos há mais tempo" },
+  { value: "title", label: "Título (A-Z)" },
+];
+const byTitle = new Intl.Collator("pt", { sensitivity: "base" });
+const POST_SORTERS = {
+  deleted_recent: (a, b) => new Date(b.deletedAt) - new Date(a.deletedAt),
+  deleted_oldest: (a, b) => new Date(a.deletedAt) - new Date(b.deletedAt),
+  title: (a, b) => byTitle.compare(a.title || "", b.title || ""),
+};
 
 // Abas da lixeira: ?tipo=publicos mostra os públicos; sem parâmetro, os posts
 const TABS = [
@@ -223,6 +238,8 @@ function PostsTrash() {
   const [confirmRemove, setConfirmRemove] = useState(null); // { post, close } | { all: true }
   const [busy, setBusy] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [sort, setSort] = useSortPreference("admin-trash-sort", POST_SORTS, "deleted_recent");
+  const sortedPosts = useMemo(() => [...posts].sort(POST_SORTERS[sort] || POST_SORTERS.deleted_recent), [posts, sort]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -337,6 +354,8 @@ function PostsTrash() {
               Não há exclusão automática: os posts ficam aqui até você excluir. Restaurar devolve como rascunho.
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto sm:ml-auto">
+          {posts.length > 1 && <SortSelect options={POST_SORTS} value={sort} onChange={setSort} />}
           {posts.length > 0 && (
             <button
               type="button"
@@ -347,6 +366,7 @@ function PostsTrash() {
               <Trash2 size={16} /> {busy ? "Excluindo..." : `Esvaziar lixeira (${posts.length})`}
             </button>
           )}
+          </div>
         </div>
 
         {posts.length === 0 && (
@@ -354,7 +374,7 @@ function PostsTrash() {
         )}
 
         <div className="space-y-4">
-          {posts.map((post) => {
+          {sortedPosts.map((post) => {
             const prev = POST_STATUS[previousKey(post)];
             return (
               <article key={post._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">

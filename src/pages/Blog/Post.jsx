@@ -76,8 +76,18 @@ export default function Post() {
   const navigate = useNavigate();
   const [post, setPost] = useState(() => getPrerenderedPost(slug));
   const [loading, setLoading] = useState(
-    () => !getPrerenderedPost(slug) && !isPrerenderedNotFound(slug)
+    () => Boolean(slug) && !getPrerenderedPost(slug) && !isPrerenderedNotFound(slug)
   );
+
+  // Trocou de post (ex.: "Continue lendo"): ajusta o estado já neste render,
+  // sem efeito, para não mostrar o post anterior nem um "carregando" atrasado
+  const [prevSlug, setPrevSlug] = useState(slug);
+  if (slug !== prevSlug) {
+    setPrevSlug(slug);
+    const notFound = isPrerenderedNotFound(slug);
+    if (notFound) setPost(null);
+    setLoading(Boolean(slug) && post?.slug !== slug && !notFound);
+  }
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
   // Nomes para exibir: "Negócios" em vez do slug, título da season no breadcrumb
@@ -91,25 +101,22 @@ export default function Post() {
   }, []);
 
   useEffect(() => {
-    if (!slug) {
-      setLoading(false);
-      return;
-    }
+    if (!slug || post?.slug === slug || isPrerenderedNotFound(slug)) return;
 
-    if (post?.slug === slug) return;
-    if (isPrerenderedNotFound(slug)) return;
-
-    setLoading(true);
-
+    // Leitor trocou de post antes da resposta chegar: a resposta antiga é descartada
+    let active = true;
     PostsService.getBySlug(slug)
       .then((postData) => {
         if (postData) return postData;
         // Links antigos por ID; um slug comum daria 400 na rota por ID
         return /^[a-f0-9]{24}$/i.test(slug) ? PostsService.getPublicById(slug) : null;
       })
-      .then((postData) => setPost(postData || null))
-      .catch(() => setPost(null))
-      .finally(() => setLoading(false));
+      .then((postData) => active && setPost(postData || null))
+      .catch(() => active && setPost(null))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
   }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Visualização do post: GA4 (com categoria), Pixel ViewContent (públicos por

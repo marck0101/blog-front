@@ -13,6 +13,8 @@ import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import usePageSize from "../../hooks/usePageSize";
 import Pagination from "../../components/Pagination";
 import PostPreview from "../../components/PostPreview";
@@ -70,11 +72,7 @@ export default function PostsList() {
   const [pageSize, setPageSize] = usePageSize("admin-posts-page-size", PAGE_SIZES, 10);
   const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
   const [selectedSeason, setSelectedSeason] = useState("all");
-  const [sort, setSortRaw] = useViewMode("admin-posts-sort", SORT_OPTIONS.map((o) => o.value), "created");
-  const setSort = (value) => {
-    setSortRaw(value);
-    setPage(1);
-  };
+  const [sort, setSort] = useSortPreference("admin-posts-sort", SORT_OPTIONS, "created", () => setPage(1));
   const [seasons, setSeasons] = useState([]);
 
   // seleção em massa (ids da página atual)
@@ -358,17 +356,7 @@ export default function PostsList() {
           />
           </div>
           <div className="flex items-start gap-3 shrink-0">
-          <select
-            aria-label="Ordenar posts"
-            title="Ordenar por"
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="input flex-1 sm:!w-auto text-sm"
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <SortSelect options={SORT_OPTIONS} value={sort} onChange={setSort} className="flex-1 sm:flex-none" />
           <ViewToggle value={view} onChange={setView} modes={["list", "grid", "compact"]} />
           </div>
         </div>

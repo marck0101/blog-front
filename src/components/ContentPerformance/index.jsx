@@ -5,6 +5,8 @@ import Sparkline from "../Sparkline";
 import MetricsService from "../../services/metrics.service";
 import SubscriberService from "../../services/subscriber.service";
 import PostsService from "../../services/posts.service";
+import SortableTh from "../SortableTh";
+import useSortPreference from "../../hooks/useSortPreference";
 
 const PERIODS = [
   { value: "7", label: "7 dias" },
@@ -20,13 +22,8 @@ const METRICS = [
   { value: "shareVisits", label: "Visitas por compartilhamento" },
 ];
 
-const SORTS = [
-  { value: "total", label: "Mais no período" },
-  { value: "up", label: "Maior alta" },
-  { value: "down", label: "Maior queda" },
-  { value: "low", label: "Menos no período" },
-  { value: "recent", label: "Publicados mais recentes" },
-];
+// Ordem: escolhida clicando nos cabeçalhos da tabela
+const SORTS = ["total", "low", "up", "down", "peak", "peak_low", "recent", "oldest"].map((value) => ({ value }));
 
 // Linhas visíveis por vez (a maioria dos posts antigos fica em zero no período)
 const PAGE = 15;
@@ -120,7 +117,7 @@ export default function ContentPerformance() {
   const [season, setSeason] = useState("");
   const [term, setTerm] = useState("");
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("total");
+  const [sort, setSort] = useSortPreference("admin-content-sort", SORTS, "total");
   const [sharedScale, setSharedScale] = useState(false);
   const [open, setOpen] = useState(null);
   const [visible, setVisible] = useState(PAGE);
@@ -168,13 +165,16 @@ export default function ContentPerformance() {
       up: (a, b) => pct(b) - pct(a) || byTotal(a, b),
       down: (a, b) => pct(a) - pct(b) || byTotal(a, b),
       recent: (a, b) => new Date(b.publishedAt) - new Date(a.publishedAt),
+      oldest: (a, b) => new Date(a.publishedAt) - new Date(b.publishedAt),
+      peak: (a, b) => (b.peak?.value || 0) - (a.peak?.value || 0) || byTotal(a, b),
+      peak_low: (a, b) => (a.peak?.value || 0) - (b.peak?.value || 0) || byTotal(a, b),
     };
     if (sort === "up" || sort === "down") {
       // Posts novos não têm base de comparação: vão para o fim, pelo total
       const isNew = (r) => r.delta.kind === "new";
       return [...list.filter((r) => !isNew(r)).sort(sorters[sort]), ...list.filter(isNew).sort(byTotal)];
     }
-    return list.sort(sorters[sort]);
+    return list.sort(sorters[sort] || byTotal);
   }, [data, metric, sort]);
 
   const sharedMax = useMemo(
@@ -223,10 +223,6 @@ export default function ContentPerformance() {
             </select>
           </>
         )}
-        <label className="sr-only" htmlFor="cp-sort">Ordenar</label>
-        <select id="cp-sort" className={selectClass} value={sort} onChange={(e) => setSort(e.target.value)}>
-          {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
         <div className="relative flex-1 min-w-[12rem]">
           <label className="sr-only" htmlFor="cp-search">Buscar post</label>
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -261,15 +257,16 @@ export default function ContentPerformance() {
         )}
 
         {rows.length > 0 && (
-          <div className="overflow-x-auto">
+          // relative: textos sr-only (absolute) das células ficam presos na rolagem da tabela
+          <div className="relative overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
-                  <th className="px-5 py-2 font-semibold">Post</th>
+                  <SortableTh label="Post" asc="oldest" desc="recent" sort={sort} onSort={setSort} className="px-5 py-2" title="Data de publicação" />
                   <th className="px-3 py-2 font-semibold">Dia a dia</th>
-                  <th className="px-3 py-2 font-semibold text-right">Total</th>
-                  <th className="px-3 py-2 font-semibold text-right">vs anterior</th>
-                  <th className="px-3 py-2 font-semibold text-right">Pico</th>
+                  <SortableTh label="Total" asc="low" desc="total" sort={sort} onSort={setSort} align="right" className="px-3 py-2" />
+                  <SortableTh label="vs anterior" asc="down" desc="up" sort={sort} onSort={setSort} align="right" className="px-3 py-2" title="Variação contra o período anterior" />
+                  <SortableTh label="Pico" asc="peak_low" desc="peak" sort={sort} onSort={setSort} align="right" className="px-3 py-2" title="Dia com mais no período" />
                   <th className="px-3 py-2"><span className="sr-only">Detalhes</span></th>
                 </tr>
               </thead>

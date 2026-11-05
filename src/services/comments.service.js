@@ -31,15 +31,18 @@ const CommentsService = {
     return data;
   },
 
+  // { ok, removed }: removed = ficou "removido pelo autor" (já tinha respostas de outras pessoas)
   async removeMine(id) {
-    await api.delete(`/comments/mine/${safeId(id)}`);
+    const { data } = await api.delete(`/comments/mine/${safeId(id)}`);
+    return data || {};
   },
 
   /* ================= PAINEL ================= */
 
   // { comments, total, page, totalPages, counts: { pending, approved, rejected } }
-  async adminList({ status = "pending", page = 1, post = "" } = {}) {
+  async adminList({ status = "pending", page = 1, post = "", sort = "recent" } = {}) {
     const params = { status, page };
+    if (sort !== "recent") params.sort = sort;
     if (post) params.post = post;
     const { data } = await api.get("/comments/admin", { params });
     return data;

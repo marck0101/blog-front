@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { ShieldCheck, KeyRound, LogOut, CheckCircle2, AlertTriangle } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context/auth-context";
 import AuthService from "../../services/auth.service";
 import { RecoveryCodes } from "./Login";
 

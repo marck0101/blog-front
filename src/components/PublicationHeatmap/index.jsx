@@ -44,7 +44,7 @@ function buildMonthLabels(weeks) {
   const labels = [];
   let lastMonth = -1;
 
-  weeks.forEach((week, wi) => {
+  weeks.forEach((week) => {
     const firstDay = week.find((d) => d !== null);
     if (!firstDay) {
       labels.push(null);

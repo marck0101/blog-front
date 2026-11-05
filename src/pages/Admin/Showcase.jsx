@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, ArrowDown, ArrowUp, ExternalLink, Flame, Info, Pin, PinOff, Search } from "lucide-react";
 import Header from "../../components/Header";
+import SortableTh from "../../components/SortableTh";
+import useSortPreference from "../../hooks/useSortPreference";
 import SEO from "../../components/SEO";
 import PostsService from "../../services/posts.service";
 import { normalizeImageUrl } from "../../utils/imageUrl";
@@ -138,11 +140,37 @@ function HighlightToggle({ value, onChange, disabled }) {
  * Vitrine da home: posts fixados (até 3, em ordem) e destaques da semana
  * (mais lidos dos últimos 7 dias, com regra manual por post).
  */
+// "Mais lidos da semana": ordena pelo cabeçalho; padrão = leituras em 7 dias (o ranking)
+const RANKING_SORTS = [
+  { value: "views7d" }, { value: "views7d_low" },
+  { value: "favorites" }, { value: "favorites_low" },
+  { value: "shares" }, { value: "shares_low" },
+  { value: "title" }, { value: "title_desc" },
+];
+const byTitle = new Intl.Collator("pt", { sensitivity: "base" });
+const desc = (field) => (a, b) => (b[field] || 0) - (a[field] || 0) || (b.views7d || 0) - (a.views7d || 0);
+const asc = (field) => (a, b) => (a[field] || 0) - (b[field] || 0) || (b.views7d || 0) - (a.views7d || 0);
+const RANKING_SORTERS = {
+  views7d: desc("views7d"),
+  views7d_low: asc("views7d"),
+  favorites: desc("favorites"),
+  favorites_low: asc("favorites"),
+  shares: desc("shares"),
+  shares_low: asc("shares"),
+  title: (a, b) => byTitle.compare(a.title || "", b.title || ""),
+  title_desc: (a, b) => byTitle.compare(b.title || "", a.title || ""),
+};
+
 export default function Showcase() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [rankingSort, setRankingSort] = useSortPreference("admin-showcase-ranking-sort", RANKING_SORTS, "views7d");
+  const ranking = useMemo(
+    () => [...(data?.ranking || [])].sort(RANKING_SORTERS[rankingSort] || RANKING_SORTERS.views7d),
+    [data, rankingSort]
+  );
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -308,7 +336,7 @@ export default function Showcase() {
             </Card>
 
             {/* DESTAQUES */}
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card
                 icon={Flame}
                 title="Destaques da semana"
@@ -355,15 +383,15 @@ export default function Showcase() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
-                          <th className="px-5 py-2 font-semibold">Post</th>
-                          <th className="px-3 py-2 font-semibold text-right" title="Leituras nos últimos 7 dias">7 dias</th>
-                          <th className="px-3 py-2 font-semibold text-right" title="Favoritos (total)">Fav.</th>
-                          <th className="px-3 py-2 font-semibold text-right" title="Compartilhamentos (total)">Comp.</th>
+                          <SortableTh label="Post" asc="title" desc="title_desc" first="asc" sort={rankingSort} onSort={setRankingSort} className="px-5 py-2" />
+                          <SortableTh label="7 dias" asc="views7d_low" desc="views7d" sort={rankingSort} onSort={setRankingSort} align="right" className="px-3 py-2" title="Leituras nos últimos 7 dias" />
+                          <SortableTh label="Fav." asc="favorites_low" desc="favorites" sort={rankingSort} onSort={setRankingSort} align="right" className="px-3 py-2" title="Favoritos (total)" />
+                          <SortableTh label="Comp." asc="shares_low" desc="shares" sort={rankingSort} onSort={setRankingSort} align="right" className="px-3 py-2" title="Compartilhamentos (total)" />
                           <th className="px-5 py-2 font-semibold">Destaque</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {data.ranking.map((post) => (
+                        {ranking.map((post) => (
                           <tr key={post._id} className="border-t border-gray-100 dark:border-gray-800">
                             <td className="px-5 py-2">
                               <Link to={`/admin/posts/${post._id}`} className="hover:underline">

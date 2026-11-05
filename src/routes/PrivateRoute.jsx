@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/auth-context";
 
 // Telas do admin: confere a sessão (cookie httpOnly) na API antes de mostrar
 export default function PrivateRoute({ children }) {

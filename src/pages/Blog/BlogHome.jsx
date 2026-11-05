@@ -1,6 +1,6 @@
 import BlogLayout from "../../layouts/BlogLayout";
 import authorPhoto from "../../assets/author.webp";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
@@ -126,7 +126,6 @@ export default function BlogHome() {
   const [posts, setPosts] = useState(() => initial?.posts.slice(0, pageSize).map(normalizePost) ?? []);
   const [totalPages, setTotalPages] = useState(() => (initial ? Math.max(1, Math.ceil(initial.total / pageSize)) : 1));
   const [total, setTotal] = useState(() => initial?.total ?? 0);
-  const [loading, setLoading] = useState(!initial);
   const [toast, setToast] = useState(null);
   const [categories, setCategories] = useState(() => prerendered("categories") || []);
   // Seasons públicas (com episódio publicado): selo "Season" nos cards
@@ -146,39 +145,11 @@ export default function BlogHome() {
 
   const catsKey = activeCategories.join(",");
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const load = useCallback(() => {
-    let mounted = true;
-    setLoading(true);
-
-    // Sem filtro, os fixados ficam só na vitrine (em todas as páginas, para a
-    // paginação não pular nem repetir posts)
-    const excludePinned = activeCategories.length === 0 && !search;
-    PostsService.getPublished(page, pageSize, { categories: activeCategories, search, excludePinned, sort: sort.api })
-      .then(({ posts: data, totalPages: pages, total }) => {
-        if (!mounted) return;
-        setPosts(data.map(normalizePost));
-        setTotalPages(pages || 1);
-        setTotal(total ?? data.length);
-        // "search" = evento recomendado do GA4; busca sem resultado = pauta que falta
-        if (search && page === 1) {
-          trackEvent("search", { search_term: search, results_count: total ?? data.length });
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setPosts([]);
-          showToast("Erro ao carregar posts", "error");
-        }
-      })
-      .finally(() => mounted && setLoading(false));
-
-    return () => { mounted = false; };
-  }, [catsKey, search, page, pageSize, sort.api]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Tudo que define a lista numa chave só. Carregando = a resposta que está na
+  // tela é de outra chave (o prerender já conta como a chave inicial).
+  const requestKey = JSON.stringify([catsKey, search, page, pageSize, sort.api]);
+  const [loadedKey, setLoadedKey] = useState(() => (initial ? requestKey : null));
+  const loading = loadedKey !== requestKey;
 
   useEffect(() => {
     setPageContext({ page_type: "home" });
@@ -198,9 +169,37 @@ export default function BlogHome() {
       markHomeUsed();
       return;
     }
-    const cleanup = load();
-    return cleanup;
-  }, [load]);
+
+    // Filtro/página trocou antes da resposta chegar: a resposta antiga é descartada
+    let active = true;
+    const [cats, q, pg, size, sortApi] = JSON.parse(requestKey);
+    const categories = cats ? cats.split(",") : [];
+    // Sem filtro, os fixados ficam só na vitrine (em todas as páginas, para a
+    // paginação não pular nem repetir posts)
+    const excludePinned = categories.length === 0 && !q;
+    PostsService.getPublished(pg, size, { categories, search: q, excludePinned, sort: sortApi })
+      .then(({ posts: data, totalPages: pages, total }) => {
+        if (!active) return;
+        setPosts(data.map(normalizePost));
+        setTotalPages(pages || 1);
+        setTotal(total ?? data.length);
+        // "search" = evento recomendado do GA4; busca sem resultado = pauta que falta
+        if (q && pg === 1) {
+          trackEvent("search", { search_term: q, results_count: total ?? data.length });
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+        setPosts([]);
+        setToast({ message: "Erro ao carregar posts", type: "error" });
+        setTimeout(() => setToast(null), 3000);
+      })
+      .finally(() => active && setLoadedKey(requestKey));
+
+    return () => {
+      active = false;
+    };
+  }, [requestKey]);
 
   // Chip clicado → toggle no array, atualiza URL com múltiplos params
   const handleCategoryChange = (newCats) => {

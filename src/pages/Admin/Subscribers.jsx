@@ -6,6 +6,8 @@ import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortableTh from "../../components/SortableTh";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import Pagination from "../../components/Pagination";
 import usePageSize from "../../hooks/usePageSize";
@@ -161,6 +163,12 @@ function RowSkeleton() {
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
+// Ordem: escolhida clicando nos cabeçalhos da tabela (chaves da API)
+const SORT_OPTIONS = [
+  "recent", "oldest", "name", "name_desc", "email", "email_desc",
+  "tier", "tier_free", "active", "unsubscribed",
+].map((value) => ({ value }));
+
 export default function Subscribers() {
   const navigate = useNavigate();
   // ?list=<id>: chega filtrado vindo de Públicos
@@ -183,6 +191,7 @@ export default function Subscribers() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useSortPreference("admin-subscribers-sort", SORT_OPTIONS, "recent", () => setPage(1));
   const [pageSize, setPageSize] = usePageSize("admin-subscribers-page-size", PAGE_SIZES, 20);
   const [categories, setCategories] = useState([]);
 
@@ -204,6 +213,7 @@ export default function Subscribers() {
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
+    if (sort !== "recent") params.sort = sort;
     return params;
   };
 
@@ -230,12 +240,13 @@ export default function Subscribers() {
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
+    if (sort !== "recent") params.sort = sort;
 
     SubscriberService.getAll(params)
       .then(setData)
       .catch(() => setError("Não foi possível carregar os assinantes."))
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, tierFilter, listFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, tierFilter, listFilter, selectedCategories, search, dateFrom, dateTo, sort]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -414,7 +425,7 @@ export default function Subscribers() {
           </div>
         )}
 
-        {/* Search + date range */}
+        {/* Search + date range (a ordem fica nos cabeçalhos da tabela) */}
         <div className="mb-6">
           <FilterBar
             onSearch={changeFilter(setSearch)}
@@ -441,12 +452,12 @@ export default function Subscribers() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
-                <th className="px-4 py-3 font-semibold">Nome</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Plano</th>
+                <SortableTh label="Nome" asc="name" desc="name_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" />
+                <SortableTh label="Email" asc="email" desc="email_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" />
+                <SortableTh label="Plano" asc="tier" desc="tier_free" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" title="Membros ou gratuitos primeiro" />
                 <th className="px-4 py-3 font-semibold">Categorias</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Cadastrado em</th>
+                <SortableTh label="Status" asc="active" desc="unsubscribed" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" title="Ativos ou cancelados primeiro" />
+                <SortableTh label="Cadastrado em" asc="oldest" desc="recent" sort={sort} onSort={setSort} className="px-4 py-3" />
                 <th className="px-4 py-3 font-semibold">Ações</th>
               </tr>
             </thead>

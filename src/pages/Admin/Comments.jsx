@@ -4,6 +4,8 @@ import { AlertCircle, Check, ExternalLink, Mail, MessageSquare, Reply, Trash2, X
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import CommentsService from "../../services/comments.service";
 import { notifyPendingCommentsChanged } from "../../utils/pendingComments";
 
@@ -11,6 +13,11 @@ const TABS = [
   { value: "pending", label: "Pendentes" },
   { value: "approved", label: "Aprovados" },
   { value: "rejected", label: "Recusados" },
+];
+
+const SORT_OPTIONS = [
+  { value: "recent", label: "Mais recentes" },
+  { value: "oldest", label: "Mais antigos primeiro" },
 ];
 
 const formatDate = (d) =>
@@ -56,7 +63,7 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm">
-            <span className="font-semibold">{comment.author?.name}</span>
+            <span className="font-semibold">{comment.removedAt ? "Comentário removido" : comment.author?.name}</span>
             {comment.isAuthor ? (
               <span className="ml-2 px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">Autor</span>
             ) : (
@@ -83,11 +90,23 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
 
       {comment.parent && (
         <p className="text-xs text-gray-500 dark:text-gray-300 border-l-2 pl-3 line-clamp-2">
-          Resposta a <strong>{comment.parent.author?.name}</strong>: {comment.parent.body}
+          {comment.parent.removedAt ? (
+            "Resposta a um comentário removido pelo leitor"
+          ) : (
+            <>
+              Resposta a <strong>{comment.parent.author?.name}</strong>: {comment.parent.body}
+            </>
+          )}
         </p>
       )}
 
-      <p className="text-gray-800 dark:text-gray-100 whitespace-pre-line break-words">{comment.body}</p>
+      {comment.removedAt ? (
+        <p className="text-sm italic text-gray-500 dark:text-gray-300">
+          Removido pelo leitor em {formatDate(comment.removedAt)}. Ficou só o lugar na conversa porque já tinha respostas; o texto e os dados dele foram apagados.
+        </p>
+      ) : (
+        <p className="text-gray-800 dark:text-gray-100 whitespace-pre-line break-words">{comment.body}</p>
+      )}
 
       {comment.status === "rejected" && (
         <div className="text-xs rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2 space-y-1 text-gray-600 dark:text-gray-300">
@@ -104,7 +123,7 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
       )}
 
       <div className="flex flex-wrap gap-2">
-        {comment.status !== "approved" && (
+        {!comment.removedAt && comment.status !== "approved" && (
           <button
             type="button"
             disabled={busy}
@@ -114,7 +133,7 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
             <Check size={15} /> Aprovar
           </button>
         )}
-        {comment.status !== "rejected" && !comment.isAuthor && (
+        {!comment.removedAt && comment.status !== "rejected" && !comment.isAuthor && (
           <button
             type="button"
             disabled={busy}
@@ -127,7 +146,7 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
             <X size={15} /> Recusar
           </button>
         )}
-        {!comment.isAuthor && comment.status !== "rejected" && (
+        {!comment.removedAt && !comment.isAuthor && comment.status !== "rejected" && (
           <button
             type="button"
             disabled={busy}
@@ -229,6 +248,7 @@ export default function Comments() {
   const [searchParams, setSearchParams] = useSearchParams();
   const status = TABS.some((t) => t.value === searchParams.get("status")) ? searchParams.get("status") : "pending";
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useSortPreference("admin-comments-sort", SORT_OPTIONS, "recent", () => setPage(1));
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -242,14 +262,14 @@ export default function Comments() {
 
   const load = useCallback(
     () =>
-      CommentsService.adminList({ status, page })
+      CommentsService.adminList({ status, page, sort })
         .then((d) => {
           setData(d);
           setError(null);
           notifyPendingCommentsChanged(d.counts.pending);
         })
         .catch(() => setError("Erro ao carregar os comentários.")),
-    [status, page]
+    [status, page, sort]
   );
 
   useEffect(() => {
@@ -331,7 +351,8 @@ export default function Comments() {
           </p>
         </div>
 
-        <div role="tablist" className="flex gap-1 border-b">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-end gap-3 border-b">
+        <div role="tablist" className="flex gap-1 -mb-px">
           {TABS.map((tab) => (
             <button
               key={tab.value}
@@ -339,7 +360,7 @@ export default function Comments() {
               role="tab"
               aria-selected={status === tab.value}
               onClick={() => changeTab(tab.value)}
-              className={`px-4 py-2 -mb-px border-b-2 text-sm font-medium transition ${
+              className={`px-4 py-2 border-b-2 text-sm font-medium transition ${
                 status === tab.value
                   ? "border-blue-600 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
@@ -349,6 +370,8 @@ export default function Comments() {
               {data && <span className="ml-1.5 text-xs tabular-nums opacity-70">({data.counts[tab.value]})</span>}
             </button>
           ))}
+        </div>
+        <SortSelect options={SORT_OPTIONS} value={sort} onChange={setSort} className="w-full sm:w-auto sm:ml-auto sm:mb-2" />
         </div>
 
         {error && (

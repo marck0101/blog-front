@@ -1,7 +1,7 @@
 import { Link, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context/auth-context";
 import { resolveTheme, setThemePref, watchSystemTheme } from "../../utils/theme";
 import { usePendingComments } from "../../utils/pendingComments";
 import {

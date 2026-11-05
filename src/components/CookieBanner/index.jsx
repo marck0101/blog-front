@@ -1,17 +1,26 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CONSENT_EVENT } from "../../utils/analytics";
 
-export default function CookieBanner() {
-  const [visible, setVisible] = useState(false);
+// Já respondeu ao aviso? (localStorage pode ser bloqueado no modo privado)
+function hasAnswered() {
+  try {
+    return Boolean(localStorage.getItem("cookiesAccepted"));
+  } catch {
+    return false;
+  }
+}
 
-  useEffect(() => {
-    if (!localStorage.getItem("cookiesAccepted")) {
-      setVisible(true);
-    }
-  }, []);
+export default function CookieBanner() {
+  // O app usa createRoot (sem hidratação): dá para ler o localStorage já no
+  // primeiro render, sem efeito e sem render extra
+  const [visible, setVisible] = useState(() => !hasAnswered());
 
   const accept = (level) => {
-    localStorage.setItem("cookiesAccepted", level);
+    try {
+      localStorage.setItem("cookiesAccepted", level);
+    } catch {
+      /* sem localStorage: vale só para esta visita */
+    }
     window.dispatchEvent(new Event(CONSENT_EVENT));
     setVisible(false);
   };

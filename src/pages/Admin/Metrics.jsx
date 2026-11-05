@@ -6,6 +6,8 @@ import SEO from "../../components/SEO";
 import BarList from "../../components/BarList";
 import ContentPerformance from "../../components/ContentPerformance";
 import FilterChips from "../../components/FilterChips";
+import SortableTh from "../../components/SortableTh";
+import useSortPreference from "../../hooks/useSortPreference";
 import MetricsService from "../../services/metrics.service";
 import { formatRate, shortUrl } from "../../utils/metrics";
 import { SHARE_CHANNELS } from "../../utils/share";
@@ -17,6 +19,35 @@ const PERIODS = [
 ];
 
 const LOCATION_LABELS = { home: "Página inicial", post: "Dentro de um post", "sem registro": "Sem registro" };
+
+// "Desempenho por envio": ordena pelo cabeçalho; padrão = mais recente
+const CAMPAIGN_SORTS = [
+  { value: "recent" }, { value: "oldest" },
+  { value: "subject" }, { value: "subject_desc" },
+  { value: "delivered" }, { value: "delivered_low" },
+  { value: "open" }, { value: "open_low" },
+  { value: "click" }, { value: "click_low" },
+  { value: "unsub" }, { value: "unsub_low" },
+];
+const bySubject = new Intl.Collator("pt", { sensitivity: "base" });
+const when = (c) => new Date(c.startedAt || 0).getTime();
+const num = (field) => (c) => c[field] ?? -1; // sem taxa (null) fica no fim do "maior primeiro"
+const high = (get) => (a, b) => get(b) - get(a) || when(b) - when(a);
+const low = (get) => (a, b) => get(a) - get(b) || when(b) - when(a);
+const CAMPAIGN_SORTERS = {
+  recent: (a, b) => when(b) - when(a),
+  oldest: (a, b) => when(a) - when(b),
+  subject: (a, b) => bySubject.compare(a.subject || "", b.subject || ""),
+  subject_desc: (a, b) => bySubject.compare(b.subject || "", a.subject || ""),
+  delivered: high(num("delivered")),
+  delivered_low: low(num("delivered")),
+  open: high(num("openRate")),
+  open_low: low(num("openRate")),
+  click: high(num("clickRate")),
+  click_low: low(num("clickRate")),
+  unsub: high(num("unsubscribed")),
+  unsub_low: low(num("unsubscribed")),
+};
 
 function Tile({ label, value, detail }) {
   return (
@@ -136,7 +167,7 @@ function Engagement({ data }) {
         />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card title="Compartilhado por canal" subtitle="Botão usado no post">
           <BarList items={channelItems(data.sharesByChannel)} empty="Nenhum compartilhamento no período." />
         </Card>
@@ -169,6 +200,7 @@ export default function Metrics() {
   const [data, setData] = useState(null);
   const [engagement, setEngagement] = useState(null);
   const [error, setError] = useState(null);
+  const [campaignSort, setCampaignSort] = useSortPreference("admin-metrics-campaigns-sort", CAMPAIGN_SORTS, "recent");
 
   useEffect(() => {
     let active = true;
@@ -228,7 +260,7 @@ export default function Metrics() {
               />
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card title="Novos assinantes por semana">
                 <WeeklyBars weekly={data.audience.weekly} />
               </Card>
@@ -286,7 +318,7 @@ export default function Metrics() {
               <Tile label="Cancelamento por email" value={formatRate(data.email.unsubscribeRate, 2)} detail={`${data.email.unsubscribed} saída(s) pelo link`} />
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card title="Desempenho por envio" className="lg:col-span-2">
                 {data.email.perCampaign.length === 0 ? (
                   <p className="flex items-start gap-2 text-sm text-gray-500 dark:text-gray-300">
@@ -298,15 +330,15 @@ export default function Metrics() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
-                          <th className="px-5 py-2 font-semibold">Envio</th>
-                          <th className="px-3 py-2 font-semibold text-right">Entregues</th>
-                          <th className="px-3 py-2 font-semibold text-right">Abertura</th>
-                          <th className="px-3 py-2 font-semibold text-right">Clique</th>
-                          <th className="px-5 py-2 font-semibold text-right">Saídas</th>
+                          <SortableTh label="Envio" asc="oldest" desc="recent" sort={campaignSort} onSort={setCampaignSort} className="px-5 py-2" title="Data do envio" />
+                          <SortableTh label="Entregues" asc="delivered_low" desc="delivered" sort={campaignSort} onSort={setCampaignSort} align="right" className="px-3 py-2" />
+                          <SortableTh label="Abertura" asc="open_low" desc="open" sort={campaignSort} onSort={setCampaignSort} align="right" className="px-3 py-2" title="Taxa de abertura" />
+                          <SortableTh label="Clique" asc="click_low" desc="click" sort={campaignSort} onSort={setCampaignSort} align="right" className="px-3 py-2" title="Taxa de clique" />
+                          <SortableTh label="Saídas" asc="unsub_low" desc="unsub" sort={campaignSort} onSort={setCampaignSort} align="right" className="px-5 py-2" title="Descadastros pelo link do email" />
                         </tr>
                       </thead>
                       <tbody>
-                        {data.email.perCampaign.map((c) => (
+                        {[...data.email.perCampaign].sort(CAMPAIGN_SORTERS[campaignSort] || CAMPAIGN_SORTERS.recent).map((c) => (
                           <tr key={c._id} className="border-t border-gray-100 dark:border-gray-800">
                             <td className="px-5 py-2">
                               <Link to={`/admin/campaigns/${c._id}`} className="text-gray-900 dark:text-gray-100 hover:underline">

@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../../../context/AuthContext";
+import { AuthContext } from "../../../context/auth-context";
 import { Linkedin, Github, MessageCircle } from "lucide-react";
 import authorPhoto from "../../../assets/author.webp";
 import { contactMethod, trackEvent } from "../../../utils/analytics";

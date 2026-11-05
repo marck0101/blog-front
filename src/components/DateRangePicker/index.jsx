@@ -27,11 +27,14 @@ export default function DateRangePicker({ from = "", to = "", onChange }) {
   const [endDate, setEndDate] = useState(to ? parseISO(to) : null);
   const ref = useRef(null);
 
-  // Sincroniza quando o pai limpa os filtros externamente
-  useEffect(() => {
+  // Sincroniza quando o pai muda o período por fora (ex.: "Limpar filtros").
+  // Ajuste durante o render, sem efeito: a tela não pisca com o valor antigo.
+  const [synced, setSynced] = useState({ from, to });
+  if (synced.from !== from || synced.to !== to) {
+    setSynced({ from, to });
     setStartDate(from ? parseISO(from) : null);
     setEndDate(to ? parseISO(to) : null);
-  }, [from, to]);
+  }
 
   // Fecha ao clicar fora
   useEffect(() => {

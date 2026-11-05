@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Crown, Download } from "lucide-react";
 import FilterChips from "../FilterChips";
+import SortableTh from "../SortableTh";
+import useSortPreference from "../../hooks/useSortPreference";
 import RecipientStatus from "../RecipientStatus";
 import { RECIPIENT_STATUS_LABELS } from "../../utils/campaignAudience";
 
@@ -52,6 +54,42 @@ const matchesFilter = (r, filter) => {
   }
 };
 
+// Ordem pelo cabeçalho; padrão = ordem do envio (como a lista foi montada)
+const SORTS = [
+  { value: "default" },
+  { value: "email" }, { value: "email_desc" },
+  { value: "name" }, { value: "name_desc" },
+  { value: "status" }, { value: "status_desc" },
+  { value: "sent" }, { value: "sent_old" },
+  { value: "engaged" }, { value: "engaged_low" },
+];
+const collator = new Intl.Collator("pt", { sensitivity: "base" });
+const nameOf = (r) => r.subscriber?.name || "";
+// Falhou primeiro (precisa de atenção), depois pendente, depois enviado
+const STATUS_RANK = { failed: 0, pending: 1, sent: 2 };
+const statusRank = (r) => STATUS_RANK[r.status] ?? 3;
+// Clicou > abriu > não abriu > não enviado; cancelou conta como engajamento negativo
+const engagement = (r) => (r.status !== "sent" ? -1 : (r.clickedAt ? 3 : r.openedAt ? 2 : 1) - (r.unsubscribedAt ? 0.5 : 0));
+const time = (d) => (d ? new Date(d).getTime() : 0);
+// Nome vazio sempre no fim, nas duas direções
+const byName = (dir) => (a, b) => {
+  const [x, y] = [nameOf(a), nameOf(b)];
+  if (!x !== !y) return x ? -1 : 1;
+  return dir * collator.compare(x, y);
+};
+const SORTERS = {
+  email: (a, b) => collator.compare(a.email, b.email),
+  email_desc: (a, b) => collator.compare(b.email, a.email),
+  name: byName(1),
+  name_desc: byName(-1),
+  status: (a, b) => statusRank(a) - statusRank(b),
+  status_desc: (a, b) => statusRank(b) - statusRank(a),
+  sent: (a, b) => time(b.sentAt) - time(a.sentAt),
+  sent_old: (a, b) => (time(a.sentAt) || Infinity) - (time(b.sentAt) || Infinity),
+  engaged: (a, b) => engagement(b) - engagement(a),
+  engaged_low: (a, b) => engagement(a) - engagement(b),
+};
+
 function Engagement({ r }) {
   if (r.status !== "sent") return <span className="text-gray-400">—</span>;
   const tags = [];
@@ -75,14 +113,16 @@ function Engagement({ r }) {
 export default function RecipientsTable({ campaign }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [sort, setSort] = useSortPreference("admin-recipients-sort", SORTS, "default");
   const recipients = campaign.recipients || [];
 
   const term = search.trim().toLowerCase();
-  const visible = recipients.filter(
+  const filtered = recipients.filter(
     (r) =>
       matchesFilter(r, status) &&
       (!term || r.email.includes(term) || r.subscriber?.name?.toLowerCase().includes(term))
   );
+  const visible = SORTERS[sort] ? [...filtered].sort(SORTERS[sort]) : filtered;
 
   if (recipients.length === 0) return null;
 
@@ -121,11 +161,13 @@ export default function RecipientsTable({ campaign }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
-              <th className="px-4 py-2 font-semibold">Email</th>
-              <th className="px-4 py-2 font-semibold">Nome</th>
-              <th className="px-4 py-2 font-semibold">Status</th>
-              <th className="px-4 py-2 font-semibold">Enviado em</th>
-              {campaign.tracking && <th className="px-4 py-2 font-semibold">Engajamento</th>}
+              <SortableTh label="Email" asc="email" desc="email_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-2" />
+              <SortableTh label="Nome" asc="name" desc="name_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-2" />
+              <SortableTh label="Status" asc="status" desc="status_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-2" title="Falhas primeiro" />
+              <SortableTh label="Enviado em" asc="sent_old" desc="sent" sort={sort} onSort={setSort} className="px-4 py-2" />
+              {campaign.tracking && (
+                <SortableTh label="Engajamento" asc="engaged_low" desc="engaged" sort={sort} onSort={setSort} className="px-4 py-2" title="Quem clicou e abriu primeiro" />
+              )}
             </tr>
           </thead>
           <tbody>
