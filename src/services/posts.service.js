@@ -90,6 +90,8 @@ const PostsService = {
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
+    // created (padrão) | published_desc | published_asc | updated | az
+    if (filters.sort && filters.sort !== "created") params.sort = filters.sort;
     const { data } = await api.get("/posts", { params });
     return data;
   },

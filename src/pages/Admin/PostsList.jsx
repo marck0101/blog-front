@@ -20,6 +20,15 @@ import { Pencil, Pin, Trash } from "lucide-react";
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
+// Ordem da lista (fica salva no navegador, como o formato de exibição)
+const SORT_OPTIONS = [
+  { value: "created", label: "Criados recentemente" },
+  { value: "published_desc", label: "Publicação: mais recentes" },
+  { value: "published_asc", label: "Publicação: mais antigos" },
+  { value: "updated", label: "Editados recentemente" },
+  { value: "az", label: "Título (A-Z)" },
+];
+
 // Contêiner de cada formato de visualização
 const LAYOUT = {
   list: "space-y-4",
@@ -61,6 +70,11 @@ export default function PostsList() {
   const [pageSize, setPageSize] = usePageSize("admin-posts-page-size", PAGE_SIZES, 10);
   const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
   const [selectedSeason, setSelectedSeason] = useState("all");
+  const [sort, setSortRaw] = useViewMode("admin-posts-sort", SORT_OPTIONS.map((o) => o.value), "created");
+  const setSort = (value) => {
+    setSortRaw(value);
+    setPage(1);
+  };
   const [seasons, setSeasons] = useState([]);
 
   // seleção em massa (ids da página atual)
@@ -98,6 +112,7 @@ export default function PostsList() {
       search,
       dateFrom,
       dateTo,
+      sort,
     })
       .then(({ posts: data, total: t, totalPages: tp }) => {
         setPosts(Array.isArray(data) ? data : []);
@@ -109,7 +124,7 @@ export default function PostsList() {
         showToast("Erro ao carregar posts", "error");
       })
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo, sort]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -329,7 +344,7 @@ export default function PostsList() {
         )}
 
         {/* Search + date range + formato */}
-        <div className="mb-6 flex items-start gap-3">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-start gap-3">
           <div className="flex-1 min-w-0">
           <FilterBar
             onSearch={changeFilter(setSearch)}
@@ -342,7 +357,20 @@ export default function PostsList() {
             searchPlaceholder="Buscar por título..."
           />
           </div>
+          <div className="flex items-start gap-3 shrink-0">
+          <select
+            aria-label="Ordenar posts"
+            title="Ordenar por"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="input flex-1 sm:!w-auto text-sm"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
           <ViewToggle value={view} onChange={setView} modes={["list", "grid", "compact"]} />
+          </div>
         </div>
 
         {!loading && posts.length === 0 && (
