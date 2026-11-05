@@ -50,8 +50,9 @@ const CommentsService = {
     return data?.count || 0;
   },
 
-  async setStatus(id, status) {
-    const { data } = await api.patch(`/comments/admin/${safeId(id)}`, { status });
+  // Recusa aceita { reason, notify } (motivo opcional; notify = avisar o leitor por email)
+  async setStatus(id, status, extra = {}) {
+    const { data } = await api.patch(`/comments/admin/${safeId(id)}`, { status, ...extra });
     return data;
   },
 

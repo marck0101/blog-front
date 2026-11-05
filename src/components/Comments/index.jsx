@@ -77,8 +77,20 @@ function CommentItem({ comment, canReply, onReply, onDelete }) {
             Aguardando aprovação · só você está vendo
           </p>
         )}
+        {comment.status === "rejected" && (
+          <div className="mt-1 text-xs text-red-700 dark:text-red-400">
+            <p className="font-medium">Não foi publicado · só você está vendo</p>
+            {comment.rejectionReason && <p className="mt-0.5">Motivo: {comment.rejectionReason}</p>}
+          </div>
+        )}
         {/* Texto puro: o React escapa tudo; quebras de linha preservadas */}
-        <p className="mt-1 text-gray-700 dark:text-gray-200 whitespace-pre-line break-words">{comment.body}</p>
+        <p
+          className={`mt-1 whitespace-pre-line break-words ${
+            comment.status === "rejected" ? "text-gray-500 dark:text-gray-400" : "text-gray-700 dark:text-gray-200"
+          }`}
+        >
+          {comment.body}
+        </p>
         <div className="mt-1 flex gap-3 text-xs">
           {canReply && (
             <button

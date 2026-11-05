@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AlertCircle, Check, ExternalLink, MessageSquare, Reply, Trash2, X } from "lucide-react";
+import { AlertCircle, Check, ExternalLink, Mail, MessageSquare, Reply, Trash2, X } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
@@ -16,9 +16,24 @@ const TABS = [
 const formatDate = (d) =>
   new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
+const REASON_MAX = 500;
+
 function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
   const [replying, setReplying] = useState(false);
   const [reply, setReply] = useState("");
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  const canEmail = Boolean(comment.author?.email);
+  const [notify, setNotify] = useState(true);
+
+  const sendReject = async (e) => {
+    e.preventDefault();
+    const ok = await onStatus(comment, "rejected", { reason: reason.trim(), notify: canEmail && notify });
+    if (ok) {
+      setReason("");
+      setRejecting(false);
+    }
+  };
 
   const sendReply = async (e) => {
     e.preventDefault();
@@ -74,6 +89,20 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
 
       <p className="text-gray-800 dark:text-gray-100 whitespace-pre-line break-words">{comment.body}</p>
 
+      {comment.status === "rejected" && (
+        <div className="text-xs rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2 space-y-1 text-gray-600 dark:text-gray-300">
+          <p>
+            <strong>Motivo:</strong> {comment.rejectionReason || <span className="italic">sem motivo informado</span>}
+          </p>
+          <p className="inline-flex items-center gap-1">
+            <Mail size={12} />
+            {comment.readerNotifiedAt
+              ? `Leitor avisado por email em ${formatDate(comment.readerNotifiedAt)}`
+              : "Leitor não foi avisado por email (ele ainda vê o aviso no post quando entra)"}
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {comment.status !== "approved" && (
           <button
@@ -89,7 +118,10 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
           <button
             type="button"
             disabled={busy}
-            onClick={() => onStatus(comment, "rejected")}
+            onClick={() => {
+              setRejecting((v) => !v);
+              setReplying(false);
+            }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             <X size={15} /> Recusar
@@ -99,7 +131,10 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
           <button
             type="button"
             disabled={busy}
-            onClick={() => setReplying((v) => !v)}
+            onClick={() => {
+              setReplying((v) => !v);
+              setRejecting(false);
+            }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             <Reply size={15} /> Responder
@@ -114,6 +149,46 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
           <Trash2 size={15} /> Excluir
         </button>
       </div>
+
+      {rejecting && (
+        <form onSubmit={sendReject} className="space-y-2">
+          <label htmlFor={`reason-${comment._id}`} className="text-sm font-medium">
+            Motivo da recusa <span className="font-normal text-gray-500 dark:text-gray-300">(opcional, o leitor vê)</span>
+          </label>
+          <textarea
+            id={`reason-${comment._id}`}
+            className="input"
+            rows={2}
+            maxLength={REASON_MAX}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Ex.: link de divulgação não é permitido nos comentários."
+            autoFocus
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {canEmail ? (
+              <label className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+                Avisar por email ({comment.author.email})
+              </label>
+            ) : (
+              <span className="text-xs text-gray-500 dark:text-gray-300">Sem email: o aviso aparece só no post.</span>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <button type="button" onClick={() => setRejecting(false)} className="px-3 py-1.5 rounded-lg border text-sm">
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={busy}
+                className="px-3 py-1.5 rounded-lg bg-gray-800 text-white dark:bg-gray-100 dark:text-gray-900 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                Recusar
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
 
       {replying && (
         <form onSubmit={sendReply} className="space-y-2">
@@ -189,9 +264,9 @@ export default function Comments() {
   const run = async (action, message) => {
     setBusy(true);
     try {
-      await action();
+      const result = await action();
       await load();
-      showToast(message);
+      showToast(typeof message === "function" ? message(result) : message);
       return true;
     } catch (err) {
       showToast(err?.response?.data?.error || "Não foi possível concluir", "error");
@@ -201,8 +276,16 @@ export default function Comments() {
     }
   };
 
-  const onStatus = (comment, next) =>
-    run(() => CommentsService.setStatus(comment._id, next), next === "approved" ? "Comentário aprovado" : "Comentário recusado");
+  const onStatus = (comment, next, extra) =>
+    run(
+      () => CommentsService.setStatus(comment._id, next, extra),
+      (result) => {
+        if (next === "approved") return "Comentário aprovado";
+        if (result?.notified) return "Comentário recusado · leitor avisado por email";
+        if (extra?.notify) return "Comentário recusado · o email não saiu, o aviso fica no post";
+        return "Comentário recusado · está na aba Recusados";
+      }
+    );
 
   const onReply = (comment, body) => run(() => CommentsService.reply(comment._id, body), "Resposta publicada");
 
