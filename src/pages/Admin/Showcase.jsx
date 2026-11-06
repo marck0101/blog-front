@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, ArrowDown, ArrowUp, ExternalLink, Flame, Info, Pin, PinOff, Search } from "lucide-react";
 import Header from "../../components/Header";
+import { Loading, Skeleton } from "../../components/Skeleton";
 import SortableTh from "../../components/SortableTh";
 import useSortPreference from "../../hooks/useSortPreference";
 import SEO from "../../components/SEO";
@@ -22,6 +23,46 @@ function Thumb({ post }) {
     <div className="w-16 shrink-0 aspect-video rounded overflow-hidden bg-gray-100 dark:bg-gray-800">
       {src && <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" />}
     </div>
+  );
+}
+
+// Mesmo desenho da tela: fixados, destaques da semana e ranking
+function ShowcaseSkeleton() {
+  const box = "rounded-xl border bg-white dark:bg-gray-900 p-5 space-y-4";
+  const row = (i) => (
+    <div key={i} className="flex items-center gap-3">
+      <Skeleton className="w-5 h-5" />
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className={`h-4 ${["w-2/3", "w-1/2", "w-3/4", "w-2/5"][i % 4]}`} />
+        <Skeleton className="h-3 w-1/4" />
+      </div>
+    </div>
+  );
+  return (
+    <Loading label="Carregando vitrine" className="space-y-6">
+      <div className={box}>
+        <Skeleton className="h-5 w-40" />
+        {[0, 1, 2].map(row)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className={box}>
+          <Skeleton className="h-5 w-1/2" />
+          {[0, 1, 2, 3].map(row)}
+        </div>
+        <div className={`${box} lg:col-span-2`}>
+          <Skeleton className="h-5 w-1/3" />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className={`h-4 flex-1 ${i % 2 ? "max-w-[50%]" : "max-w-[70%]"}`} />
+              <Skeleton className="h-4 w-8 ml-auto" />
+              <Skeleton className="h-4 w-6" />
+              <Skeleton className="h-4 w-6" />
+              <Skeleton className="h-7 w-28" rounded="rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Loading>
   );
 }
 
@@ -265,7 +306,7 @@ export default function Showcase() {
           </div>
         )}
 
-        {!data && !error && <p className="text-gray-400">Carregando...</p>}
+        {!data && !error && <ShowcaseSkeleton />}
 
         {data && (
           <>

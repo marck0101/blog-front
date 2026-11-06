@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { AlertCircle, Send, FlaskConical, Save, Trash2, X, Crown, Copy, RotateCcw, UserPlus, FileText, Download } from "lucide-react";
 import Header from "../../components/Header";
+import { SkeletonForm } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import RichTextEditor from "../../components/RichTextEditor";
 import FilterChips from "../../components/FilterChips";
@@ -446,7 +447,9 @@ export default function CampaignEditor() {
     return (
       <>
         <Header />
-        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-400">Carregando...</main>
+        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10">
+          <SkeletonForm label="Carregando envio" />
+        </main>
       </>
     );
   }

@@ -42,7 +42,14 @@ const AuthService = {
     return res.data;
   },
 
-  // Sessão atual: { user, security }; 401 (erro) = não está logado
+  // Conferência da sessão ao abrir o painel: { user } ou { user: null } (sem
+  // login). Responde 200 nos dois casos: sessão expirada não vira erro no console.
+  async session() {
+    const res = await api.get("/auth/session");
+    return res.data;
+  },
+
+  // Sessão atual com dados de segurança: { user, security }; 401 (erro) = não está logado
   async me() {
     const res = await api.get("/auth/me");
     return res.data;

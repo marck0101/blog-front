@@ -28,6 +28,7 @@ import {
 import PostsService from "../../services/posts.service";
 import { uploadImage } from "../../services/uploadImage";
 import AltTextInput from "../AltTextInput";
+import { Loading, Skeleton } from "../Skeleton";
 
 // Imagens do texto com a posição no documento (para editar o alt de cada uma)
 function contentImages(editor) {
@@ -333,11 +334,11 @@ export default function RichTextEditor({ value, onChange }) {
                   Ou selecione da galeria de posts
                 </p>
                 {galleryLoading ? (
-                  <div className="grid grid-cols-3 gap-3">
+                  <Loading label="Carregando imagens" className="grid grid-cols-3 gap-3">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg" />
+                      <Skeleton key={i} className="h-24" rounded="rounded-lg" />
                     ))}
-                  </div>
+                  </Loading>
                 ) : galleryUrls.length === 0 ? (
                   <p className="text-sm text-gray-400 italic">Nenhuma imagem encontrada. Faça upload acima.</p>
                 ) : (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Info } from "lucide-react";
 import Header from "../../components/Header";
+import { Loading, Skeleton } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import BarList from "../../components/BarList";
 import ContentPerformance from "../../components/ContentPerformance";
@@ -56,6 +57,42 @@ function Tile({ label, value, detail }) {
       <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums mt-1">{value}</p>
       {detail && <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">{detail}</p>}
     </div>
+  );
+}
+
+// Mesmo desenho da tela carregada: 4 indicadores + gráfico semanal + barras
+function MetricsSkeleton() {
+  return (
+    <Loading label="Carregando métricas" className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-xl border bg-white dark:bg-gray-900 p-5 space-y-3">
+            <Skeleton className="h-3.5 w-2/3" />
+            <Skeleton className="h-8 w-1/2" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="rounded-xl border bg-white dark:bg-gray-900 p-5 space-y-4">
+          <Skeleton className="h-4 w-1/2" />
+          <div className="flex items-end gap-2 h-32">
+            {[40, 65, 30, 80, 55, 70, 45, 90].map((h, i) => (
+              <Skeleton key={i} className="flex-1" rounded="rounded-t" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-xl border bg-white dark:bg-gray-900 p-5 space-y-4">
+          <Skeleton className="h-4 w-2/3" />
+          {["w-full", "w-3/4", "w-1/2", "w-1/3"].map((w, i) => (
+            <div key={i} className="space-y-1.5">
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className={`h-2 ${w}`} rounded="rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Loading>
   );
 }
 
@@ -236,7 +273,7 @@ export default function Metrics() {
           </div>
         )}
 
-        {!data && !error && <p className="text-gray-400">Carregando...</p>}
+        {!data && !error && <MetricsSkeleton />}
 
         {data && (
           <>

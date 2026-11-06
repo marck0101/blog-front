@@ -4,6 +4,7 @@ import { Eye, EyeOff, ShieldCheck, Smartphone, KeyRound, Copy, Download } from "
 import { AuthContext } from "../../context/auth-context";
 import AuthService from "../../services/auth.service";
 import SEO from "../../components/SEO";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 // Erros que a API manda na volta do Google (?error=…)
 const GOOGLE_ERRORS = {
@@ -302,7 +303,9 @@ export default function Login() {
                   </details>
                 </>
               ) : (
-                <div className="mx-auto w-[220px] h-[220px] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                <Loading label="Gerando QR code">
+                  <Skeleton className="mx-auto w-[220px] h-[220px]" rounded="rounded-lg" />
+                </Loading>
               )}
               <label className="block text-sm font-medium">Código de 6 dígitos que aparece no app</label>
               <CodeInput value={code} onChange={setCode} />

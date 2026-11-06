@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, FileUp, Pencil, Plus, Trash2, Upload, Users, X } from "lucide-react";
 import Header from "../../components/Header";
+import { SkeletonCards } from "../../components/Skeleton";
 import useSortPreference from "../../hooks/useSortPreference";
 import SortSelect from "../../components/SortSelect";
 import SEO from "../../components/SEO";
@@ -464,7 +465,7 @@ export default function Audiences() {
           </div>
         )}
 
-        {!audiences && !error && <p className="text-gray-400">Carregando...</p>}
+        {!audiences && !error && <SkeletonCards count={4} lines={2} grid label="Carregando públicos" />}
 
         {audiences?.length === 0 && !form && (
           <div className="rounded-xl border border-dashed p-10 text-center text-gray-500 dark:text-gray-300">

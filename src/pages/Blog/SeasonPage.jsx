@@ -14,6 +14,7 @@ import { setPageContext } from "../../utils/analytics";
 import { AUTHOR_NAME } from "../../seo/site";
 import PostFaq from "../../components/PostFaq";
 import { SeasonSchema } from "../../components/StructuredData";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 // /seasons/:slug — episódios publicados da season, na ordem de leitura
 export default function SeasonPage() {
@@ -36,8 +37,28 @@ export default function SeasonPage() {
   if (loading) {
     return (
       <BlogLayout>
+        {/* Mesmo desenho da season: título, descrição e lista de episódios */}
         <main className="max-w-3xl mx-auto px-6 py-10 min-h-screen">
-          <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
+          <Loading label="Carregando season">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-4 w-40 mt-4 mb-4" />
+            <Skeleton className="h-9 w-3/4" />
+            <Skeleton className="h-5 w-full mt-3" />
+            <Skeleton className="h-5 w-2/3 mt-2" />
+            <ol className="mt-8 space-y-3">
+              {[0, 1, 2, 3].map((i) => (
+                <li key={i} className="flex gap-4 items-start rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4">
+                  <Skeleton className="w-9 h-9 shrink-0" rounded="rounded-full" />
+                  <Skeleton className="hidden sm:block w-40 shrink-0 aspect-video" rounded="rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className={`h-5 ${i % 2 ? "w-2/3" : "w-5/6"}`} />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Loading>
         </main>
       </BlogLayout>
     );

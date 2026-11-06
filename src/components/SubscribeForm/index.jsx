@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import SubscriberService from "../../services/subscriber.service";
 import { trackEvent } from "../../utils/analytics";
 import { getAttribution } from "../../utils/attribution";
+import { Loading, Skeleton } from "../Skeleton";
 
 // location: onde o formulário está ("home" | "post"), para comparar conversão por página
 // postSlug: post em que a pessoa assinou (métrica "posts que mais geram assinantes")
@@ -186,14 +187,11 @@ export default function SubscribeForm({ location = "home", postCategory, postSlu
           </p>
 
           {catLoading && (
-            <div className="flex gap-2 flex-wrap">
+            <Loading label="Carregando categorias" className="flex gap-2 flex-wrap">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse"
-                />
+                <Skeleton key={i} className="h-8 w-24" rounded="rounded-lg" />
               ))}
-            </div>
+            </Loading>
           )}
 
           {!catLoading && !catError && (

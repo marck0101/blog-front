@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { RefreshCw, Users, AlertCircle, Crown, Send, UserPlus, Pencil, Download } from "lucide-react";
 import RowMenu from "../../components/RowMenu";
 import Header from "../../components/Header";
+import { Skeleton, SkeletonRows } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
@@ -146,18 +147,6 @@ function StatusBadge({ status }) {
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
       Cancelado
     </span>
-  );
-}
-
-function RowSkeleton() {
-  return (
-    <tr className="border-t border-gray-100 dark:border-gray-800">
-      {Array.from({ length: 7 }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
-        </td>
-      ))}
-    </tr>
   );
 }
 
@@ -335,7 +324,11 @@ export default function Subscribers() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Assinantes</h1>
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
-              {data.total} assinante{data.total !== 1 ? "s" : ""}
+              {loading ? (
+                <Skeleton as="span" className="inline-block h-4 w-24 align-middle" />
+              ) : (
+                <>{data.total} assinante{data.total !== 1 ? "s" : ""}</>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -461,10 +454,11 @@ export default function Subscribers() {
                 <th className="px-4 py-3 font-semibold">Ações</th>
               </tr>
             </thead>
+            {loading ? (
+              <SkeletonRows cols={7} rows={Math.min(pageSize, 8)} label="Carregando assinantes" />
+            ) : (
             <tbody>
-              {loading && Array.from({ length: 6 }).map((_, i) => <RowSkeleton key={i} />)}
-
-              {!loading && data.subscribers.length === 0 && (
+              {data.subscribers.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Users size={32} className="mx-auto mb-3 opacity-30" />
@@ -473,7 +467,7 @@ export default function Subscribers() {
                 </tr>
               )}
 
-              {!loading && data.subscribers.map((sub) => (
+              {data.subscribers.map((sub) => (
                 <tr
                   key={sub._id}
                   className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
@@ -573,6 +567,7 @@ export default function Subscribers() {
                 </tr>
               ))}
             </tbody>
+            )}
           </table>
         </div>
 

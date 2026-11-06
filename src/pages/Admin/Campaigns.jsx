@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Plus, AlertCircle, Search, Users } from "lucide-react";
 import Header from "../../components/Header";
+import { Skeleton, SkeletonRows } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import useSortPreference from "../../hooks/useSortPreference";
@@ -187,10 +188,14 @@ export default function Campaigns() {
             multiSelect={false}
           />
           <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-300">
-            <span>
-              {data.total} envio{data.total !== 1 ? "s" : ""}
-              {byEmail && ` para emails contendo "${appliedEmail}"`}
-            </span>
+            {loading ? (
+              <Skeleton as="span" className="inline-block h-3.5 w-16" />
+            ) : (
+              <span>
+                {data.total} envio{data.total !== 1 ? "s" : ""}
+                {byEmail && ` para emails contendo "${appliedEmail}"`}
+              </span>
+            )}
             {hasFilters && (
               <button
                 onClick={() => {
@@ -226,14 +231,11 @@ export default function Campaigns() {
                 {byEmail && <th className="px-4 py-3 font-semibold">Para este email</th>}
               </tr>
             </thead>
+            {loading ? (
+              <SkeletonRows cols={columns} rows={Math.min(pageSize, 8)} label="Carregando envios" />
+            ) : (
             <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={columns} className="px-4 py-8 text-center text-gray-400">Carregando...</td>
-                </tr>
-              )}
-
-              {!loading && visible.length === 0 && (
+              {visible.length === 0 && (
                 <tr>
                   <td colSpan={columns} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Mail size={32} className="mx-auto mb-3 opacity-30" />
@@ -259,7 +261,7 @@ export default function Campaigns() {
                 </tr>
               )}
 
-              {!loading && visible.map((c) => {
+              {visible.map((c) => {
                 const date = formatDate(c);
                 return (
                   <tr
@@ -313,6 +315,7 @@ export default function Campaigns() {
                 );
               })}
             </tbody>
+            )}
           </table>
         </div>
 

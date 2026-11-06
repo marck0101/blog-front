@@ -3,6 +3,7 @@ import { Link, useBlocker, useNavigate } from "react-router-dom";
 import slugify from "slugify";
 import { ArrowLeft, Eye, History } from "lucide-react";
 import Header from "../Header";
+import { SkeletonForm } from "../Skeleton";
 import SEO from "../SEO";
 import PostEmailSection from "../PostEmailSection";
 import PostLinkedInSection from "../PostLinkedInSection";
@@ -16,7 +17,6 @@ import FaqFields from "../FaqFields";
 import PostLinksSection from "../PostLinksSection";
 import PostPreview from "../PostPreview";
 import PostHistory from "../PostHistory";
-import PostSkeleton from "../PostSkeleton";
 import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
 import UploadService from "../../services/upload.service";
@@ -371,9 +371,8 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
     return (
       <>
         <Header />
-        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-4">
-          <h1 className="text-2xl font-bold mb-6">Carregando post...</h1>
-          {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
+        <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-28">
+          <SkeletonForm sidebar label="Carregando post" />
         </main>
       </>
     );

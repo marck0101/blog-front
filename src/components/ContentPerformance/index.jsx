@@ -7,6 +7,7 @@ import SubscriberService from "../../services/subscriber.service";
 import PostsService from "../../services/posts.service";
 import SortableTh from "../SortableTh";
 import useSortPreference from "../../hooks/useSortPreference";
+import { Loading, Skeleton } from "../Skeleton";
 
 const PERIODS = [
   { value: "7", label: "7 dias" },
@@ -241,7 +242,7 @@ export default function ContentPerformance() {
                 {totals.zero > 0 && <> · {totals.zero} sem registro no período</>}
               </>
             ) : (
-              "Carregando..."
+              <Skeleton as="span" className="h-4 w-56 inline-block align-middle" />
             )}
           </p>
           <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none">
@@ -252,6 +253,23 @@ export default function ContentPerformance() {
         </div>
 
         {error && <p className="px-5 py-6 text-sm text-red-600">Erro ao carregar o desempenho dos posts.</p>}
+        {!data && !error && (
+          // Linhas como as reais: título + data, sparkline e números
+          <Loading label="Carregando desempenho dos posts" className="divide-y divide-gray-100 dark:divide-gray-800">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-3">
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <Skeleton className={`h-4 ${["w-3/4", "w-1/2", "w-2/3"][i % 3]}`} />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-8 w-36 hidden sm:block" />
+                <Skeleton className="h-4 w-10" />
+                <Skeleton className="h-4 w-12 hidden sm:block" />
+                <Skeleton className="h-4 w-20 hidden sm:block" />
+              </div>
+            ))}
+          </Loading>
+        )}
         {data && !error && rows.length === 0 && (
           <p className="px-5 py-6 text-sm text-gray-500 dark:text-gray-300">Nenhum post publicado com esses filtros.</p>
         )}

@@ -29,6 +29,7 @@ import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
 import DirectAnswer from "../../components/DirectAnswer";
 import { prerendered } from "../../utils/prerendered";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -226,8 +227,27 @@ export default function Post() {
   if (loading) {
     return (
       <BlogLayout>
+        {/* Mesmo desenho do post: voltar, trilha, título, autor/data, ações e texto */}
         <main className="max-w-3xl mx-auto px-6 py-10 min-h-screen">
-          <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
+          <Loading label="Carregando post">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-4 w-48 mt-4 mb-4" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-2/3 mt-2" />
+            <Skeleton className="h-5 w-80 max-w-full mt-3" />
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <Skeleton className="h-9 w-28" rounded="rounded-full" />
+              <div className="flex gap-2">
+                {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-9" rounded="rounded-full" />)}
+              </div>
+            </div>
+            <div className="mt-8 space-y-3">
+              <Skeleton className="w-full aspect-video mb-6" rounded="rounded-xl" />
+              {["w-full", "w-full", "w-11/12", "w-full", "w-4/5", "w-full", "w-2/3"].map((w, i) => (
+                <Skeleton key={i} className={`h-5 ${w}`} />
+              ))}
+            </div>
+          </Loading>
         </main>
       </BlogLayout>
     );

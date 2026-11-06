@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, Check, ExternalLink, Mail, MessageSquare, Reply, Trash2, X } from "lucide-react";
 import Header from "../../components/Header";
+import { SkeletonCards } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import useSortPreference from "../../hooks/useSortPreference";
@@ -380,7 +381,7 @@ export default function Comments() {
           </div>
         )}
 
-        {!data && !error && <p className="text-gray-400">Carregando...</p>}
+        {!data && !error && <SkeletonCards count={3} lines={3} avatar label="Carregando comentários" />}
 
         {data && data.comments.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-300 py-6 text-center">

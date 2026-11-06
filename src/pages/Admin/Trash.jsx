@@ -4,6 +4,7 @@ import PostsService from "../../services/posts.service";
 import AudiencesService from "../../services/audiences.service";
 import SubscriberService from "../../services/subscriber.service";
 import Header from "../../components/Header";
+import { Loading, SkeletonCards } from "../../components/Skeleton";
 import useSortPreference from "../../hooks/useSortPreference";
 import SortSelect from "../../components/SortSelect";
 import SEO from "../../components/SEO";
@@ -143,7 +144,7 @@ function AudiencesTrash() {
         )}
       </div>
 
-      {!audiences && <p className="text-gray-400">Carregando...</p>}
+      {!audiences && <SkeletonCards count={2} lines={1} label="Carregando públicos" />}
 
       {audiences?.length === 0 && <EmptyState title="Lixeira vazia" description="Nenhum público na lixeira." />}
 
@@ -307,7 +308,9 @@ function PostsTrash() {
         <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-4">
           <h1 className="text-2xl font-bold">Lixeira</h1>
           <TrashTabs current="posts" />
-          {Array.from({ length: 5 }).map((_, index) => <PostSkeleton key={index} />)}
+          <Loading label="Carregando lixeira" className="space-y-4">
+            {Array.from({ length: 5 }).map((_, index) => <PostSkeleton key={index} />)}
+          </Loading>
         </main>
       </>
     );

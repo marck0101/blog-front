@@ -4,6 +4,7 @@ import { Mail, FlaskConical } from "lucide-react";
 import AudiencePicker from "../AudiencePicker";
 import RecipientStatus from "../RecipientStatus";
 import CampaignService from "../../services/campaign.service";
+import { Loading, Skeleton } from "../Skeleton";
 
 const defaultSubject = (title) => `Novo artigo: ${title || "título do post"} | marck0101`;
 
@@ -48,7 +49,12 @@ function NotificationStatus({ postId }) {
   }, [postId]);
 
   if (notification === undefined) {
-    return <p className="text-sm text-gray-400">Carregando aviso...</p>;
+    return (
+      <Loading label="Carregando aviso por email" className="flex items-center gap-2">
+        <Skeleton className="h-5 w-20" rounded="rounded-full" />
+        <Skeleton className="h-4 w-48" />
+      </Loading>
+    );
   }
 
   if (!notification) {

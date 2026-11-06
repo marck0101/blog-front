@@ -27,6 +27,7 @@ import { normalizeImageUrl } from "../../utils/imageUrl";
 import GeneratedCover from "../../components/GeneratedCover";
 import CoverImage from "../../components/CoverImage";
 import { markHomeUsed, prerendered, prerenderedHome } from "../../utils/prerendered";
+import { Loading } from "../../components/Skeleton";
 
 // Múltiplos de 3: a grade tem 3 colunas e as linhas ficam completas
 const PAGE_SIZES = [6, 12, 24, 48];
@@ -438,11 +439,11 @@ export default function BlogHome() {
         </div>
 
         {loading && (
-          <div className={LAYOUT[view]}>
+          <Loading label="Carregando posts" className={LAYOUT[view]}>
             {Array.from({ length: 6 }).map((_, i) => (
               <PostCardSkeleton key={i} variant={view} />
             ))}
-          </div>
+          </Loading>
         )}
 
         {!loading && posts.length === 0 && (

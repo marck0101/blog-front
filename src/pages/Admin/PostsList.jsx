@@ -19,6 +19,7 @@ import usePageSize from "../../hooks/usePageSize";
 import Pagination from "../../components/Pagination";
 import PostPreview from "../../components/PostPreview";
 import { Pencil, Pin, Trash } from "lucide-react";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
@@ -301,7 +302,11 @@ export default function PostsList() {
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Posts</h1>
-          <span className="text-sm text-gray-500">{total} post{total !== 1 ? "s" : ""}</span>
+          {loading ? (
+            <Skeleton as="span" className="inline-block h-4 w-16" />
+          ) : (
+            <span className="text-sm text-gray-500">{total} post{total !== 1 ? "s" : ""}</span>
+          )}
         </div>
 
         {/* Status chips */}
@@ -371,9 +376,9 @@ export default function PostsList() {
         )}
 
         {loading && (
-          <div className="space-y-4">
+          <Loading label="Carregando posts" className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
-          </div>
+          </Loading>
         )}
 
         {!loading && posts.length > 0 && (

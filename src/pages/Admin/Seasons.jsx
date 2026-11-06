@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layers, Pencil, Trash2, Plus, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
 import Header from "../../components/Header";
+import { SkeletonCards } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import SeasonsService from "../../services/seasons.service";
@@ -261,7 +262,7 @@ export default function AdminSeasons() {
           />
         )}
 
-        {loading && <p className="text-gray-500">Carregando...</p>}
+        {loading && <SkeletonCards count={3} lines={3} label="Carregando seasons" />}
 
         {!loading && seasons.length === 0 && (
           <p className="text-gray-500">Nenhuma season ainda. Crie a primeira para agrupar posts que se complementam.</p>

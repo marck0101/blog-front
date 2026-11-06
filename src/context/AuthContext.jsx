@@ -4,7 +4,7 @@ import AuthService from "../services/auth.service";
 
 // O token da sessão fica num cookie httpOnly (o JavaScript não o lê).
 // Aqui guardamos só um indicador para exibição (nome/email), sem valor de acesso:
-// quem decide se a sessão vale é a API (GET /auth/me).
+// quem decide se a sessão vale é a API (GET /auth/session; sem login responde { user: null }).
 const USER_HINT = "user";
 
 function readHint() {
@@ -42,8 +42,9 @@ export function AuthProvider({ children }) {
   // Confere a sessão na API uma vez por carregamento (chamado pelas telas do admin)
   const ensureSession = useCallback(() => {
     if (!pending.current) {
-      pending.current = AuthService.me()
+      pending.current = AuthService.session()
         .then(({ user: me }) => {
+          if (!me) throw new Error("sem sessão");
           setUser(me);
           writeHint(me);
           setStatus("authenticated");
