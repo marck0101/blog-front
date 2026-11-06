@@ -1,3 +1,13 @@
+# Painel e blog marck0101 (blog.marck0101.com.br)
+
+Documentação do projeto:
+
+- [docs/OPERACAO.md](docs/OPERACAO.md): regras de deploy, dependências, SEO/IA, segurança e ambiente local. Leia antes de subir código.
+- [docs/BACKLOG.md](docs/BACKLOG.md): pendências conhecidas, com contexto e caminho sugerido.
+- O outro repositório tem os mesmos dois arquivos em `node-express-mongodb/docs/`.
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
