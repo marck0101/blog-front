@@ -30,6 +30,7 @@
     { "source": "/sitemap.xml", "destination": "https://api.blog.marck0101.com.br/sitemap.xml" },
     { "source": "/rss.xml", "destination": "https://api.blog.marck0101.com.br/rss.xml" },
     { "source": "/llms.txt", "destination": "https://api.blog.marck0101.com.br/llms.txt" },
+    { "source": "/llms-full.txt", "destination": "https://api.blog.marck0101.com.br/llms-full.txt" },
     { "source": "/indexnow-key.txt", "destination": "https://api.blog.marck0101.com.br/indexnow-key.txt" },
     { "source": "/blog", "destination": "/api/prerender" },
     { "source": "/blog/:slug", "destination": "/api/prerender?slug=:slug" },
