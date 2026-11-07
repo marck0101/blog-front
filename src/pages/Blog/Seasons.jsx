@@ -11,6 +11,7 @@ import { setPageContext } from "../../utils/analytics";
 import { AUTHOR_NAME, SEASONS_DESCRIPTION, SEASONS_FAQ } from "../../seo/site";
 import PostFaq from "../../components/PostFaq";
 import { SeasonsIndexSchema } from "../../components/StructuredData";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 // /seasons — séries de posts que se complementam (só as que já têm episódio publicado)
 export default function Seasons() {
@@ -55,17 +56,17 @@ export default function Seasons() {
         </header>
 
         {loading && (
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Loading label="Carregando seasons" className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800" />
+              <div key={i} className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <Skeleton className="aspect-video" rounded="rounded-none" />
                 <div className="p-4 space-y-2">
-                  <div className="h-5 w-2/3 rounded bg-gray-100 dark:bg-gray-800" />
-                  <div className="h-4 w-full rounded bg-gray-100 dark:bg-gray-800" />
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-4 w-full" />
                 </div>
               </div>
             ))}
-          </div>
+          </Loading>
         )}
 
         {!loading && seasons.length === 0 && (

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AlertCircle, Check, ExternalLink, MessageSquare, Reply, Trash2, X } from "lucide-react";
+import { AlertCircle, Check, ExternalLink, Mail, MessageSquare, Reply, Trash2, X } from "lucide-react";
 import Header from "../../components/Header";
+import { SkeletonCards } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import CommentsService from "../../services/comments.service";
 import { notifyPendingCommentsChanged } from "../../utils/pendingComments";
 import { errorText } from "../../utils/apiError";
@@ -15,12 +18,32 @@ const TABS = [
   { value: "rejected", label: "Recusados" },
 ];
 
+const SORT_OPTIONS = [
+  { value: "recent", label: "Mais recentes" },
+  { value: "oldest", label: "Mais antigos primeiro" },
+];
+
 const formatDate = (d) =>
   new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+const REASON_MAX = 500;
 
 function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
   const [replying, setReplying] = useState(false);
   const [reply, setReply] = useState("");
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  const canEmail = Boolean(comment.author?.email);
+  const [notify, setNotify] = useState(true);
+
+  const sendReject = async (e) => {
+    e.preventDefault();
+    const ok = await onStatus(comment, "rejected", { reason: reason.trim(), notify: canEmail && notify });
+    if (ok) {
+      setReason("");
+      setRejecting(false);
+    }
+  };
 
   const sendReply = async (e) => {
     e.preventDefault();
@@ -43,7 +66,7 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm">
-            <span className="font-semibold">{comment.author?.name}</span>
+            <span className="font-semibold">{comment.removedAt ? "Comentário removido" : comment.author?.name}</span>
             {comment.isAuthor ? (
               <span className="ml-2 px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">Autor</span>
             ) : (
@@ -70,14 +93,40 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
 
       {comment.parent && (
         <p className="text-xs text-gray-500 dark:text-gray-300 border-l-2 pl-3 line-clamp-2">
-          Resposta a <strong>{comment.parent.author?.name}</strong>: {comment.parent.body}
+          {comment.parent.removedAt ? (
+            "Resposta a um comentário removido pelo leitor"
+          ) : (
+            <>
+              Resposta a <strong>{comment.parent.author?.name}</strong>: {comment.parent.body}
+            </>
+          )}
         </p>
       )}
 
-      <p className="text-gray-800 dark:text-gray-100 whitespace-pre-line break-words">{comment.body}</p>
+      {comment.removedAt ? (
+        <p className="text-sm italic text-gray-500 dark:text-gray-300">
+          Removido pelo leitor em {formatDate(comment.removedAt)}. Ficou só o lugar na conversa porque já tinha respostas; o texto e os dados dele foram apagados.
+        </p>
+      ) : (
+        <p className="text-gray-800 dark:text-gray-100 whitespace-pre-line break-words">{comment.body}</p>
+      )}
+
+      {comment.status === "rejected" && (
+        <div className="text-xs rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2 space-y-1 text-gray-600 dark:text-gray-300">
+          <p>
+            <strong>Motivo:</strong> {comment.rejectionReason || <span className="italic">sem motivo informado</span>}
+          </p>
+          <p className="inline-flex items-center gap-1">
+            <Mail size={12} />
+            {comment.readerNotifiedAt
+              ? `Leitor avisado por email em ${formatDate(comment.readerNotifiedAt)}`
+              : "Leitor não foi avisado por email (ele ainda vê o aviso no post quando entra)"}
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
-        {comment.status !== "approved" && (
+        {!comment.removedAt && comment.status !== "approved" && (
           <button
             type="button"
             disabled={busy}
@@ -87,21 +136,27 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
             <Check size={15} /> Aprovar
           </button>
         )}
-        {comment.status !== "rejected" && !comment.isAuthor && (
+        {!comment.removedAt && comment.status !== "rejected" && !comment.isAuthor && (
           <button
             type="button"
             disabled={busy}
-            onClick={() => onStatus(comment, "rejected")}
+            onClick={() => {
+              setRejecting((v) => !v);
+              setReplying(false);
+            }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             <X size={15} /> Recusar
           </button>
         )}
-        {!comment.isAuthor && comment.status !== "rejected" && (
+        {!comment.removedAt && !comment.isAuthor && comment.status !== "rejected" && (
           <button
             type="button"
             disabled={busy}
-            onClick={() => setReplying((v) => !v)}
+            onClick={() => {
+              setReplying((v) => !v);
+              setRejecting(false);
+            }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             <Reply size={15} /> Responder
@@ -116,6 +171,46 @@ function CommentCard({ comment, onStatus, onReply, onDelete, busy }) {
           <Trash2 size={15} /> Excluir
         </button>
       </div>
+
+      {rejecting && (
+        <form onSubmit={sendReject} className="space-y-2">
+          <label htmlFor={`reason-${comment._id}`} className="text-sm font-medium">
+            Motivo da recusa <span className="font-normal text-gray-500 dark:text-gray-300">(opcional, o leitor vê)</span>
+          </label>
+          <textarea
+            id={`reason-${comment._id}`}
+            className="input"
+            rows={2}
+            maxLength={REASON_MAX}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Ex.: link de divulgação não é permitido nos comentários."
+            autoFocus
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {canEmail ? (
+              <label className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+                Avisar por email ({comment.author.email})
+              </label>
+            ) : (
+              <span className="text-xs text-gray-500 dark:text-gray-300">Sem email: o aviso aparece só no post.</span>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <button type="button" onClick={() => setRejecting(false)} className="px-3 py-1.5 rounded-lg border text-sm">
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={busy}
+                className="px-3 py-1.5 rounded-lg bg-gray-800 text-white dark:bg-gray-100 dark:text-gray-900 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                Recusar
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
 
       {replying && (
         <form onSubmit={sendReply} className="space-y-2">
@@ -156,6 +251,7 @@ export default function Comments() {
   const [searchParams, setSearchParams] = useSearchParams();
   const status = TABS.some((t) => t.value === searchParams.get("status")) ? searchParams.get("status") : "pending";
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useSortPreference("admin-comments-sort", SORT_OPTIONS, "recent", () => setPage(1));
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -164,14 +260,14 @@ export default function Comments() {
 
   const load = useCallback(
     () =>
-      CommentsService.adminList({ status, page })
+      CommentsService.adminList({ status, page, sort })
         .then((d) => {
           setData(d);
           setError(null);
           notifyPendingCommentsChanged(d.counts.pending);
         })
         .catch(() => setError("Erro ao carregar os comentários.")),
-    [status, page]
+    [status, page, sort]
   );
 
   useEffect(() => {
@@ -186,9 +282,9 @@ export default function Comments() {
   const run = async (action, message) => {
     setBusy(true);
     try {
-      await action();
+      const result = await action();
       await load();
-      showToast(message);
+      showToast(typeof message === "function" ? message(result) : message);
       return true;
     } catch (err) {
       showToast(errorText(err) || "Não foi possível concluir", "error");
@@ -198,8 +294,16 @@ export default function Comments() {
     }
   };
 
-  const onStatus = (comment, next) =>
-    run(() => CommentsService.setStatus(comment._id, next), next === "approved" ? "Comentário aprovado" : "Comentário recusado");
+  const onStatus = (comment, next, extra) =>
+    run(
+      () => CommentsService.setStatus(comment._id, next, extra),
+      (result) => {
+        if (next === "approved") return "Comentário aprovado";
+        if (result?.notified) return "Comentário recusado · leitor avisado por email";
+        if (extra?.notify) return "Comentário recusado · o email não saiu, o aviso fica no post";
+        return "Comentário recusado · está na aba Recusados";
+      }
+    );
 
   const onReply = (comment, body) => run(() => CommentsService.reply(comment._id, body), "Resposta publicada");
 
@@ -234,7 +338,8 @@ export default function Comments() {
           </p>
         </div>
 
-        <div role="tablist" className="flex gap-1 border-b">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-end gap-3 border-b">
+        <div role="tablist" className="flex gap-1 -mb-px">
           {TABS.map((tab) => (
             <button
               key={tab.value}
@@ -242,7 +347,7 @@ export default function Comments() {
               role="tab"
               aria-selected={status === tab.value}
               onClick={() => changeTab(tab.value)}
-              className={`px-4 py-2 -mb-px border-b-2 text-sm font-medium transition ${
+              className={`px-4 py-2 border-b-2 text-sm font-medium transition ${
                 status === tab.value
                   ? "border-blue-600 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
@@ -253,6 +358,8 @@ export default function Comments() {
             </button>
           ))}
         </div>
+        <SortSelect options={SORT_OPTIONS} value={sort} onChange={setSort} className="w-full sm:w-auto sm:ml-auto sm:mb-2" />
+        </div>
 
         {error && (
           <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
@@ -260,7 +367,7 @@ export default function Comments() {
           </div>
         )}
 
-        {!data && !error && <p className="text-gray-400">Carregando...</p>}
+        {!data && !error && <SkeletonCards count={3} lines={3} avatar label="Carregando comentários" />}
 
         {data && data.comments.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-300 py-6 text-center">

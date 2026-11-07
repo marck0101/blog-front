@@ -1,6 +1,8 @@
 // Ferramentas de análise do blog público: Microsoft Clarity (mapas de calor e
 // gravações), Google Analytics 4 e Meta Pixel. Só rodam no domínio de produção, fora do
 // /admin e se o visitante não recusou cookies analíticos.
+import { aiSource, getAttribution } from "./attribution";
+
 const CLARITY_ID = "yv1fb9k675";
 const GA_ID = "G-YMX46P4H2P";
 const PIXEL_ID = "1042435387262327";
@@ -176,7 +178,35 @@ function applyAnalytics(pathname) {
   syncClarity(enabled);
   syncGA(enabled);
   syncPixel(enabled, pathname);
-  if (enabled) startWebVitals();
+  if (enabled) {
+    startWebVitals();
+    trackAiReferral();
+  }
+}
+
+/* ================= TRÁFEGO DE ASSISTENTES DE IA ================= */
+
+// Visita vinda do ChatGPT, Perplexity, Claude etc. muitas vezes chega sem referrer
+// e cai em "Direct" no GA4. Quando dá para identificar, a sessão ganha um evento
+// ai_referral (uma vez por sessão) e a tag ai_source no Clarity. No GA4, registrar
+// ai_source e landing_path como dimensões personalizadas (escopo evento).
+const AI_SENT_KEY = "ai-referral-sent";
+let aiChecked = false;
+
+function trackAiReferral() {
+  if (aiChecked) return;
+  aiChecked = true;
+  const attribution = getAttribution();
+  const source = aiSource(attribution);
+  if (!source) return;
+  if (clarityRunning) window.clarity("set", "ai_source", source);
+  try {
+    if (sessionStorage.getItem(AI_SENT_KEY)) return;
+    sessionStorage.setItem(AI_SENT_KEY, "1");
+  } catch {
+    /* sem sessionStorage: manda mesmo assim */
+  }
+  trackEvent("ai_referral", { ai_source: source, landing_path: attribution.landingPath || "" });
 }
 
 /* ================= EVENTOS ================= */

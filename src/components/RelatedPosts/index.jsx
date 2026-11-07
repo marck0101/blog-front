@@ -2,15 +2,23 @@ import { useEffect, useState } from "react";
 import PostCard from "../PostCard";
 import PostsService from "../../services/posts.service";
 import { trackEvent } from "../../utils/analytics";
+import { prerendered } from "../../utils/prerendered";
+
+// Lista que o prerender já colocou no HTML para este post (links para os bots)
+function prerenderedRelated(postId) {
+  const data = prerendered("related");
+  return data?.postId === postId ? data.posts : null;
+}
 
 /**
- * "Continue lendo" no fim do post: 3 artigos da mesma categoria (mais lidos
- * primeiro), completando com outras categorias quando faltar.
+ * "Continue lendo" no fim do post: até 3 artigos — primeiro os escolhidos no
+ * editor, depois por tags em comum, season e categoria (mais lidos no empate).
  */
 export default function RelatedPosts({ post, categories = [], seasons = [] }) {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(() => prerenderedRelated(post._id) || []);
 
   useEffect(() => {
+    if (prerenderedRelated(post._id)) return;
     let active = true;
     PostsService.getRelated(post._id)
       .then((list) => active && setPosts(list))
@@ -25,7 +33,6 @@ export default function RelatedPosts({ post, categories = [], seasons = [] }) {
   const label = (slug) => categories.find((c) => c.slug === slug)?.label;
   const allSameCategory = posts.every((p) => p.category === post.category);
   const categoryLabel = label(post.category);
-
   return (
     <section aria-labelledby="continue-lendo" className="mt-12">
       <h2 id="continue-lendo" className="text-xl font-bold text-gray-900 dark:text-gray-100">

@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, FileUp, Pencil, Plus, Trash2, Upload, Users, X } from "lucide-react";
 import Header from "../../components/Header";
+import { SkeletonCards } from "../../components/Skeleton";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import SEO from "../../components/SEO";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import FilterChips from "../../components/FilterChips";
@@ -320,6 +323,21 @@ function ImportModal({ audience, categories, onClose, onDone }) {
  * Públicos: listas nomeadas de assinantes para mirar envios
  * (ex.: clientes, participantes de um evento).
  */
+// A lista vem inteira da API: ordena aqui mesmo
+const SORT_OPTIONS = [
+  { value: "recent", label: "Criados recentemente" },
+  { value: "name", label: "Nome (A-Z)" },
+  { value: "people", label: "Mais pessoas" },
+  { value: "active", label: "Mais pessoas ativas" },
+];
+const byName = new Intl.Collator("pt", { sensitivity: "base" });
+const SORTERS = {
+  recent: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+  name: (a, b) => byName.compare(a.name || "", b.name || ""),
+  people: (a, b) => b.total - a.total || byName.compare(a.name || "", b.name || ""),
+  active: (a, b) => b.active - a.active || byName.compare(a.name || "", b.name || ""),
+};
+
 export default function Audiences() {
   const [audiences, setAudiences] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -329,6 +347,8 @@ export default function Audiences() {
   const [toDelete, setToDelete] = useState(null);
   const [trashCount, setTrashCount] = useState(0);
   const showToast = useToast();
+  const [sort, setSort] = useSortPreference("admin-audiences-sort", SORT_OPTIONS, "recent");
+  const sorted = useMemo(() => (audiences ? [...audiences].sort(SORTERS[sort] || SORTERS.recent) : null), [audiences, sort]);
 
   const load = useCallback(() => {
     AudiencesService.getTrash()
@@ -431,7 +451,7 @@ export default function Audiences() {
           </div>
         )}
 
-        {!audiences && !error && <p className="text-gray-400">Carregando...</p>}
+        {!audiences && !error && <SkeletonCards count={4} lines={2} grid label="Carregando públicos" />}
 
         {audiences?.length === 0 && !form && (
           <div className="rounded-xl border border-dashed p-10 text-center text-gray-500 dark:text-gray-300">
@@ -441,9 +461,15 @@ export default function Audiences() {
           </div>
         )}
 
+        {audiences?.length > 1 && (
+          <div className="flex sm:justify-end">
+            <SortSelect options={SORT_OPTIONS} value={sort} onChange={setSort} />
+          </div>
+        )}
+
         {audiences?.length > 0 && (
           <ul className="grid gap-3 sm:grid-cols-2">
-            {audiences.map((a) => (
+            {sorted.map((a) => (
               <li key={a._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

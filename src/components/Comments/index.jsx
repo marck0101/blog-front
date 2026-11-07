@@ -58,6 +58,12 @@ function Avatar({ comment, size = 36 }) {
 }
 
 function CommentItem({ comment, canReply, onReply, onDelete }) {
+  // Leitor apagou, mas já tinha resposta: fica só o lugar na conversa
+  if (comment.removed) {
+    return (
+      <p className="text-sm italic text-gray-500 dark:text-gray-400 py-1">Comentário removido pelo autor.</p>
+    );
+  }
   const name = comment.isAuthor ? AUTHOR_NAME : comment.name;
   return (
     <article className="flex gap-3">
@@ -79,8 +85,20 @@ function CommentItem({ comment, canReply, onReply, onDelete }) {
             Aguardando aprovação · só você está vendo
           </p>
         )}
+        {comment.status === "rejected" && (
+          <div className="mt-1 text-xs text-red-700 dark:text-red-400">
+            <p className="font-medium">Não foi publicado · só você está vendo</p>
+            {comment.rejectionReason && <p className="mt-0.5">Motivo: {comment.rejectionReason}</p>}
+          </div>
+        )}
         {/* Texto puro: o React escapa tudo; quebras de linha preservadas */}
-        <p className="mt-1 text-gray-700 dark:text-gray-200 whitespace-pre-line break-words">{comment.body}</p>
+        <p
+          className={`mt-1 whitespace-pre-line break-words ${
+            comment.status === "rejected" ? "text-gray-500 dark:text-gray-400" : "text-gray-700 dark:text-gray-200"
+          }`}
+        >
+          {comment.body}
+        </p>
         <div className="mt-1 flex gap-3 text-xs">
           {canReply && (
             <button
@@ -159,7 +177,7 @@ export default function Comments({ post }) {
     return top.map((c) => ({ ...c, replies: comments.filter((r) => String(r.parent) === String(c.id)) }));
   }, [comments]);
 
-  const approvedCount = comments.filter((c) => c.status === "approved").length;
+  const approvedCount = comments.filter((c) => c.status === "approved" && !c.removed).length;
   const replyingTo = draft.parentId ? comments.find((c) => String(c.id) === String(draft.parentId)) : null;
 
   // Sem login disponível e sem comentários: a seção não aparece
@@ -211,8 +229,13 @@ export default function Comments({ post }) {
     const comment = toRemove;
     setToRemove(null);
     try {
-      await CommentsService.removeMine(comment.id);
-      setComments((list) => list.filter((c) => c.id !== comment.id && String(c.parent) !== String(comment.id)));
+      const { removed } = await CommentsService.removeMine(comment.id);
+      setComments((list) =>
+        removed
+          ? // Tinha resposta de outras pessoas: vira "removido pelo autor" e as respostas ficam
+            list.map((c) => (c.id === comment.id ? { ...c, removed: true, body: "", name: "", picture: "", mine: false } : c))
+          : list.filter((c) => c.id !== comment.id && String(c.parent) !== String(comment.id))
+      );
       setNotice({ type: "ok", text: "Comentário excluído." });
     } catch (err) {
       setNotice({ type: "error", text: errorText(err) || "Não foi possível excluir. Tente de novo." });

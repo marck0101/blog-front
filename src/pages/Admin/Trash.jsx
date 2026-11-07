@@ -1,9 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PostsService from "../../services/posts.service";
 import AudiencesService from "../../services/audiences.service";
 import SubscriberService from "../../services/subscriber.service";
 import Header from "../../components/Header";
+import { Loading, SkeletonCards } from "../../components/Skeleton";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import SEO from "../../components/SEO";
 import PostSkeleton from "../../components/PostSkeleton";
 import EmptyState from "../../components/EmptyState";
@@ -17,6 +20,19 @@ import { useToast } from "../../hooks/useToast";
 
 // Status que o post tinha antes de ir para a lixeira
 const previousKey = (post) => postStatusKey({ ...post, deletedAt: null });
+
+// Posts da lixeira vêm todos de uma vez: ordena aqui mesmo
+const POST_SORTS = [
+  { value: "deleted_recent", label: "Removidos recentemente" },
+  { value: "deleted_oldest", label: "Removidos há mais tempo" },
+  { value: "title", label: "Título (A-Z)" },
+];
+const byTitle = new Intl.Collator("pt", { sensitivity: "base" });
+const POST_SORTERS = {
+  deleted_recent: (a, b) => new Date(b.deletedAt) - new Date(a.deletedAt),
+  deleted_oldest: (a, b) => new Date(a.deletedAt) - new Date(b.deletedAt),
+  title: (a, b) => byTitle.compare(a.title || "", b.title || ""),
+};
 
 // Abas da lixeira: ?tipo=publicos mostra os públicos; sem parâmetro, os posts
 const TABS = [
@@ -118,7 +134,7 @@ function AudiencesTrash() {
         )}
       </div>
 
-      {!audiences && <p className="text-gray-400">Carregando...</p>}
+      {!audiences && <SkeletonCards count={2} lines={1} label="Carregando públicos" />}
 
       {audiences?.length === 0 && <EmptyState title="Lixeira vazia" description="Nenhum público na lixeira." />}
 
@@ -213,6 +229,8 @@ function PostsTrash() {
   const [confirmRemove, setConfirmRemove] = useState(null); // { post, close } | { all: true }
   const [busy, setBusy] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [sort, setSort] = useSortPreference("admin-trash-sort", POST_SORTS, "deleted_recent");
+  const sortedPosts = useMemo(() => [...posts].sort(POST_SORTERS[sort] || POST_SORTERS.deleted_recent), [posts, sort]);
 
   const loadTrash = useCallback(async () => {
     try {
@@ -275,7 +293,9 @@ function PostsTrash() {
         <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-4">
           <h1 className="text-2xl font-bold">Lixeira</h1>
           <TrashTabs current="posts" />
-          {Array.from({ length: 5 }).map((_, index) => <PostSkeleton key={index} />)}
+          <Loading label="Carregando lixeira" className="space-y-4">
+            {Array.from({ length: 5 }).map((_, index) => <PostSkeleton key={index} />)}
+          </Loading>
         </main>
       </>
     );
@@ -314,6 +334,8 @@ function PostsTrash() {
               Não há exclusão automática: os posts ficam aqui até você excluir. Restaurar devolve como rascunho.
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto sm:ml-auto">
+          {posts.length > 1 && <SortSelect options={POST_SORTS} value={sort} onChange={setSort} />}
           {posts.length > 0 && (
             <button
               type="button"
@@ -324,6 +346,7 @@ function PostsTrash() {
               <Trash2 size={16} /> {busy ? "Excluindo..." : `Esvaziar lixeira (${posts.length})`}
             </button>
           )}
+          </div>
         </div>
 
         {posts.length === 0 && (
@@ -331,7 +354,7 @@ function PostsTrash() {
         )}
 
         <div className="space-y-4">
-          {posts.map((post) => {
+          {sortedPosts.map((post) => {
             const prev = POST_STATUS[previousKey(post)];
             return (
               <article key={post._id} className="rounded-xl border bg-white dark:bg-gray-900 p-4 sm:p-5">

@@ -39,3 +39,25 @@ export function captureAttribution() {
 export function getAttribution() {
   return read() || {};
 }
+
+// Assistentes de IA que mandam visitas: pelo referrer ou pelo utm_source que
+// eles mesmos colocam no link (ex.: ChatGPT usa utm_source=chatgpt.com)
+const AI_SOURCES = [
+  ["chatgpt", /(^|\.)(chatgpt\.com|chat\.openai\.com|openai\.com)$/],
+  ["perplexity", /(^|\.)perplexity\.ai$/],
+  ["claude", /(^|\.)claude\.ai$/],
+  ["gemini", /(^|\.)(gemini\.google\.com|bard\.google\.com)$/],
+  ["copilot", /(^|\.)(copilot\.microsoft\.com|copilot\.cloud\.microsoft)$/],
+  ["deepseek", /(^|\.)(chat\.)?deepseek\.com$/],
+  ["meta_ai", /(^|\.)meta\.ai$/],
+  ["grok", /(^|\.)grok\.com$/],
+];
+
+/** Nome do assistente de IA de onde veio a sessão, ou "" */
+export function aiSource({ referrer = "", utmSource = "" } = getAttribution()) {
+  const candidates = [referrer, utmSource].map((v) => String(v).toLowerCase().trim()).filter(Boolean);
+  for (const [name, pattern] of AI_SOURCES) {
+    if (candidates.some((c) => pattern.test(c))) return name;
+  }
+  return "";
+}

@@ -15,6 +15,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import DateRangePicker from "../../components/DateRangePicker";
 import Header from "../../components/Header";
+import { Loading, Skeleton } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import PostsService from "../../services/posts.service";
 import ConfirmDialog from "../../components/ConfirmDialog";
@@ -555,7 +556,25 @@ export default function Calendar() {
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-sm text-gray-400">Carregando...</div>
+            // Mesma grade de dias, com blocos no lugar dos posts e envios
+            <Loading label="Carregando calendário" className="grid grid-cols-7">
+              {cells.map((day, idx) => (
+                <div
+                  key={idx}
+                  className={`${view === "semana" ? "min-h-[420px]" : "min-h-[100px]"} p-1.5 border-r border-b dark:border-gray-800 last:border-r-0 space-y-1.5 ${
+                    day ? "" : "bg-gray-50 dark:bg-gray-800/30 opacity-40"
+                  }`}
+                >
+                  {day && (
+                    <>
+                      <Skeleton className="h-4 w-5" />
+                      {idx % 3 === 1 && <Skeleton className="h-5 w-full" rounded="rounded-md" />}
+                      {idx % 5 === 2 && <Skeleton className="h-5 w-4/5" rounded="rounded-md" />}
+                    </>
+                  )}
+                </div>
+              ))}
+            </Loading>
           ) : (
             <div className="grid grid-cols-7">
               {cells.map((day, idx) => {

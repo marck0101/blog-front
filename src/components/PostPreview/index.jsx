@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
 import PostFaq from "../PostFaq";
+import DirectAnswer from "../DirectAnswer";
 import { AUTHOR_NAME } from "../../seo/site";
 import { readingMinutes } from "../../utils/readingTime";
 import { safeHtml } from "../../utils/safeHtml";
@@ -48,6 +49,7 @@ export default function PostPreview({ post, categoryLabel, onClose, actions = nu
             {" "}• <time>{new Date(date).toLocaleDateString("pt-BR")}</time>
             {" "}• {readingMinutes(post.content)} min de leitura
           </p>
+          <DirectAnswer text={post.directAnswer} />
           <div
             className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: safeHtml(post.content) || "<p><em>Sem conteúdo ainda.</em></p>" }}

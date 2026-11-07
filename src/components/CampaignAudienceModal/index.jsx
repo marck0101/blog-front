@@ -4,6 +4,7 @@ import { Crown, X } from "lucide-react";
 import RecipientsTable from "../RecipientsTable";
 import CampaignService from "../../services/campaign.service";
 import { audienceLabel, audienceToApi } from "../../utils/campaignAudience";
+import { Loading, Skeleton } from "../Skeleton";
 
 // Rascunho ainda não tem destinatários fixados: mostra quem receberia hoje
 function DraftAudience({ campaign }) {
@@ -71,8 +72,9 @@ export default function CampaignAudienceModal({ campaignId, onClose }) {
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 p-5 border-b dark:border-gray-800 bg-white dark:bg-gray-900">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-              {campaign?.subject ?? "Carregando..."}
+              {campaign?.subject ?? <Skeleton as="span" className="block h-6 w-64 max-w-full" />}
             </h2>
+            {!campaign && !error && <Skeleton className="h-4 w-48 mt-2" />}
             {campaign && (
               <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
                 {audienceLabel(campaign.audience)}
@@ -92,6 +94,21 @@ export default function CampaignAudienceModal({ campaignId, onClose }) {
 
         <div className="p-5 space-y-4">
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {!campaign && !error && (
+            <Loading label="Carregando público do envio" className="rounded-xl border bg-white dark:bg-gray-900 p-4 space-y-3">
+              <Skeleton className="h-10 w-full" rounded="rounded-lg" />
+              <div className="flex gap-2">
+                {[16, 20, 14].map((w) => <Skeleton key={w} className="h-7" rounded="rounded-full" style={{ width: `${w * 4}px` }} />)}
+              </div>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex gap-4">
+                  <Skeleton className={`h-4 ${i % 2 ? "w-1/3" : "w-2/5"}`} />
+                  <Skeleton className="h-4 w-1/5" />
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                </div>
+              ))}
+            </Loading>
+          )}
           {campaign && campaign.status === "draft" && <DraftAudience campaign={campaign} />}
           {campaign && campaign.status !== "draft" && <RecipientsTable campaign={campaign} />}
           {campaign && (

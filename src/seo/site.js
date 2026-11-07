@@ -17,6 +17,8 @@ export const HOME_DESCRIPTION =
 export const ROBOTS_INDEX = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 
 // FAQ da home (/blog#faq). Fixo no código: muda pouco e vale para o blog inteiro.
+// BLOG_FAQ e SEASONS_FAQ têm uma cópia na API (node-express-mongodb/app/config/siteFaq.js)
+// para o llms-full.txt: mudou aqui, mude lá também.
 export const BLOG_FAQ = [
   {
     question: "Sobre o que é o blog do Marcos Henrique Corrêa?",
@@ -275,6 +277,9 @@ export function postSchema(post) {
       "@id": `${url}#article`,
       headline: truncate(post.title, 110),
       description: postDescription(post),
+      // Resposta direta (BLUF): a conclusão que buscadores e IAs podem citar
+      ...(post.directAnswer?.trim() ? { abstract: post.directAnswer.trim() } : {}),
+      ...(post.tags?.length ? { keywords: post.tags.map((t) => t.replace(/-/g, " ")).join(", ") } : {}),
       image: post.coverImage
         ? [
             post.coverImageAlt

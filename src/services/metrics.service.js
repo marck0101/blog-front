@@ -13,6 +13,16 @@ const MetricsService = {
     return data;
   },
 
+  // Série diária por post: { days, dayKeys, posts: [{ id, title, metrics: { views: { series, total, previous } } }] }
+  async content({ days = 30, category = "", season = "", search = "" } = {}) {
+    const params = { days };
+    if (category) params.category = category;
+    if (season) params.season = season;
+    if (search) params.search = search;
+    const { data } = await api.get("/metrics/content", { params });
+    return data;
+  },
+
   // { links: [{ url, clicks, uniqueClicks }], timeline: [{ day, opens }], automated }
   async campaign(id) {
     const { data } = await api.get(`/metrics/campaigns/${id}`);

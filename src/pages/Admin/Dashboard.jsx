@@ -21,6 +21,7 @@ import SEO from "../../components/SEO";
 import PublicationHeatmap from "../../components/PublicationHeatmap";
 import DashboardService from "../../services/dashboard.service";
 import PostsService from "../../services/posts.service";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 // Quantos avisos listar pelo nome antes de resumir em "e mais N"
 const NOTICES_SHOWN = 3;
@@ -64,10 +65,10 @@ export function UnsentNotices({ notices }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="rounded-xl border bg-white dark:bg-gray-900 p-6 animate-pulse">
-      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4" />
-      <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+    <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
+      <Skeleton className="h-10 w-10 mb-4" rounded="rounded-lg" />
+      <Skeleton className="h-9 w-16 mb-2" />
+      <Skeleton className="h-4 w-24" />
     </div>
   );
 }
@@ -204,6 +205,9 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Leitor de tela: um aviso só para os cards de números */}
+        {loading && <Loading label="Carregando números do painel" className="sr-only" />}
+
         {/* Cards — Posts */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           {loading ? (
@@ -240,9 +244,9 @@ export default function Dashboard() {
             Último post publicado
           </h2>
           {loading ? (
-            <div className="animate-pulse space-y-2">
-              <div className="h-5 w-2/3 bg-gray-200 dark:bg-gray-700 rounded" />
-              <div className="h-4 w-1/4 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-1/4" />
             </div>
           ) : stats?.lastPost ? (
             <div className="flex items-start justify-between gap-4">
@@ -278,11 +282,14 @@ export default function Dashboard() {
               Posts mais visitados
             </h2>
             {performanceLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-5 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              <Loading label="Carregando posts mais visitados" className="space-y-3">
+                {["w-full", "w-5/6", "w-full", "w-2/3"].map((w, i) => (
+                  <div key={i} className="flex justify-between gap-3">
+                    <Skeleton className={`h-5 ${w} max-w-[80%]`} />
+                    <Skeleton className="h-5 w-8" />
+                  </div>
                 ))}
-              </div>
+              </Loading>
             ) : performance?.topPosts?.length ? (
               <ul className="space-y-3">
                 {performance.topPosts.map((post) => (
@@ -316,11 +323,14 @@ export default function Dashboard() {
               Últimos {performance?.days ?? 30} dias — termos digitados na busca do blog
             </p>
             {performanceLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-5 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              <Loading label="Carregando termos buscados" className="space-y-3">
+                {["w-1/2", "w-1/3", "w-2/5", "w-1/4"].map((w, i) => (
+                  <div key={i} className="flex justify-between gap-3">
+                    <Skeleton className={`h-5 ${w}`} />
+                    <Skeleton className="h-5 w-6" />
+                  </div>
                 ))}
-              </div>
+              </Loading>
             ) : performance?.topSearchTerms?.length ? (
               <ul className="space-y-2">
                 {performance.topSearchTerms.map(({ term, count }) => (
@@ -352,7 +362,9 @@ export default function Dashboard() {
             Histórico de publicações
           </h2>
           {heatmapLoading ? (
-            <div className="h-24 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+            <Loading label="Carregando histórico de publicações">
+              <Skeleton className="h-28 w-full" rounded="rounded-lg" />
+            </Loading>
           ) : (
             <PublicationHeatmap
               data={heatmap.data}

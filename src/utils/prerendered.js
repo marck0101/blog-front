@@ -2,7 +2,8 @@
 // (<script type="application/json" id="…">, não executáveis — a CSP não libera
 // script inline):
 //   prerendered-data      → categories, seasons (todas as páginas);
-//                           home: { posts, total, pinned, highlights } (só /blog)
+//                           home: { posts, total, pinned, highlights } (só /blog);
+//                           seasonEpisodes, related: { postId, posts } (só /blog/:slug)
 //   prerendered-post      → o post de /blog/:slug
 //   prerendered-not-found → slug que o prerender já respondeu como 404
 // Com eles o primeiro render já sai completo: sem esperar a API e sem a página

@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Plus, AlertCircle, Search, Users } from "lucide-react";
 import Header from "../../components/Header";
+import { Skeleton, SkeletonRows } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortableTh from "../../components/SortableTh";
 import RecipientStatus from "../../components/RecipientStatus";
 import CampaignAudienceModal from "../../components/CampaignAudienceModal";
 import Pagination from "../../components/Pagination";
@@ -80,6 +83,13 @@ function audienceSizeLabel(c) {
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
+// Ordem: escolhida clicando nos cabeçalhos da tabela (chaves da API).
+// Data = a que a tabela mostra: envio, início ou última edição.
+const SORT_OPTIONS = [
+  "recent", "oldest", "subject", "subject_desc", "audience", "audience_small",
+  "status", "status_desc", "delivered", "delivered_low",
+].map((value) => ({ value }));
+
 export default function Campaigns() {
   const navigate = useNavigate();
   const [data, setData] = useState({ campaigns: [], total: 0, page: 1, totalPages: 1 });
@@ -92,6 +102,7 @@ export default function Campaigns() {
   const [audienceOf, setAudienceOf] = useState(null); // id do envio aberto no modal
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = usePageSize("admin-campaigns-page-size", PAGE_SIZES, 20);
+  const [sort, setSort] = useSortPreference("admin-campaigns-sort", SORT_OPTIONS, "recent", () => setPage(1));
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -105,6 +116,7 @@ export default function Campaigns() {
   if (appliedEmail) params.email = appliedEmail;
   if (statusFilter !== "all") params.status = statusFilter;
   if (kindFilter !== "all") params.kind = kindFilter;
+  if (sort !== "recent") params.sort = sort;
   const requestKey = JSON.stringify(params);
   const loading = loadedKey !== requestKey;
 
@@ -176,10 +188,14 @@ export default function Campaigns() {
             multiSelect={false}
           />
           <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-300">
-            <span>
-              {data.total} envio{data.total !== 1 ? "s" : ""}
-              {byEmail && ` para emails contendo "${appliedEmail}"`}
-            </span>
+            {loading ? (
+              <Skeleton as="span" className="inline-block h-3.5 w-16" />
+            ) : (
+              <span>
+                {data.total} envio{data.total !== 1 ? "s" : ""}
+                {byEmail && ` para emails contendo "${appliedEmail}"`}
+              </span>
+            )}
             {hasFilters && (
               <button
                 onClick={() => {
@@ -207,22 +223,19 @@ export default function Campaigns() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
-                <th className="px-4 py-3 font-semibold">Assunto</th>
-                <th className="px-4 py-3 font-semibold">Público</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Entrega</th>
-                <th className="px-4 py-3 font-semibold">Data</th>
+                <SortableTh label="Assunto" asc="subject" desc="subject_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" />
+                <SortableTh label="Público" asc="audience_small" desc="audience" sort={sort} onSort={setSort} className="px-4 py-3" title="Tamanho do público" />
+                <SortableTh label="Status" asc="status" desc="status_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" title="Os que precisam de atenção primeiro" />
+                <SortableTh label="Entrega" asc="delivered_low" desc="delivered" sort={sort} onSort={setSort} className="px-4 py-3" title="Quantos receberam" />
+                <SortableTh label="Data" asc="oldest" desc="recent" sort={sort} onSort={setSort} className="px-4 py-3" />
                 {byEmail && <th className="px-4 py-3 font-semibold">Para este email</th>}
               </tr>
             </thead>
+            {loading ? (
+              <SkeletonRows cols={columns} rows={Math.min(pageSize, 8)} label="Carregando envios" />
+            ) : (
             <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={columns} className="px-4 py-8 text-center text-gray-400">Carregando...</td>
-                </tr>
-              )}
-
-              {!loading && visible.length === 0 && (
+              {visible.length === 0 && (
                 <tr>
                   <td colSpan={columns} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Mail size={32} className="mx-auto mb-3 opacity-30" />
@@ -248,7 +261,7 @@ export default function Campaigns() {
                 </tr>
               )}
 
-              {!loading && visible.map((c) => {
+              {visible.map((c) => {
                 const date = formatDate(c);
                 return (
                   <tr
@@ -302,6 +315,7 @@ export default function Campaigns() {
                 );
               })}
             </tbody>
+            )}
           </table>
         </div>
 

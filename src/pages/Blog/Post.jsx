@@ -15,6 +15,7 @@ import SeasonsService from "../../services/seasons.service";
 import {
   AUTHOR_NAME,
   PORTFOLIO_URL,
+  SITE_URL,
   postTitle,
   postDescription,
 } from "../../seo/site";
@@ -27,8 +28,10 @@ import ShareButtons from "../../components/ShareButtons";
 import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
+import DirectAnswer from "../../components/DirectAnswer";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -46,6 +49,24 @@ function percentSeen(el) {
 function getPrerenderedPost(slug) {
   const data = readBlock("prerendered-post");
   return data && data.slug === slug ? data : null;
+}
+
+// Link do texto para outra página do blog: o endereço que o React Router abre
+// sem recarregar (também aceita o link absoluto blog.marck0101.com.br/...).
+// Admin, API e arquivos (sitemap, rss) seguem como link normal.
+const INTERNAL_PATH = /^\/(blog|seasons|favoritos|privacidade)(\/|$)/;
+
+function internalPath(href) {
+  if (!href) return null;
+  let url;
+  try {
+    url = new URL(href, window.location.href);
+  } catch {
+    return null;
+  }
+  const sameSite = url.origin === window.location.origin || url.origin === SITE_URL;
+  if (!sameSite || !INTERNAL_PATH.test(url.pathname) || /\.[a-z0-9]+$/i.test(url.pathname)) return null;
+  return url.pathname + url.search + url.hash;
 }
 
 // Prerender já respondeu 404 para este slug — não buscar de novo na API
@@ -173,8 +194,26 @@ export default function Post() {
   }, [post?.slug, post?.season, post?.content]);
 
   // Cliques em links de contato dentro do texto do post (ex.: CTA de WhatsApp)
+  // Links internos no meio do texto: navegação do app (sem recarregar) + evento
+  // para medir a interlinkagem. Ctrl/Cmd+clique e target=_blank abrem em outra aba.
+  const openInternalLink = (e, link) => {
+    if (!link || e.defaultPrevented || e.button !== 0) return false;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || link.target === "_blank") return false;
+    const path = internalPath(link.getAttribute("href"));
+    if (!path) return false;
+    e.preventDefault();
+    trackEvent("internal_link_click", {
+      link_location: "post_content",
+      post_slug: post.slug,
+      target_path: path,
+    });
+    navigate(path);
+    return true;
+  };
+
   const handleContentClick = (e) => {
     const link = e.target.closest?.("a[href]");
+    if (openInternalLink(e, link)) return;
     const method = contactMethod(link?.getAttribute("href"));
     if (!method) return;
     trackEvent(
@@ -196,8 +235,27 @@ export default function Post() {
   if (loading) {
     return (
       <BlogLayout>
+        {/* Mesmo desenho do post: voltar, trilha, título, autor/data, ações e texto */}
         <main className="max-w-3xl mx-auto px-6 py-10 min-h-screen">
-          <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
+          <Loading label="Carregando post">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-4 w-48 mt-4 mb-4" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-2/3 mt-2" />
+            <Skeleton className="h-5 w-80 max-w-full mt-3" />
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <Skeleton className="h-9 w-28" rounded="rounded-full" />
+              <div className="flex gap-2">
+                {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-9" rounded="rounded-full" />)}
+              </div>
+            </div>
+            <div className="mt-8 space-y-3">
+              <Skeleton className="w-full aspect-video mb-6" rounded="rounded-xl" />
+              {["w-full", "w-full", "w-11/12", "w-full", "w-4/5", "w-full", "w-2/3"].map((w, i) => (
+                <Skeleton key={i} className={`h-5 ${w}`} />
+              ))}
+            </div>
+          </Loading>
         </main>
       </BlogLayout>
     );
@@ -289,6 +347,8 @@ export default function Post() {
         </div>
 
         <SeasonNav post={post} variant="badge" />
+
+        <DirectAnswer text={post.directAnswer} />
 
         <div
           ref={contentRef}

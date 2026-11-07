@@ -13,14 +13,26 @@ import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortSelect from "../../components/SortSelect";
 import usePageSize from "../../hooks/usePageSize";
 import Pagination from "../../components/Pagination";
 import PostPreview from "../../components/PostPreview";
 import { Pencil, Pin, Trash } from "lucide-react";
 import { errorText } from "../../utils/apiError";
 import { useToast } from "../../hooks/useToast";
+import { Loading, Skeleton } from "../../components/Skeleton";
 
 const PAGE_SIZES = [5, 10, 20, 50];
+
+// Ordem da lista (fica salva no navegador, como o formato de exibição)
+const SORT_OPTIONS = [
+  { value: "created", label: "Criados recentemente" },
+  { value: "published_desc", label: "Publicação: mais recentes" },
+  { value: "published_asc", label: "Publicação: mais antigos" },
+  { value: "updated", label: "Editados recentemente" },
+  { value: "az", label: "Título (A-Z)" },
+];
 
 // Contêiner de cada formato de visualização
 const LAYOUT = {
@@ -63,6 +75,7 @@ export default function PostsList() {
   const [pageSize, setPageSize] = usePageSize("admin-posts-page-size", PAGE_SIZES, 10);
   const [view, setView] = useViewMode("admin-posts-view", ["list", "grid", "compact"], "list");
   const [selectedSeason, setSelectedSeason] = useState("all");
+  const [sort, setSort] = useSortPreference("admin-posts-sort", SORT_OPTIONS, "created", () => setPage(1));
   const [seasons, setSeasons] = useState([]);
 
   // seleção em massa (ids da página atual)
@@ -95,6 +108,7 @@ export default function PostsList() {
       search,
       dateFrom,
       dateTo,
+      sort,
     })
       .then(({ posts: data, total: t, totalPages: tp }) => {
         setPosts(Array.isArray(data) ? data : []);
@@ -106,7 +120,7 @@ export default function PostsList() {
         showToast("Erro ao carregar posts", "error");
       })
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo, showToast]);
+  }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo, sort, showToast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -277,7 +291,11 @@ export default function PostsList() {
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 text-gray-900 dark:text-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Posts</h1>
-          <span className="text-sm text-gray-500">{total} post{total !== 1 ? "s" : ""}</span>
+          {loading ? (
+            <Skeleton as="span" className="inline-block h-4 w-16" />
+          ) : (
+            <span className="text-sm text-gray-500">{total} post{total !== 1 ? "s" : ""}</span>
+          )}
         </div>
 
         {/* Status chips */}
@@ -318,7 +336,7 @@ export default function PostsList() {
         )}
 
         {/* Search + date range + formato */}
-        <div className="mb-6 flex items-start gap-3">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-start gap-3">
           <div className="flex-1 min-w-0">
           <FilterBar
             onSearch={changeFilter(setSearch)}
@@ -331,7 +349,10 @@ export default function PostsList() {
             searchPlaceholder="Buscar por título..."
           />
           </div>
+          <div className="flex items-start gap-3 shrink-0">
+          <SortSelect options={SORT_OPTIONS} value={sort} onChange={setSort} className="flex-1 sm:flex-none" />
           <ViewToggle value={view} onChange={setView} modes={["list", "grid", "compact"]} />
+          </div>
         </div>
 
         {!loading && posts.length === 0 && (
@@ -344,9 +365,9 @@ export default function PostsList() {
         )}
 
         {loading && (
-          <div className="space-y-4">
+          <Loading label="Carregando posts" className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => <PostSkeleton key={i} />)}
-          </div>
+          </Loading>
         )}
 
         {!loading && posts.length > 0 && (

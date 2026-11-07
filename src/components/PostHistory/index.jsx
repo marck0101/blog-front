@@ -5,11 +5,15 @@ import ConfirmDialog from "../ConfirmDialog";
 import PostsService from "../../services/posts.service";
 import { safeHtml } from "../../utils/safeHtml";
 import { errorText } from "../../utils/apiError";
+import { Loading, Skeleton } from "../Skeleton";
 
 const FIELD_LABELS = {
   title: "título",
   slug: "endereço",
   excerpt: "resumo",
+  directAnswer: "resposta direta",
+  tags: "tags",
+  relatedPosts: "leituras sugeridas",
   content: "conteúdo",
   category: "categoria",
   season: "season",
@@ -114,7 +118,19 @@ export default function PostHistory({ postId, dirty, onClose, onRestored }) {
       <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-[320px_minmax(0,1fr)]">
         {/* LISTA */}
         <ol className="shrink-0 max-h-56 lg:max-h-none overflow-y-auto border-b lg:border-b-0 lg:border-r divide-y dark:divide-gray-800">
-          {revisions === null && <li className="p-4 text-sm text-gray-500">Carregando...</li>}
+          {revisions === null && (
+            <Loading as="li" label="Carregando versões" className="divide-y dark:divide-gray-800">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="h-3 w-24 ml-auto" />
+                  </div>
+                  <Skeleton className={`h-3.5 ${i % 2 ? "w-1/2" : "w-3/4"}`} />
+                </div>
+              ))}
+            </Loading>
+          )}
           {revisions?.length === 0 && !error && (
             <li className="p-4 text-sm text-gray-500 dark:text-gray-300">
               Este post ainda não tem histórico. A primeira versão é guardada no próximo salvamento.
@@ -181,7 +197,16 @@ export default function PostHistory({ postId, dirty, onClose, onRestored }) {
             </div>
           )}
 
-          {selected != null && !snapshot && <p className="p-6 text-sm text-gray-500">Carregando versão...</p>}
+          {selected != null && !snapshot && (
+            // Mesmo desenho da versão aberta: capa, título e parágrafos
+            <Loading label="Carregando versão" className="max-w-3xl mx-auto px-6 py-10 space-y-4">
+              <Skeleton className="w-full aspect-video" rounded="rounded-xl" />
+              <Skeleton className="h-8 w-3/4" />
+              {["w-full", "w-full", "w-5/6", "w-full", "w-2/3"].map((w, i) => (
+                <Skeleton key={i} className={`h-4 ${w}`} />
+              ))}
+            </Loading>
+          )}
 
           {snapshot && (
             <article className="max-w-3xl mx-auto px-6 py-10">

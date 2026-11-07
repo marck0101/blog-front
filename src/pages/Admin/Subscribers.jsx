@@ -3,9 +3,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { RefreshCw, Users, AlertCircle, Crown, Send, UserPlus, Pencil, Download } from "lucide-react";
 import RowMenu from "../../components/RowMenu";
 import Header from "../../components/Header";
+import { Skeleton, SkeletonRows } from "../../components/Skeleton";
 import SEO from "../../components/SEO";
 import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
+import useSortPreference from "../../hooks/useSortPreference";
+import SortableTh from "../../components/SortableTh";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import Pagination from "../../components/Pagination";
 import usePageSize from "../../hooks/usePageSize";
@@ -149,19 +152,13 @@ function StatusBadge({ status }) {
   );
 }
 
-function RowSkeleton() {
-  return (
-    <tr className="border-t border-gray-100 dark:border-gray-800">
-      {Array.from({ length: 7 }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
-        </td>
-      ))}
-    </tr>
-  );
-}
-
 const PAGE_SIZES = [5, 10, 20, 50];
+
+// Ordem: escolhida clicando nos cabeçalhos da tabela (chaves da API)
+const SORT_OPTIONS = [
+  "recent", "oldest", "name", "name_desc", "email", "email_desc",
+  "tier", "tier_free", "active", "unsubscribed",
+].map((value) => ({ value }));
 
 export default function Subscribers() {
   const navigate = useNavigate();
@@ -186,6 +183,7 @@ export default function Subscribers() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useSortPreference("admin-subscribers-sort", SORT_OPTIONS, "recent", () => setPage(1));
   const [pageSize, setPageSize] = usePageSize("admin-subscribers-page-size", PAGE_SIZES, 20);
   const [categories, setCategories] = useState([]);
 
@@ -207,6 +205,7 @@ export default function Subscribers() {
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
+    if (sort !== "recent") params.sort = sort;
     return params;
   };
 
@@ -233,12 +232,13 @@ export default function Subscribers() {
     if (search) params.search = search;
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
+    if (sort !== "recent") params.sort = sort;
 
     SubscriberService.getAll(params)
       .then(setData)
       .catch(() => setError("Não foi possível carregar os assinantes."))
       .finally(() => setLoading(false));
-  }, [page, pageSize, statusFilter, tierFilter, listFilter, selectedCategories, search, dateFrom, dateTo]);
+  }, [page, pageSize, statusFilter, tierFilter, listFilter, selectedCategories, search, dateFrom, dateTo, sort]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -331,7 +331,11 @@ export default function Subscribers() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Assinantes</h1>
             <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
-              {data.total} assinante{data.total !== 1 ? "s" : ""}
+              {loading ? (
+                <Skeleton as="span" className="inline-block h-4 w-24 align-middle" />
+              ) : (
+                <>{data.total} assinante{data.total !== 1 ? "s" : ""}</>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -425,7 +429,7 @@ export default function Subscribers() {
           </div>
         )}
 
-        {/* Search + date range */}
+        {/* Search + date range (a ordem fica nos cabeçalhos da tabela) */}
         <div className="mb-6">
           <FilterBar
             onSearch={changeFilter(setSearch)}
@@ -452,19 +456,20 @@ export default function Subscribers() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
-                <th className="px-4 py-3 font-semibold">Nome</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Plano</th>
+                <SortableTh label="Nome" asc="name" desc="name_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" />
+                <SortableTh label="Email" asc="email" desc="email_desc" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" />
+                <SortableTh label="Plano" asc="tier" desc="tier_free" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" title="Membros ou gratuitos primeiro" />
                 <th className="px-4 py-3 font-semibold">Categorias</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Cadastrado em</th>
+                <SortableTh label="Status" asc="active" desc="unsubscribed" first="asc" sort={sort} onSort={setSort} className="px-4 py-3" title="Ativos ou cancelados primeiro" />
+                <SortableTh label="Cadastrado em" asc="oldest" desc="recent" sort={sort} onSort={setSort} className="px-4 py-3" />
                 <th className="px-4 py-3 font-semibold">Ações</th>
               </tr>
             </thead>
+            {loading ? (
+              <SkeletonRows cols={7} rows={Math.min(pageSize, 8)} label="Carregando assinantes" />
+            ) : (
             <tbody>
-              {loading && Array.from({ length: 6 }).map((_, i) => <RowSkeleton key={i} />)}
-
-              {!loading && data.subscribers.length === 0 && (
+              {data.subscribers.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-gray-500 dark:text-gray-300">
                     <Users size={32} className="mx-auto mb-3 opacity-30" />
@@ -473,7 +478,7 @@ export default function Subscribers() {
                 </tr>
               )}
 
-              {!loading && data.subscribers.map((sub) => (
+              {data.subscribers.map((sub) => (
                 <tr
                   key={sub._id}
                   className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
@@ -573,6 +578,7 @@ export default function Subscribers() {
                 </tr>
               ))}
             </tbody>
+            )}
           </table>
         </div>
 

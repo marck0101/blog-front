@@ -16,6 +16,13 @@ As regras de negócio, os dashboards, a segurança e as **convenções do códig
 blog-backend: **`docs/SISTEMA.md`** (convenções na seção 18) e **`docs/BACKLOG.md`**
 (melhorias planejadas). Elas valem para os dois repositórios.
 
+Específicos do front, neste repositório:
+
+- **[docs/OPERACAO.md](docs/OPERACAO.md)**: deploy, SEO e conteúdo para IA, padrões de
+  interface do painel e o que conferir antes do push. Leia antes de subir código.
+- **[docs/BACKLOG.md](docs/BACKLOG.md)**: pendências do front (pré-render de `/privacidade`,
+  `noindex` sem JavaScript, selects do "Desempenho por conteúdo", FAQ em uma fonte só).
+
 ## Rodar localmente
 
 Pré-requisitos: Node 22+ e o blog-backend rodando (`http://localhost:3333`).

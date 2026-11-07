@@ -3,8 +3,9 @@
 //
 // O app é uma SPA: sem isto, crawlers recebem um <head> genérico e um <div id="root">
 // vazio. Aqui buscamos o index.html estático, injetamos title/meta/canonical/JSON-LD
-// do post e o conteúdo em <noscript> (lido por bots sem JS, como GPTBot/ClaudeBot e
-// previews de redes sociais), e devolvemos 404 real quando o post não existe.
+// do post e o conteúdo (post: HTML visível no #root; listas: <noscript>) para bots sem
+// JS, como GPTBot/ClaudeBot e previews de redes sociais, e devolvemos 404 real quando
+// o post não existe.
 // O React assume normalmente no navegador (ver src/main.jsx e src/pages/Blog/Post.jsx).
 
 import {
@@ -31,6 +32,15 @@ import {
   SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
 import { coverSrcSet, GRID_SIZES } from "../src/utils/coverSrcSet.js";
+
+// Alturas (px) do header do blog e da linha favoritar/compartilhar do post, que o
+// HTML estático reserva para o texto não pular quando o React assumir. No celular
+// (< 640px, breakpoint sm do Tailwind) os botões de compartilhar quebram em 3 linhas.
+// Medidas no Chrome em 390px e 1280px; mudou o header ou o ShareButtons, medir de novo.
+const PLACEHOLDER_CSS = `<style>
+      .pr-header{min-height:68px}.pr-actions{min-height:128px}
+      @media (min-width:640px){.pr-header{min-height:66px}.pr-actions{min-height:40px}}
+    </style>`;
 
 const API_URL = process.env.PRERENDER_API_URL || "https://api.blog.marck0101.com.br/api";
 
@@ -173,10 +183,12 @@ function headTags({ title, description, url, image, type, robots, extra = "", sc
     .join("\n    ");
 }
 
-function render(shell, head, body) {
-  return shell
+// root: HTML visível dentro do #root (o React substitui ao montar)
+function render(shell, head, body, root = "") {
+  const html = shell
     .replace(/<!--prerender-head-->[\s\S]*?<!--\/prerender-head-->/, head)
     .replace("<!--prerender-body-->", body);
+  return root ? html.replace('<div id="root"></div>', () => `<div id="root">${root}</div>`) : html;
 }
 
 function formatDate(date) {
@@ -187,13 +199,87 @@ function formatDate(date) {
 function faqHtml(items) {
   const faq = cleanFaq(items);
   if (!faq.length) return "";
-  return `<section>
-          <h2>Perguntas frequentes</h2>
-          ${faq.map((item) => `<h3>${esc(item.question)}</h3>\n          <p>${esc(item.answer)}</p>`).join("\n          ")}
+  return `<section id="faq" class="mt-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Perguntas frequentes</h2>
+          ${faq.map((item) => `<h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">${esc(item.question)}</h3>\n          <p class="mt-2 text-gray-700 dark:text-gray-300 whitespace-pre-line">${esc(item.answer)}</p>`).join("\n          ")}
         </section>`;
 }
 
-function postPage(post) {
+// Links internos no HTML que os bots leem: sem eles o artigo é um beco sem saída
+// para o crawler (o "Continue lendo" e a navegação da season só existem no React)
+function linkListHtml(title, posts) {
+  if (!posts?.length) return "";
+  return `<nav aria-label="${esc(title)}" class="mt-12">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">${esc(title)}</h2>
+          <ul class="mt-4 space-y-3">
+            ${posts
+              .map((p) => `<li><a href="/blog/${esc(p.slug)}" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">${esc(p.title)}</a>${p.excerpt ? ` <span class="text-gray-600 dark:text-gray-300">— ${esc(p.excerpt)}</span>` : ""}</li>`)
+              .join("\n            ")}
+          </ul>
+        </nav>`;
+}
+
+// Fallback para API antiga sem readingMinutes (mesma conta de utils/readingTime)
+function readingMinutes(html = "") {
+  const words = String(html).replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
+// Mesmo esqueleto e classes de BlogLayout + Post.jsx: o HTML pinta já com a cara
+// da página e o React (que monta com o post do bloco prerendered-post, sem esperar a
+// API) substitui sem a página pular. Alturas fixas = header e linha de
+// favoritar/compartilhar, que só existem no React.
+function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }) {
+  const minutes = post.readingMinutes || readingMinutes(post.content);
+  const trail = post.season && seasonTitle
+    ? `<span class="mx-2">/</span><a href="/seasons" class="hover:underline dark:hover:text-gray-100">Seasons</a>
+          <span class="mx-2">/</span><a href="/seasons/${esc(post.season)}" class="hover:underline dark:hover:text-gray-100">${esc(seasonTitle)}</a>`
+    : "";
+  const otherEpisodes = episodes?.season ? episodes.posts?.filter((p) => p.slug !== post.slug) : null;
+
+  return `${PLACEHOLDER_CSS}
+    <div class="min-h-screen flex flex-col">
+      <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+        <div class="pr-header max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
+          <a href="/blog" class="font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0">marck0101</a>
+        </div>
+      </header>
+      <div class="flex-1">
+        <main class="max-w-3xl mx-auto px-6 py-10">
+          <a href="/blog" class="inline-block mb-6 text-sm text-blue-600 dark:text-blue-400 hover:underline">← Voltar para o blog</a>
+          <nav aria-label="Você está em" class="text-sm text-gray-500 dark:text-gray-300 mb-6">
+            <a href="/blog" class="hover:underline dark:hover:text-gray-100">Blog</a>
+            ${trail}
+            <span class="mx-2">/</span><span class="text-gray-700 dark:text-gray-100 font-medium">${esc(post.title)}</span>
+          </nav>
+          <article>
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white">${esc(post.title)}</h1>
+            <p class="text-gray-500 dark:text-gray-300 mt-2">
+              Por <a href="${PORTFOLIO_URL}" rel="author" class="font-medium hover:underline dark:text-gray-100">${esc(AUTHOR_NAME)}</a>
+              • <a href="/blog?categoria=${esc(post.category || "")}" class="hover:underline">${esc(categoryLabel || post.category || "")}</a>
+              • <time datetime="${esc(post.publishedAt)}">${formatDate(post.publishedAt)}</time>
+              • ${minutes} min de leitura
+            </p>
+            <div class="pr-actions mt-5"></div>
+            ${post.directAnswer?.trim()
+              ? `<aside aria-label="Resposta direta" class="mt-6 rounded-lg border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/40 px-5 py-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">Resposta direta</p>
+              <p class="mt-1 text-lg leading-relaxed text-gray-900 dark:text-gray-100 whitespace-pre-line">${esc(post.directAnswer.trim())}</p>
+            </aside>`
+              : ""}
+            <div class="post-content prose prose-lg max-w-none mt-8 dark:prose-invert">
+              ${post.content || ""}
+            </div>
+            ${faqHtml(postFaq(post))}
+          </article>
+          ${otherEpisodes ? linkListHtml(`Season: ${episodes.season.title}`, otherEpisodes) : ""}
+          ${linkListHtml("Continue lendo", related)}
+        </main>
+      </div>
+    </div>`;
+}
+
+function postPage(post, { related = [], episodes = null, categoryLabel = "", seasonTitle = "" } = {}) {
   const url = postUrl(post);
   const head = headTags({
     title: postTitle(post),
@@ -219,21 +305,14 @@ function postPage(post) {
   });
 
   // Conteúdo vem do editor do próprio admin, já limpo pela API ao salvar (SEC-01).
-  // Sem <noscript> dentro: um "</noscript>" fecharia a tag antes da hora e o que
-  // viesse depois rodaria como página.
-  const content = String(post.content || "").replace(/<\/?noscript\b[^>]*>/gi, "");
-  const body = `<noscript>
-      <article>
-        <p><a href="/blog">Blog</a> / ${esc(post.title)}</p>
-        <h1>${esc(post.title)}</h1>
-        <p>Por <a href="${PORTFOLIO_URL}" rel="author">${esc(AUTHOR_NAME)}</a> · ${esc(post.category || "")} · <time datetime="${esc(post.publishedAt)}">${formatDate(post.publishedAt)}</time></p>
-        ${content}
-        ${faqHtml(postFaq(post))}
-      </article>
-    </noscript>
-    ${jsonBlock("prerendered-post", post)}`;
+  // Vai visível dentro do #root (não em <noscript>: extratores como o Readability,
+  // base de muitos leitores de IA, descartam <noscript>). O React troca tudo no
+  // primeiro render; ver postArticleHtml. Os dados vão num bloco JSON, não em
+  // script inline (a CSP não libera, SEC-02).
+  const root = postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle });
+  const body = jsonBlock("prerendered-post", post);
 
-  return { head, body };
+  return { head, body, root };
 }
 
 // home: { posts, pinned }; preload só sem filtro, quando a vitrine aparece
@@ -411,12 +490,21 @@ export default async function handler(req, res) {
         return res.status(301).end();
       }
       if (post) {
-        page = postPage(post);
-        // Selo da season no topo do post (SeasonNav)
-        if (post.season) {
-          const episodes = await fetchOptional(`${API_URL}/posts/season/${encodeURIComponent(post.season)}`);
-          if (episodes) data.seasonEpisodes = episodes;
-        }
+        // Selo da season no topo do post (SeasonNav) e "Continue lendo": entram no
+        // HTML como links e vão prontos para o React (sem buscar de novo)
+        const [episodes, related] = await Promise.all([
+          post.season ? fetchOptional(`${API_URL}/posts/season/${encodeURIComponent(post.season)}`) : null,
+          fetchOptional(`${API_URL}/posts/public/${encodeURIComponent(post._id)}/related`),
+        ]);
+        if (episodes) data.seasonEpisodes = episodes;
+        if (Array.isArray(related)) data.related = { postId: post._id, posts: related };
+        const { categories = [], seasons = [] } = await shared;
+        page = postPage(post, {
+          related: Array.isArray(related) ? related : [],
+          episodes,
+          categoryLabel: categories.find((c) => c.slug === post.category)?.label,
+          seasonTitle: seasons.find((s) => s.slug === post.season)?.title || episodes?.season?.title,
+        });
       } else {
         page = notFoundPage(slug);
         status = 404;
@@ -450,7 +538,7 @@ export default async function handler(req, res) {
         ? "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
         : "public, max-age=0, s-maxage=60"
     );
-    res.status(status).send(render(shell.html, page.head, page.body));
+    res.status(status).send(render(shell.html, page.head, page.body, page.root));
   } catch (err) {
     // API fora do ar: entrega a SPA normal em vez de quebrar o site.
     console.error("[prerender]", err);

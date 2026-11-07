@@ -3,6 +3,7 @@ import { Info } from "lucide-react";
 import BarList from "../BarList";
 import MetricsService from "../../services/metrics.service";
 import { formatRate, shortUrl } from "../../utils/metrics";
+import { Loading, Skeleton } from "../Skeleton";
 
 function Tile({ label, value, detail }) {
   return (
@@ -58,7 +59,15 @@ export default function CampaignMetrics({ campaign }) {
             empty="Nenhum clique ainda."
           />
         ) : (
-          <p className="text-sm text-gray-400">Carregando...</p>
+          // Mesmo desenho do BarList: rótulo + barra
+          <Loading label="Carregando links clicados" className="space-y-3">
+            {["w-full", "w-2/3", "w-1/3"].map((w, i) => (
+              <div key={i} className="space-y-1.5">
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className={`h-2 ${w}`} rounded="rounded-full" />
+              </div>
+            ))}
+          </Loading>
         )}
       </div>
 
