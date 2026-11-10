@@ -25,7 +25,11 @@
     }
   ],
   "redirects": [
-    { "source": "/", "destination": "/blog", "permanent": true }
+    { "source": "/", "destination": "/blog", "permanent": true },
+    { "source": "/feed", "destination": "/rss.xml", "permanent": true },
+    { "source": "/feed.xml", "destination": "/rss.xml", "permanent": true },
+    { "source": "/rss", "destination": "/rss.xml", "permanent": true },
+    { "source": "/politica-de-privacidade", "destination": "/privacidade", "permanent": true }
   ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "https://api.blog.marck0101.com.br/sitemap.xml" },
@@ -37,6 +41,10 @@
     { "source": "/blog/:slug", "destination": "/api/prerender?slug=:slug" },
     { "source": "/seasons", "destination": "/api/prerender?page=seasons" },
     { "source": "/seasons/:slug", "destination": "/api/prerender?season=:slug" },
-    { "source": "/((?!assets/)(?!.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/privacidade", "destination": "/index.html" },
+    { "source": "/favoritos", "destination": "/index.html" },
+    { "source": "/cancelar-inscricao", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/admin/:path*", "destination": "/index.html" }
   ]
 }
