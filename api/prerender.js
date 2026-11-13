@@ -238,14 +238,14 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }
   const otherEpisodes = episodes?.season ? episodes.posts?.filter((p) => p.slug !== post.slug) : null;
 
   return `${PLACEHOLDER_CSS}
-    <div class="min-h-screen flex flex-col">
-      <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+    <div class="skin-root min-h-screen flex flex-col">
+      <header class="skin-header sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div class="pr-header max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
           <a href="/blog" class="font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0">marck0101</a>
         </div>
       </header>
       <div class="flex-1">
-        <main class="max-w-3xl mx-auto px-6 py-10">
+        <main class="skin-post max-w-3xl mx-auto px-6 py-10">
           <a href="/blog" class="inline-block mb-6 text-sm text-blue-600 dark:text-blue-400 hover:underline">← Voltar para o blog</a>
           <nav aria-label="Você está em" class="text-sm text-gray-500 dark:text-gray-300 mb-6">
             <a href="/blog" class="hover:underline dark:hover:text-gray-100">Blog</a>

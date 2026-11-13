@@ -5,6 +5,7 @@ import { useFavorites } from "../../../utils/favorites";
 import SubscriberService from "../../../services/subscriber.service";
 import SeasonsService from "../../../services/seasons.service";
 import ThemeToggle from "../../ThemeToggle";
+import SkinToggle from "../../SkinToggle";
 import { prerendered } from "../../../utils/prerendered";
 
 const VISIBLE_CATEGORIES_COUNT = 3;
@@ -92,7 +93,7 @@ export default function BlogHeader({ activeNav }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-white dark:bg-gray-900 transition-shadow duration-200 ${
+      className={`skin-header sticky top-0 z-50 bg-white dark:bg-gray-900 transition-shadow duration-200 ${
         scrolled
           ? "shadow-md"
           : "border-b border-gray-100 dark:border-gray-800"
@@ -199,6 +200,7 @@ export default function BlogHeader({ activeNav }) {
           )}
 
           <ThemeToggle />
+          <SkinToggle />
 
           <a
             href="#assinar"

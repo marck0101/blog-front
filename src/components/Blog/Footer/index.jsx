@@ -48,7 +48,7 @@ export default function BlogFooter() {
   const { user } = useContext(AuthContext);
 
   return (
-    <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-16">
+    <footer className="skin-footer bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-16">
       <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Coluna esquerda — logo + descrição */}
         <div>

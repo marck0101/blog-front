@@ -14,7 +14,7 @@ function CardFavorite({ post, className }) {
 // Lista: capa pequena ao lado do texto
 function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
   return (
-    <article className="group relative">
+    <article className="skin-card group relative">
       <CardFavorite post={post} className="top-0 left-0" />
       <Link
         to={`/blog/${post.slug || post.id}`}
@@ -52,7 +52,7 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
 // Compacta: só data, categoria e título, para varrer o arquivo
 function CompactCard({ post, date, categoryLabel }) {
   return (
-    <article className="group">
+    <article className="skin-card group">
       <Link
         to={`/blog/${post.slug || post.id}`}
         className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 py-3"
@@ -108,7 +108,7 @@ function ShowcaseBadge({ badge }) {
 // todos com a mesma altura na linha
 function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, priority }) {
   return (
-    <article className="group h-full relative">
+    <article className="skin-card group h-full relative">
       <CardFavorite post={post} className="top-2 right-2" />
       <Link
         to={`/blog/${post.slug || post.id}`}

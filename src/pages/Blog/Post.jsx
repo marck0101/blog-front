@@ -300,7 +300,7 @@ export default function Post() {
         />
       )}
 
-      <main className="max-w-3xl mx-auto px-6 py-10">
+      <main className="skin-post max-w-3xl mx-auto px-6 py-10">
         <BackButton />
         <Breadcrumb
           title={post.title}

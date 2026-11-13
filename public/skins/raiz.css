@@ -1,0 +1,133 @@
+/*
+  Modo raiz (src/utils/skin.js e public/theme-init.js). Só é baixado por quem liga.
+  Claro + raiz = Jornal; escuro + raiz = Terminal. Tudo fica dentro de .skin-root
+  (BlogLayout e o post pré-renderizado): o painel e o resto do site não mudam.
+
+  Os ganchos (skin-root, skin-header, skin-footer, skin-post, skin-card) existem
+  porque as cores do site estão nas classes do Tailwind de cada componente; aqui
+  elas são trocadas pela paleta da época.
+
+  Fase 1: paletas e fontes do sistema. As fontes da época (no próprio site; a
+  CSP não aceita Google Fonts) e os detalhes de cada estilo vêm nas fases 2 e 3.
+*/
+
+/* ---------- Paletas ---------- */
+
+/* Jornal: tinta sobre papel creme (contraste AA) */
+html.raiz {
+  --raiz-bg: #f4ecd8;
+  --raiz-bg-alt: #ebe1c8;
+  --raiz-ink: #1d1a16;
+  --raiz-muted: #4a4239;
+  --raiz-accent: #8b1e1e;
+  --raiz-line: #1d1a16;
+  --raiz-font-body: Georgia, "Times New Roman", Times, serif;
+  --raiz-font-head: Georgia, "Times New Roman", Times, serif;
+  --raiz-font-meta: "Courier New", Courier, monospace;
+}
+
+/* Terminal: fósforo verde sobre preto */
+html.raiz.dark {
+  --raiz-bg: #0a0f0a;
+  --raiz-bg-alt: #111a11;
+  --raiz-ink: #6dff8a;
+  --raiz-muted: #4cc768;
+  --raiz-accent: #ffcf5c;
+  --raiz-line: #4cc768;
+  --raiz-font-body: "Courier New", Courier, monospace;
+  --raiz-font-head: "Courier New", Courier, monospace;
+  --raiz-font-meta: "Courier New", Courier, monospace;
+}
+
+/* ---------- Base ---------- */
+
+html.raiz .skin-root {
+  background: var(--raiz-bg);
+  color: var(--raiz-ink);
+  font-family: var(--raiz-font-body);
+}
+
+/* Cores do Tailwind dão lugar à paleta: texto na tinta, bordas em linha */
+html.raiz .skin-root * {
+  color: inherit;
+  border-color: var(--raiz-line);
+  box-shadow: none;
+}
+
+/* Fundos (header fixo, menus, caixas) ficam no papel, e não transparentes.
+   Só a classe bg-* que vale sempre: hover:bg-* e dark:bg-* sozinhos não contam. */
+html.raiz .skin-root :is([class^="bg-"], [class*=" bg-"]):not(img):not(picture) {
+  background-color: var(--raiz-bg);
+  background-image: none;
+}
+
+html.raiz .skin-root :is(h1, h2, h3, h4) {
+  font-family: var(--raiz-font-head);
+}
+
+html.raiz .skin-root :is(time, figcaption, small) {
+  font-family: var(--raiz-font-meta);
+}
+
+html.raiz .skin-root a {
+  color: var(--raiz-accent);
+}
+
+/* Botões e links com fundo (Assinar, ações): caixa com borda, sem pílula */
+html.raiz .skin-root :is(button, a):is([class^="bg-"], [class*=" bg-"]) {
+  border: 1px solid var(--raiz-line);
+  border-radius: 0;
+}
+
+html.raiz .skin-root ::selection {
+  background: var(--raiz-ink);
+  color: var(--raiz-bg);
+}
+
+/* Texto do post (plugin typography do Tailwind) */
+html.raiz .skin-root .prose {
+  --tw-prose-body: var(--raiz-ink);
+  --tw-prose-headings: var(--raiz-ink);
+  --tw-prose-links: var(--raiz-accent);
+  --tw-prose-bold: var(--raiz-ink);
+  --tw-prose-quotes: var(--raiz-ink);
+  --tw-prose-quote-borders: var(--raiz-line);
+  --tw-prose-hr: var(--raiz-line);
+  --tw-prose-bullets: var(--raiz-muted);
+  --tw-prose-counters: var(--raiz-muted);
+  --tw-prose-code: var(--raiz-ink);
+  --tw-prose-pre-bg: var(--raiz-bg-alt);
+  --tw-prose-pre-code: var(--raiz-ink);
+  --tw-prose-captions: var(--raiz-muted);
+  --tw-prose-th-borders: var(--raiz-line);
+  --tw-prose-td-borders: var(--raiz-line);
+}
+
+/* ---------- Ganchos ---------- */
+
+html.raiz .skin-header {
+  border-bottom: 4px double var(--raiz-line);
+}
+
+html.raiz .skin-footer {
+  border-top: 4px double var(--raiz-line);
+}
+
+html.raiz .skin-card img,
+html.raiz .skin-post img {
+  border-radius: 0;
+}
+
+/* Jornal: fotos em tons de cinza, como impressas */
+html.raiz:not(.dark) .skin-root img {
+  filter: grayscale(1) contrast(1.05);
+}
+
+/* Terminal: fotos numa cor só, como num monitor de fósforo */
+html.raiz.dark .skin-root img {
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.2) brightness(0.9);
+}
+
+html.raiz.dark .skin-root {
+  text-shadow: 0 0 6px rgba(109, 255, 138, 0.25);
+}

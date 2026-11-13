@@ -61,3 +61,36 @@ campo de busca, em 390px e em 1280px.
 Ver `node-express-mongodb/docs/BACKLOG.md`. Resumo: `BLOG_FAQ` e
 `SEASONS_FAQ` (em `src/seo/site.js`) têm uma cópia na API para o
 `/llms-full.txt`; o ideal é um lugar só.
+
+## Média — Modo raiz: Jornal e Terminal (fases 2 a 4)
+
+**O que é:** botão no topo do blog que troca o visual por um retrô, para o
+leitor brincar. Claro + raiz = **Jornal / máquina de escrever**; escuro + raiz
+= **Terminal BBS**. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
+
+**Feito (fase 1):** classe `raiz` no `<html>` (`src/utils/skin.js`, aplicada
+antes de pintar pelo `public/theme-init.js`), botão `SkinToggle` ao lado do
+tema, ganchos `skin-root/header/footer/post/card` (React e `api/prerender.js`)
+e `public/skins/raiz.css` com as duas paletas e fontes do sistema. O CSS só é
+baixado por quem liga; o painel não tem modo raiz. Evento GA4 `skin_toggle`.
+
+**Fase 2 — Jornal:** fontes da época no próprio site (a CSP não aceita Google
+Fonts), só com caracteres do português, baixadas só no modo raiz: Playfair
+Display (títulos), Libre Caslon Text (texto), Special Elite (datas e
+legendas), UnifrakturMaguntia (só o nome no topo). Capitular, citação entre
+filetes, cards como notas de jornal (resumo em tinta, não no vermelho dos
+links), capas geradas (`GeneratedCover`) em retícula.
+
+**Fase 3 — Terminal:** VT323 (títulos e menus) e IBM Plex Mono (texto),
+moldura ASCII com `aria-hidden`, menu por teclas `[B] [S] [F]`, linhas de
+varredura estáticas, cursor que pisca só sem `prefers-reduced-motion`, campos
+de formulário (busca, newsletter) na paleta.
+
+**Fase 4 — Detalhes com dados reais:** coluna lateral do post com índice,
+"Tiragem"/estatísticas (leituras e favoritos reais do `PostDailyStat`) e
+comentários como "Cartas do leitor"/"Mural".
+
+**Pronto quando (cada fase):** ligar e desligar sem recarregar; visita nova
+abre no estilo salvo sem piscar o atual; texto do post com contraste AA;
+Lighthouse de quem nunca liga igual ao de antes; celular de 390px sem rolagem
+lateral.
