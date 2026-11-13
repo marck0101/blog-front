@@ -94,8 +94,9 @@ ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
   fina no topo, cor da paleta de cada estilo).
 
 - Liga/desliga no painel (13/11/2026): **Painel → Recursos** (`/admin/recursos`)
-  tem um botão para cada recurso: estilos de época, convite do Terminal,
-  sumário e barra de leitura. Backend `GET/PATCH /api/settings/features`
+  tem um cartão com miniatura e interruptor para cada recurso: estilos de
+  época, convite do Terminal, sumário e barra de leitura. Cada mudança pede
+  "Tem certeza?" com o antes → depois (sem código do app: decisão de 13/11/2026). Backend `GET/PATCH /api/settings/features`
   (cache de 30 s); o front guarda a última resposta em `site-features`, que o
   `theme-init.js` lê antes de pintar. API fora do ar = tudo ligado.
 

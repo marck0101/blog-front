@@ -78,21 +78,44 @@ describe("recursos do blog (leitor)", () => {
 });
 
 describe("página Recursos do blog (painel)", () => {
-  it("um clique desliga o recurso", async () => {
-    render(<MemoryRouter><Features /></MemoryRouter>);
-    const toc = await screen.findByRole("switch", { name: "Sumário do post" });
-    expect(toc.getAttribute("aria-checked")).toBe("true");
+  beforeEach(() => SettingsService.setFeature.mockClear());
 
-    fireEvent.click(toc);
-    expect(SettingsService.setFeature).toHaveBeenCalledWith("toc", false);
-    await waitFor(() => expect(toc.getAttribute("aria-checked")).toBe("false"));
+  const openDialog = async (name) => {
+    render(<MemoryRouter><Features /></MemoryRouter>);
+    const sw = await screen.findByRole("switch", { name });
+    fireEvent.click(sw);
+    return { sw, dialog: screen.getByRole("alertdialog") };
+  };
+
+  it("o clique pergunta antes e nada muda até confirmar", async () => {
+    const { sw, dialog } = await openDialog("Sumário do post");
+    expect(dialog.textContent).toContain("Tem certeza que quer desligar sumário do post?");
+    expect(document.activeElement.textContent).toBe("Cancelar");
+    expect(SettingsService.setFeature).not.toHaveBeenCalled();
+    expect(sw.getAttribute("aria-checked")).toBe("true");
   });
 
-  it("erro ao salvar desfaz o clique", async () => {
+  it("Sim: desliga", async () => {
+    const { sw } = await openDialog("Sumário do post");
+    fireEvent.click(screen.getByRole("button", { name: "Sim, desligar" }));
+    expect(SettingsService.setFeature).toHaveBeenCalledWith("toc", false);
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(sw.getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("erro ao salvar: mostra o motivo, continua aberto e nada muda", async () => {
     SettingsService.setFeature.mockRejectedValueOnce(new Error("rede"));
-    render(<MemoryRouter><Features /></MemoryRouter>);
-    const bar = await screen.findByRole("switch", { name: "Barra de leitura" });
-    fireEvent.click(bar);
-    await waitFor(() => expect(bar.getAttribute("aria-checked")).toBe("true"));
+    const { sw } = await openDialog("Barra de leitura");
+    fireEvent.click(screen.getByRole("button", { name: "Sim, desligar" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    expect(sw.getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("Cancelar fecha sem salvar", async () => {
+    await openDialog("Estilos de época");
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(SettingsService.setFeature).not.toHaveBeenCalled();
   });
 });
