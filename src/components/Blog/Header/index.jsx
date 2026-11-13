@@ -103,7 +103,7 @@ export default function BlogHeader({ activeNav }) {
         {/* Logo */}
         <Link
           to="/blog"
-          className="font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0"
+          className="skin-logo font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0"
         >
           marck0101
         </Link>

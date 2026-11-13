@@ -241,7 +241,7 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }
     <div class="skin-root min-h-screen flex flex-col">
       <header class="skin-header sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div class="pr-header max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
-          <a href="/blog" class="font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0">marck0101</a>
+          <a href="/blog" class="skin-logo font-bold text-lg text-gray-900 dark:text-gray-100 shrink-0">marck0101</a>
         </div>
       </header>
       <div class="flex-1">
@@ -254,7 +254,7 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }
           </nav>
           <article>
             <h1 class="text-4xl font-bold text-gray-900 dark:text-white">${esc(post.title)}</h1>
-            <p class="text-gray-500 dark:text-gray-300 mt-2">
+            <p class="skin-meta text-gray-500 dark:text-gray-300 mt-2">
               Por <a href="${PORTFOLIO_URL}" rel="author" class="font-medium hover:underline dark:text-gray-100">${esc(AUTHOR_NAME)}</a>
               • <a href="/blog?categoria=${esc(post.category || "")}" class="hover:underline">${esc(categoryLabel || post.category || "")}</a>
               • <time datetime="${esc(post.publishedAt)}">${formatDate(post.publishedAt)}</time>

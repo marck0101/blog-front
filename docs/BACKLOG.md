@@ -62,7 +62,7 @@ Ver `node-express-mongodb/docs/BACKLOG.md`. Resumo: `BLOG_FAQ` e
 `SEASONS_FAQ` (em `src/seo/site.js`) têm uma cópia na API para o
 `/llms-full.txt`; o ideal é um lugar só.
 
-## Média — Modo raiz: Jornal e Terminal (fases 2 a 4)
+## Média — Modo raiz: Jornal e Terminal (fases 3 e 4)
 
 **O que é:** botão no topo do blog que troca o visual por um retrô, para o
 leitor brincar. Claro + raiz = **Jornal / máquina de escrever**; escuro + raiz
@@ -74,12 +74,13 @@ tema, ganchos `skin-root/header/footer/post/card` (React e `api/prerender.js`)
 e `public/skins/raiz.css` com as duas paletas e fontes do sistema. O CSS só é
 baixado por quem liga; o painel não tem modo raiz. Evento GA4 `skin_toggle`.
 
-**Fase 2 — Jornal:** fontes da época no próprio site (a CSP não aceita Google
-Fonts), só com caracteres do português, baixadas só no modo raiz: Playfair
-Display (títulos), Libre Caslon Text (texto), Special Elite (datas e
-legendas), UnifrakturMaguntia (só o nome no topo). Capitular, citação entre
-filetes, cards como notas de jornal (resumo em tinta, não no vermelho dos
-links), capas geradas (`GeneratedCover`) em retícula.
+**Feito (fase 2 — Jornal):** fontes no próprio site em `public/skins/fonts`
+(Playfair Display, Libre Caslon Text, Special Elite, UnifrakturMaguntia; só o
+subconjunto latin, ~190 KB, licenças em `LICENSES.txt`, cache de 1 ano no
+`vercel.json`), faixa de expediente, nome em gótico, manchete, linha de autor
+entre filetes, capitular, citação entre filetes, cards e capa gerada em
+retícula. Fotos dos cards em cinza; no texto do post só envelhecem (gráfico
+por cor não perde a informação).
 
 **Fase 3 — Terminal:** VT323 (títulos e menus) e IBM Plex Mono (texto),
 moldura ASCII com `aria-hidden`, menu por teclas `[B] [S] [F]`, linhas de

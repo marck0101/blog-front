@@ -318,7 +318,7 @@ export default function Post() {
           {post.title}
         </h1>
 
-        <p className="text-gray-500 dark:text-gray-300 mt-2">
+        <p className="skin-meta text-gray-500 dark:text-gray-300 mt-2">
           Por{" "}
           <a
             href={PORTFOLIO_URL}

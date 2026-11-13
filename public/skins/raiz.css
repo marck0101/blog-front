@@ -3,13 +3,64 @@
   Claro + raiz = Jornal; escuro + raiz = Terminal. Tudo fica dentro de .skin-root
   (BlogLayout e o post pré-renderizado): o painel e o resto do site não mudam.
 
-  Os ganchos (skin-root, skin-header, skin-footer, skin-post, skin-card) existem
-  porque as cores do site estão nas classes do Tailwind de cada componente; aqui
-  elas são trocadas pela paleta da época.
+  Os ganchos (skin-root, skin-header, skin-logo, skin-footer, skin-post,
+  skin-meta, skin-card, skin-cover) existem porque as cores do site estão nas
+  classes do Tailwind de cada componente; aqui elas são trocadas pela paleta.
 
-  Fase 1: paletas e fontes do sistema. As fontes da época (no próprio site; a
-  CSP não aceita Google Fonts) e os detalhes de cada estilo vêm nas fases 2 e 3.
+  Fontes no próprio site (a CSP não aceita Google Fonts), só o subconjunto
+  latin (tem todos os acentos do português). O navegador só baixa a fonte que a
+  página usa: quem está no Terminal não baixa as do Jornal. Licenças: fonts/LICENSES.txt.
 */
+
+/* ---------- Fontes do Jornal ---------- */
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("./fonts/playfair-display.woff2") format("woff2");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Caslon Text";
+  src: url("./fonts/libre-caslon-text-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Caslon Text";
+  src: url("./fonts/libre-caslon-text-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Caslon Text";
+  src: url("./fonts/libre-caslon-text-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Special Elite";
+  src: url("./fonts/special-elite-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "UnifrakturMaguntia";
+  src: url("./fonts/unifraktur-maguntia-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* ---------- Paletas ---------- */
 
@@ -21,12 +72,13 @@ html.raiz {
   --raiz-muted: #4a4239;
   --raiz-accent: #8b1e1e;
   --raiz-line: #1d1a16;
-  --raiz-font-body: Georgia, "Times New Roman", Times, serif;
-  --raiz-font-head: Georgia, "Times New Roman", Times, serif;
-  --raiz-font-meta: "Courier New", Courier, monospace;
+  --raiz-font-body: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --raiz-font-head: "Playfair Display", Georgia, "Times New Roman", serif;
+  --raiz-font-meta: "Special Elite", "Courier New", Courier, monospace;
+  --raiz-font-mast: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
 }
 
-/* Terminal: fósforo verde sobre preto */
+/* Terminal: fósforo verde sobre preto (fontes da época na fase 3) */
 html.raiz.dark {
   --raiz-bg: #0a0f0a;
   --raiz-bg-alt: #111a11;
@@ -37,9 +89,10 @@ html.raiz.dark {
   --raiz-font-body: "Courier New", Courier, monospace;
   --raiz-font-head: "Courier New", Courier, monospace;
   --raiz-font-meta: "Courier New", Courier, monospace;
+  --raiz-font-mast: "Courier New", Courier, monospace;
 }
 
-/* ---------- Base ---------- */
+/* ---------- Base (os dois estilos) ---------- */
 
 html.raiz .skin-root {
   background: var(--raiz-bg);
@@ -61,11 +114,22 @@ html.raiz .skin-root :is([class^="bg-"], [class*=" bg-"]):not(img):not(picture) 
   background-image: none;
 }
 
+html.raiz .skin-root :is(input, select, textarea) {
+  background-color: var(--raiz-bg);
+  color: var(--raiz-ink);
+  border-radius: 0;
+}
+
+html.raiz .skin-root :is(input, textarea)::placeholder {
+  color: var(--raiz-muted);
+  opacity: 1;
+}
+
 html.raiz .skin-root :is(h1, h2, h3, h4) {
   font-family: var(--raiz-font-head);
 }
 
-html.raiz .skin-root :is(time, figcaption, small) {
+html.raiz .skin-root :is(time, figcaption, small, .skin-meta) {
   font-family: var(--raiz-font-meta);
 }
 
@@ -103,8 +167,6 @@ html.raiz .skin-root .prose {
   --tw-prose-td-borders: var(--raiz-line);
 }
 
-/* ---------- Ganchos ---------- */
-
 html.raiz .skin-header {
   border-bottom: 4px double var(--raiz-line);
 }
@@ -113,17 +175,217 @@ html.raiz .skin-footer {
   border-top: 4px double var(--raiz-line);
 }
 
-html.raiz .skin-card img,
-html.raiz .skin-post img {
+html.raiz .skin-root img,
+html.raiz .skin-root .skin-cover {
   border-radius: 0;
 }
 
-/* Jornal: fotos em tons de cinza, como impressas */
+/* ---------- Jornal (claro) ---------- */
+
+/* Faixa do expediente acima do nome, como no alto da primeira página */
+html.raiz:not(.dark) .skin-header::before {
+  content: "Marketing · Tráfego · Desenvolvimento · Edição online";
+  content: "Marketing · Tráfego · Desenvolvimento · Edição online" / "";
+  display: block;
+  padding: 6px 24px;
+  border-bottom: 1px solid var(--raiz-line);
+  font-family: var(--raiz-font-meta);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+html.raiz:not(.dark) .skin-logo {
+  font-family: var(--raiz-font-mast);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--raiz-ink);
+}
+
+/* Menu: versalete em Playfair, sem cara de botão */
+html.raiz:not(.dark) .skin-header nav a,
+html.raiz:not(.dark) .skin-header nav + div > button {
+  font-family: var(--raiz-font-head);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--raiz-ink);
+}
+
+/* O card também é um link com bg-white: fica de fora, senão herda a letra de máquina */
+html.raiz:not(.dark) .skin-root :is(button, a):is([class^="bg-"], [class*=" bg-"]):not(.skin-card > a) {
+  font-family: var(--raiz-font-meta);
+  font-weight: 400;
+}
+
+/* Títulos: Playfair pesado e apertado, como manchete */
+html.raiz:not(.dark) .skin-root h1 {
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+html.raiz:not(.dark) .skin-root :is(h2, h3) {
+  font-weight: 700;
+}
+
+/* ---------- Jornal: o post ---------- */
+
+html.raiz:not(.dark) .skin-post h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+}
+
+/* Autor, categoria, data e tempo de leitura: linha datilografada entre filetes */
+html.raiz:not(.dark) .skin-post .skin-meta {
+  margin-top: 1rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--raiz-line);
+  border-bottom: 1px solid var(--raiz-line);
+  font-size: 0.875rem;
+  color: var(--raiz-ink);
+}
+
+html.raiz:not(.dark) .skin-post .skin-meta a {
+  color: var(--raiz-ink);
+  font-weight: 400;
+}
+
+html.raiz:not(.dark) .skin-post .prose {
+  font-size: 1.1875rem;
+  line-height: 1.75;
+}
+
+/* Capitular na primeira letra do texto */
+html.raiz:not(.dark) .skin-post .post-content > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.08em 0.1em 0 0;
+  font-family: var(--raiz-font-head);
+  font-weight: 900;
+  font-size: 4.4em;
+  line-height: 0.8;
+  color: var(--raiz-accent);
+}
+
+html.raiz:not(.dark) .skin-post .prose :is(h2, h3) {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--raiz-line);
+}
+
+/* Citação: entre filetes grossos, centralizada, como olho de matéria */
+html.raiz:not(.dark) .skin-post .prose blockquote {
+  margin: 2em 0;
+  padding: 1em 0;
+  border: 0;
+  border-top: 3px solid var(--raiz-line);
+  border-bottom: 3px solid var(--raiz-line);
+  text-align: center;
+  font-size: 1.35em;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+html.raiz:not(.dark) .skin-post .prose blockquote p::before,
+html.raiz:not(.dark) .skin-post .prose blockquote p::after {
+  content: none;
+}
+
+html.raiz:not(.dark) .skin-post .prose :is(figcaption, img + em) {
+  font-family: var(--raiz-font-meta);
+  font-style: normal;
+  font-size: 0.8em;
+}
+
+html.raiz:not(.dark) .skin-post .prose img {
+  border: 1px solid var(--raiz-line);
+}
+
+/* "Resposta direta" e caixas do post: quadro com fio, sem cor */
+html.raiz:not(.dark) .skin-post aside {
+  border: 1px solid var(--raiz-line);
+  border-left-width: 1px;
+  border-radius: 0;
+}
+
+/* Botões redondos (favoritar, compartilhar): quadrados */
+html.raiz:not(.dark) .skin-post :is(button, a)[class*="rounded-full"] {
+  border-radius: 0;
+}
+
+/* ---------- Jornal: home e cards ---------- */
+
+html.raiz:not(.dark) .skin-card > a {
+  border-radius: 0;
+}
+
+/* O card inteiro é um link: só o título ganha a cor do link, e no hover */
+html.raiz:not(.dark) .skin-card a {
+  color: var(--raiz-ink);
+}
+
+html.raiz:not(.dark) .skin-card h2,
+html.raiz:not(.dark) .skin-card h3 {
+  font-family: var(--raiz-font-head);
+  font-weight: 700;
+}
+
+html.raiz:not(.dark) .skin-card a:hover :is(h2, h3) {
+  color: var(--raiz-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+html.raiz:not(.dark) .skin-card :is(p, span)[class*="text-xs"] {
+  font-family: var(--raiz-font-meta);
+}
+
+html.raiz:not(.dark) .skin-root [class*="rounded-full"]:not(img) {
+  border-radius: 0;
+}
+
+/* Capa gerada (post sem imagem): retícula de jornal no lugar do degradê */
+html.raiz:not(.dark) .skin-root .skin-cover {
+  background-color: var(--raiz-bg-alt);
+  background-image: radial-gradient(var(--raiz-ink) 0.8px, transparent 0.9px);
+  background-size: 6px 6px;
+}
+
+html.raiz:not(.dark) .skin-root .skin-cover > span {
+  align-self: flex-start;
+  padding: 2px 8px;
+  background: var(--raiz-bg);
+  font-family: var(--raiz-font-head);
+  text-shadow: none;
+}
+
+/* Fotos em tons de cinza, como impressas */
 html.raiz:not(.dark) .skin-root img {
   filter: grayscale(1) contrast(1.05);
 }
 
-/* Terminal: fotos numa cor só, como num monitor de fósforo */
+/* No texto do post só envelhece: gráfico que separa séries por cor não pode
+   perder a informação */
+html.raiz:not(.dark) .skin-post .post-content img {
+  filter: saturate(0.75) sepia(0.15);
+}
+
+/* No celular a faixa do expediente sai: o header fixo fica baixo */
+@media (max-width: 767px) {
+  html.raiz:not(.dark) .skin-header::before {
+    display: none;
+  }
+
+  html.raiz:not(.dark) .skin-logo {
+    font-size: 26px;
+  }
+}
+
+/* ---------- Terminal (escuro) ---------- */
+
+/* Fotos numa cor só, como num monitor de fósforo */
 html.raiz.dark .skin-root img {
   filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.2) brightness(0.9);
 }

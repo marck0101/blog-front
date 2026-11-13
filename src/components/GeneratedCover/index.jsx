@@ -19,7 +19,7 @@ export default function GeneratedCover({ title, category, categoryLabel, size = 
   return (
     <div
       aria-hidden
-      className={`w-full h-full bg-gradient-to-br ${gradient} text-white flex flex-col justify-between ${
+      className={`skin-cover w-full h-full bg-gradient-to-br ${gradient} text-white flex flex-col justify-between ${
         size === "sm" ? "p-2" : "p-4"
       }`}
     >
