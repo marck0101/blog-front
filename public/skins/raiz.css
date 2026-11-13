@@ -114,7 +114,10 @@ html.jornal {
   --raiz-line: #1d1a16;
   --raiz-font-body: "Libre Caslon Text", Georgia, "Times New Roman", serif;
   --raiz-font-head: "Playfair Display", Georgia, "Times New Roman", serif;
-  --raiz-font-meta: "Special Elite", "Courier New", Courier, monospace;
+  /* Metadados e botões em Caslon versalete; a máquina de escrever só na faixa
+     do topo (texto curto: em 14px por toda parte, cansava a leitura) */
+  --raiz-font-meta: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --raiz-font-type: "Special Elite", "Courier New", Courier, monospace;
   --raiz-font-mast: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
 }
 
@@ -128,11 +131,13 @@ html.jornal.dark {
   --raiz-line: #ece3d0;
 }
 
-/* Terminal: fósforo verde sobre preto, com ou sem tema escuro */
+/* Terminal: fósforo sobre preto, com ou sem tema escuro. Texto em verde suave
+   (o neon em 15 minutos de leitura cansa); o neon fica para logo, menu e cursor */
 html.terminal {
   --raiz-bg: #0a0f0a;
   --raiz-bg-alt: #111a11;
-  --raiz-ink: #6dff8a;
+  --raiz-ink: #b8e6c1;
+  --raiz-neon: #6dff8a;
   --raiz-muted: #4cc768;
   --raiz-accent: #ffcf5c;
   --raiz-line: #4cc768;
@@ -268,14 +273,14 @@ html.jornal .skin-header::before {
   display: block;
   padding: 6px 24px;
   border-bottom: 1px solid var(--raiz-line);
-  font-family: var(--raiz-font-meta);
+  font-family: var(--raiz-font-type);
   font-size: 12px;
   letter-spacing: 0.12em;
   text-align: center;
   text-transform: uppercase;
 }
 
-html.jornal .skin-logo {
+html.jornal .skin-root .skin-logo {
   font-family: var(--raiz-font-mast);
   font-size: 30px;
   font-weight: 400;
@@ -298,6 +303,8 @@ html.jornal .skin-header nav + div > button {
 html.jornal .skin-root :is(button, a):is([class^="bg-"], [class*=" bg-"]):not(.skin-card > a) {
   font-family: var(--raiz-font-meta);
   font-weight: 400;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.05em;
 }
 
 /* Títulos: Playfair pesado e apertado, como manchete */
@@ -315,13 +322,15 @@ html.jornal .skin-post h1 {
   font-size: clamp(2rem, 5vw, 3.25rem);
 }
 
-/* Autor, categoria, data e tempo de leitura: linha datilografada entre filetes */
+/* Autor, categoria, data e tempo de leitura: versalete entre filetes */
 html.jornal .skin-post .skin-meta {
   margin-top: 1rem;
   padding: 0.6rem 0;
   border-top: 1px solid var(--raiz-line);
   border-bottom: 1px solid var(--raiz-line);
-  font-size: 0.875rem;
+  font-size: 1rem;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.05em;
   color: var(--raiz-ink);
 }
 
@@ -346,8 +355,10 @@ html.jornal .skin-post .post-content > p:first-of-type::first-letter {
   color: var(--raiz-accent);
 }
 
+/* Fio embaixo do título, com respiro dos dois lados */
 html.jornal .skin-post .prose :is(h2, h3) {
-  padding-bottom: 0.3em;
+  padding-bottom: 0.4em;
+  margin-bottom: 1em;
   border-bottom: 1px solid var(--raiz-line);
 }
 
@@ -371,8 +382,8 @@ html.raiz .skin-post .prose blockquote p::after {
 
 html.jornal .skin-post .prose :is(figcaption, img + em) {
   font-family: var(--raiz-font-meta);
-  font-style: normal;
-  font-size: 0.8em;
+  font-style: italic;
+  font-size: 0.85em;
 }
 
 /* "Resposta direta" e caixas do post: quadro com fio, sem cor */
@@ -424,7 +435,11 @@ html.terminal .skin-root {
     transparent 1px,
     transparent 3px
   );
-  text-shadow: 0 0 6px rgba(109, 255, 138, 0.25);
+}
+
+/* Brilho de fósforo só nos títulos; no texto corrido ele borra */
+html.terminal .skin-root :is(h1, h2, .skin-logo) {
+  text-shadow: 0 0 4px rgba(255, 207, 92, 0.3);
 }
 
 html.terminal .skin-header {
@@ -448,13 +463,13 @@ html.terminal .skin-header::before {
   text-transform: uppercase;
 }
 
-html.terminal .skin-logo {
+html.terminal .skin-root .skin-logo {
   font-family: var(--raiz-font-mast);
   font-size: 28px;
   font-weight: 400;
   line-height: 1;
   text-transform: uppercase;
-  color: var(--raiz-ink);
+  color: var(--raiz-neon);
 }
 
 html.terminal .skin-logo::before {
@@ -470,7 +485,7 @@ html.terminal .skin-header nav + div > button {
   font-family: var(--raiz-font-head);
   font-size: 21px;
   text-transform: uppercase;
-  color: var(--raiz-ink);
+  color: var(--raiz-neon);
 }
 
 html.terminal .skin-header nav a::before {
@@ -488,9 +503,9 @@ html.terminal .skin-root :is(h1, h2, h3, h4) {
   color: var(--raiz-accent);
 }
 
+/* Caixa normal: título longo todo em maiúsculas em letra de pixel é difícil de ler */
 html.terminal .skin-root h1 {
-  line-height: 1.05;
-  text-transform: uppercase;
+  line-height: 1.1;
 }
 
 html.terminal .skin-post h1 {
@@ -543,6 +558,7 @@ html.terminal .skin-post .prose blockquote {
 
 html.terminal .skin-post .prose blockquote p::before {
   content: ">> ";
+  content: ">> " / "";
 }
 
 html.terminal .skin-post .prose a {
@@ -561,7 +577,7 @@ html.terminal .skin-post .post-content::after {
   height: 1.1em;
   margin-top: 1em;
   vertical-align: text-bottom;
-  background: var(--raiz-ink);
+  background: var(--raiz-neon);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -626,6 +642,8 @@ html.raiz .skin-root .skin-offer.skin-offer {
 html.raiz .skin-root .skin-offer.skin-offer * {
   font-family: inherit;
   font-weight: 400;
+  font-variant-caps: normal;
+  letter-spacing: 0;
 }
 
 html.raiz .skin-root .skin-offer.skin-offer span {
@@ -641,7 +659,10 @@ html.raiz .skin-root .skin-offer.skin-offer button {
 html.raiz .skin-root .skin-offer.skin-offer button:first-child {
   background: #6dff8a;
   color: #0a0f0a;
+  font-family: inherit;
   font-weight: 600;
+  font-variant-caps: normal;
+  letter-spacing: 0;
 }
 
 /* ---------- Celular ---------- */
