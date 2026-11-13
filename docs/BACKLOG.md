@@ -62,30 +62,30 @@ Ver `node-express-mongodb/docs/BACKLOG.md`. Resumo: `BLOG_FAQ` e
 `SEASONS_FAQ` (em `src/seo/site.js`) têm uma cópia na API para o
 `/llms-full.txt`; o ideal é um lugar só.
 
-## Média — Modo raiz: Jornal e Terminal (fases 3 e 4)
+## Média — Estilos de época: Jornal e Terminal (fase 4)
 
-**O que é:** botão no topo do blog que troca o visual por um retrô, para o
-leitor brincar. Claro + raiz = **Jornal / máquina de escrever**; escuro + raiz
-= **Terminal BBS**. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
+**O que é:** o leitor escolhe o estilo do blog no ícone ao lado do tema:
+**Visual atual**, **Jornal / máquina de escrever** (claro; no tema escuro vira
+o Jornal noturno) ou **Terminal BBS** (sempre escuro). Post de Tecnologia
+convida para o Terminal uma vez só; aceitando, o blog todo fica no Terminal até
+ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
 
-**Feito (fase 1):** classe `raiz` no `<html>` (`src/utils/skin.js`, aplicada
-antes de pintar pelo `public/theme-init.js`), botão `SkinToggle` ao lado do
-tema, ganchos `skin-root/header/footer/post/card` (React e `api/prerender.js`)
-e `public/skins/raiz.css` com as duas paletas e fontes do sistema. O CSS só é
-baixado por quem liga; o painel não tem modo raiz. Evento GA4 `skin_toggle`.
-
-**Feito (fase 2 — Jornal):** fontes no próprio site em `public/skins/fonts`
-(Playfair Display, Libre Caslon Text, Special Elite, UnifrakturMaguntia; só o
-subconjunto latin, ~190 KB, licenças em `LICENSES.txt`, cache de 1 ano no
-`vercel.json`), faixa de expediente, nome em gótico, manchete, linha de autor
-entre filetes, capitular, citação entre filetes, cards e capa gerada em
-retícula. Fotos dos cards em cinza; no texto do post só envelhecem (gráfico
-por cor não perde a informação).
-
-**Fase 3 — Terminal:** VT323 (títulos e menus) e IBM Plex Mono (texto),
-moldura ASCII com `aria-hidden`, menu por teclas `[B] [S] [F]`, linhas de
-varredura estáticas, cursor que pisca só sem `prefers-reduced-motion`, campos
-de formulário (busca, newsletter) na paleta.
+**Feito (fases 1 a 3):**
+- `src/utils/skin.js`: estilo salvo no navegador (`skin` = jornal|terminal;
+  o "raiz" da fase 1 vira jornal), classes `raiz` + `jornal`/`terminal` no
+  `<html>`, aplicadas antes de pintar pelo `public/theme-init.js`; o painel
+  não tem estilo de época.
+- `SkinToggle` (seletor com os 3 estilos) e `TerminalOffer` (faixa fixa no
+  rodapé de post de tecnologia; espera o banner de cookies; resposta em
+  `skin-offer`). Eventos GA4 `skin_toggle` e `terminal_offer`.
+- Ganchos `skin-*` no React e no `api/prerender.js`; `public/skins/raiz.css`
+  (~16 KB) com as paletas, o Jornal e o Terminal.
+- Fontes no próprio site em `public/skins/fonts` (só o subconjunto latin,
+  licenças em `LICENSES.txt`, cache de 1 ano no `vercel.json`); o navegador
+  só baixa as do estilo em uso: Jornal ~190 KB, Terminal ~50 KB, visual atual
+  nada.
+- Imagens no texto do post continuam coloridas (gráfico por cor não perde a
+  informação); fotos dos cards em cinza (Jornal) ou fósforo verde (Terminal).
 
 **Fase 4 — Detalhes com dados reais:** coluna lateral do post com índice,
 "Tiragem"/estatísticas (leituras e favoritos reais do `PostDailyStat`) e

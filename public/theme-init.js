@@ -12,17 +12,18 @@
   document.documentElement.classList.toggle("dark", t === "dark");
   document.documentElement.style.colorScheme = t;
 
-  // Modo raiz (mesma regra de src/utils/skin.js). O painel não tem modo raiz.
+  // Estilo de época (mesma regra de src/utils/skin.js). O painel não tem.
   // document.write, não appendChild: só o <link> escrito pelo parser segura a
   // pintura em todo navegador, e a página não pisca no visual atual.
-  var raiz = false;
+  var skin = null;
   try {
-    raiz = localStorage.getItem("skin") === "raiz";
+    skin = localStorage.getItem("skin");
   } catch {
     /* sem localStorage: visual atual */
   }
-  if (raiz && location.pathname.indexOf("/admin") !== 0) {
-    document.documentElement.classList.add("raiz");
+  if (skin === "raiz") skin = "jornal";
+  if ((skin === "jornal" || skin === "terminal") && location.pathname.indexOf("/admin") !== 0) {
+    document.documentElement.classList.add("raiz", skin);
     document.write('<link id="skin-raiz" rel="stylesheet" href="/skins/raiz.css">');
   }
 })();

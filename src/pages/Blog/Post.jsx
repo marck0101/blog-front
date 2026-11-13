@@ -29,6 +29,7 @@ import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
 import DirectAnswer from "../../components/DirectAnswer";
+import TerminalOffer from "../../components/TerminalOffer";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 import { Loading, Skeleton } from "../../components/Skeleton";
@@ -299,6 +300,8 @@ export default function Post() {
           onClose={() => setLightbox({ open: false, src: "", alt: "" })}
         />
       )}
+
+      <TerminalOffer category={post.category} />
 
       <main className="skin-post max-w-3xl mx-auto px-6 py-10">
         <BackButton />

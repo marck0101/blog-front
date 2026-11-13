@@ -1,19 +1,29 @@
-// Modo raiz: visual retrô do blog, liga/desliga, independente do tema. Claro +
-// raiz = Jornal; escuro + raiz = Terminal (o CSS escolhe pela classe "dark").
+import { useSyncExternalStore } from "react";
+
+// Estilo do blog: "atual" | "jornal" | "terminal". O Jornal segue o tema
+// (claro = papel creme; escuro = Jornal noturno); o Terminal é sempre escuro.
 // Mesma regra de public/theme-init.js, que aplica antes de pintar.
 const KEY = "skin";
+const OFFER_KEY = "skin-offer";
+const EVENT = "skin-change";
+export const SKINS = ["atual", "jornal", "terminal"];
 export const SKIN_CSS_ID = "skin-raiz";
 export const SKIN_CSS_HREF = "/skins/raiz.css";
+// Post desta categoria convida para o Terminal (uma vez só)
+export const TERMINAL_CATEGORY = "tecnologia";
 
-export function getSkinPref() {
+export function getSkin() {
+  let saved = null;
   try {
-    return localStorage.getItem(KEY) === "raiz";
+    saved = localStorage.getItem(KEY);
   } catch {
-    return false;
+    /* sem localStorage: visual atual */
   }
+  if (saved === "raiz") return "jornal"; // fase 1 guardava "raiz"
+  return saved === "jornal" || saved === "terminal" ? saved : "atual";
 }
 
-// O CSS só é baixado por quem liga; quem nunca liga não paga nada
+// O CSS só é baixado por quem escolhe um estilo; quem nunca escolhe não paga nada
 export function loadSkinCss() {
   if (document.getElementById(SKIN_CSS_ID)) return;
   const link = document.createElement("link");
@@ -23,18 +33,59 @@ export function loadSkinCss() {
   document.head.appendChild(link);
 }
 
-export function applySkin(on = getSkinPref()) {
+// "raiz" = qualquer estilo de época (base comum do CSS); "jornal"/"terminal" = qual
+export function applySkin(skin = getSkin()) {
+  const on = skin !== "atual";
   if (on) loadSkinCss();
-  document.documentElement.classList.toggle("raiz", on);
-  return on;
+  const classes = document.documentElement.classList;
+  classes.toggle("raiz", on);
+  classes.toggle("jornal", skin === "jornal");
+  classes.toggle("terminal", skin === "terminal");
+  return skin;
 }
 
-export function setSkinPref(on) {
+export function setSkin(skin) {
+  const next = SKINS.includes(skin) ? skin : "atual";
   try {
-    if (on) localStorage.setItem(KEY, "raiz");
-    else localStorage.removeItem(KEY);
+    if (next === "atual") localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY, next);
   } catch {
     /* sem localStorage: vale só nesta visita */
   }
-  return applySkin(on);
+  applySkin(next);
+  window.dispatchEvent(new Event(EVENT));
+  return next;
 }
+
+function subscribe(onChange) {
+  window.addEventListener(EVENT, onChange);
+  window.addEventListener("storage", onChange); // outra aba mudou
+  return () => {
+    window.removeEventListener(EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+// Estilo atual, igual em todos os componentes (botão do topo, convite do post)
+export const useSkin = () => useSyncExternalStore(subscribe, getSkin, () => "atual");
+
+// Convite do Terminal: null = ainda não respondeu
+export function getOfferAnswer() {
+  try {
+    return localStorage.getItem(OFFER_KEY);
+  } catch {
+    return "sem-armazenamento"; // não dá para lembrar a resposta: não pergunta
+  }
+}
+
+export function answerOffer(accept) {
+  try {
+    localStorage.setItem(OFFER_KEY, accept ? "aceito" : "recusado");
+  } catch {
+    /* sem localStorage: vale só nesta visita */
+  }
+  if (accept) setSkin("terminal");
+  else window.dispatchEvent(new Event(EVENT));
+}
+
+export const useOfferAnswer = () => useSyncExternalStore(subscribe, getOfferAnswer, () => "ssr");
