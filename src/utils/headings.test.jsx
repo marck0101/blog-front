@@ -55,6 +55,11 @@ describe("barra de leitura", () => {
     expect(readingProgress({ top: -2500, bottom: 500, height: 3000 }, 1000)).toBe(1);
   });
 
+  it("texto fora da página (altura 0, trocando de post) não conta como lido", () => {
+    expect(readingProgress({ top: 0, bottom: 0, height: 0 }, 1000)).toBe(0);
+    expect(readingProgress(null, 1000)).toBe(0);
+  });
+
   it("texto que cabe na tela enche quando o fim aparece", () => {
     expect(readingProgress({ top: 200, bottom: 700, height: 500 }, 1000)).toBe(1);
     expect(readingProgress({ top: 800, bottom: 1300, height: 500 }, 1000)).toBe(0);

@@ -32,7 +32,9 @@ import DirectAnswer from "../../components/DirectAnswer";
 import TerminalOffer from "../../components/TerminalOffer";
 import PostToc from "../../components/PostToc";
 import ReadingProgress from "../../components/ReadingProgress";
-import { hashId, withHeadingIds } from "../../utils/headings";
+import { hashId, readingProgress, withHeadingIds } from "../../utils/headings";
+import { recordProgress } from "../../utils/readingHistory";
+import ResumeReading from "../../components/ResumeReading";
 import { useFeatures } from "../../utils/features";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
@@ -232,6 +234,41 @@ export default function Post() {
     );
   };
 
+  // Posts lidos e % de leitura (só neste navegador): anota até onde o leitor
+  // chegou, com a mesma régua da barra do topo. Grava a cada 2 pontos e ao sair.
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!features.readingHistory || !post?.slug || !el) return;
+    let frame = 0;
+    let saved = -1;
+    // null = ainda não rolou: abrir e sair sem ler não apaga onde parou antes
+    let last = null;
+    const save = () => {
+      if (last !== null && last !== saved) {
+        recordProgress(post, last);
+        saved = last;
+      }
+    };
+    const check = () => {
+      frame = 0;
+      // Trocando de post: o texto anterior já saiu da página, não mede mais nada
+      if (!el.isConnected) return;
+      last = Math.round(readingProgress(el.getBoundingClientRect(), window.innerHeight) * 100);
+      if (Math.abs(last - saved) >= 2 || last === 100) save();
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
+    const onHide = () => { if (document.visibilityState === "hidden") save(); };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", onHide);
+      if (frame) cancelAnimationFrame(frame);
+      save();
+    };
+  }, [post?.slug, post?.content, features.readingHistory]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Aplica cursor-pointer e lightbox em todas as imagens do conteúdo
   useEffect(() => {
     const imgs = contentRef.current?.querySelectorAll("img");
@@ -365,6 +402,8 @@ export default function Post() {
           <FavoriteButton post={post} location="post_top" />
           <ShareButtons post={post} location="post_top" />
         </div>
+
+        {features.readingHistory && <ResumeReading key={`resume-${post.slug}`} slug={post.slug} contentRef={contentRef} />}
 
         <SeasonNav post={post} variant="badge" />
 

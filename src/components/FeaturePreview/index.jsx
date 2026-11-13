@@ -116,7 +116,39 @@ function ReadingBar({ on }) {
   );
 }
 
-const PREVIEWS = { skins: Skins, terminalOffer: TerminalOffer, toc: Toc, readingProgress: ReadingBar };
+// Cartões com o selo "Lido" e a barra de quanto já leu
+function History({ on }) {
+  const cards = [
+    { label: "✓ Lido", pct: 100, tone: "bg-green-600" },
+    { label: "42% lido", pct: 42, tone: "bg-blue-600 dark:bg-blue-400" },
+    { label: null, pct: 0 },
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-2 h-full">
+      {cards.map((c, i) => (
+        <div key={i} className="flex flex-col rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 overflow-hidden">
+          <div className="relative h-1/2 bg-gray-200 dark:bg-gray-800">
+            {on && c.pct > 0 && (
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10">
+                <div className={`h-full ${c.tone}`} style={{ width: `${c.pct}%` }} />
+              </div>
+            )}
+          </div>
+          <div className="p-1.5 space-y-1">
+            {on && c.label ? (
+              <span className={`inline-block rounded-full px-1.5 text-[8px] font-semibold ${c.pct === 100 ? "bg-green-100 text-green-800" : "bg-blue-50 text-blue-700"}`}>{c.label}</span>
+            ) : (
+              <span className="block h-2.5" />
+            )}
+            <Lines n={2} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const PREVIEWS = { skins: Skins, terminalOffer: TerminalOffer, toc: Toc, readingProgress: ReadingBar, readingHistory: History };
 
 export default function FeaturePreview({ name, on, className = "h-32" }) {
   const Preview = PREVIEWS[name];

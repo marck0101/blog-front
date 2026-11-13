@@ -102,6 +102,15 @@ ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
   (cache de 30 s); o front guarda a última resposta em `site-features`, que o
   `theme-init.js` lê antes de pintar. API fora do ar = tudo ligado.
 
+- Posts lidos e % de leitura (13/11/2026): `src/utils/readingHistory.js` guarda
+  no navegador (`reading-history`, até 200 posts) o máximo lido e onde parou,
+  com a régua da barra de leitura; lido = 75% (como nas seasons). Cartões com
+  "✓ Lido"/"42% lido" e barra na capa, "Retome a leitura" na home,
+  "Continuar de onde parou" no post e /favoritos virou **Minhas leituras**
+  (resumo "você leu X de Y", Lendo agora, Favoritos, Já lidos, apagar
+  histórico). Recurso `readingHistory` no painel; Política de Privacidade
+  atualizada. Eventos GA4 `resume_reading` e `reading_history_clear`.
+
 **Fase 4 — Detalhes com dados reais:** coluna lateral do post com o sumário fixo,
 "Tiragem"/estatísticas (leituras e favoritos reais do `PostDailyStat`) e
 comentários como "Cartas do leitor"/"Mural".

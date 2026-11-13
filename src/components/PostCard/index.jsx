@@ -5,6 +5,9 @@ import GeneratedCover from "../GeneratedCover";
 import FavoriteButton from "../FavoriteButton";
 import CoverImage from "../CoverImage";
 import { GRID_SIZES } from "../../utils/coverSrcSet";
+import { useFeatures } from "../../utils/features";
+import { useReadingHistory } from "../../utils/readingHistory";
+import { ReadBar, ReadChip } from "../ReadingStatus";
 
 // Coração sobre a capa: fora do <Link> (botão dentro de link não é válido)
 function CardFavorite({ post, className }) {
@@ -12,7 +15,7 @@ function CardFavorite({ post, className }) {
 }
 
 // Lista: capa pequena ao lado do texto
-function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
+function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel, reading }) {
   return (
     <article className="skin-card group relative">
       <CardFavorite post={post} className="top-0 left-0" />
@@ -20,12 +23,13 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
         to={`/blog/${post.slug || post.id}`}
         className="flex gap-4 sm:gap-6 items-start rounded-xl p-2 -m-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
       >
-        <div className="w-28 sm:w-56 shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+        <div className="relative w-28 sm:w-56 shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
           {coverSrc ? (
             <CoverImage src={coverSrc} alt={post.coverImageAlt || ""} width={320} height={180} sizes="(min-width: 640px) 224px, 112px" className="w-full h-full object-cover" />
           ) : (
             <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
           )}
+          <ReadBar entry={reading} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-300">
@@ -35,7 +39,12 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
             </p>
             <ReadingTime minutes={post.readingMinutes} />
           </div>
-          {seasonLabel && <div className="mt-1"><SeasonBadge label={seasonLabel} /></div>}
+          {(seasonLabel || reading) && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              <SeasonBadge label={seasonLabel} />
+              <ReadChip entry={reading} />
+            </div>
+          )}
           <h2 className="mt-1 font-semibold text-base sm:text-xl leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {post.title}
           </h2>
@@ -50,7 +59,7 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel }) {
 }
 
 // Compacta: só data, categoria e título, para varrer o arquivo
-function CompactCard({ post, date, categoryLabel }) {
+function CompactCard({ post, date, categoryLabel, reading }) {
   return (
     <article className="skin-card group">
       <Link
@@ -61,6 +70,7 @@ function CompactCard({ post, date, categoryLabel }) {
         <h2 className="flex-1 font-medium text-gray-900 dark:text-gray-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline underline-offset-4 transition-colors">
           {post.title}
         </h2>
+        <ReadChip entry={reading} className="shrink-0" />
         {categoryLabel && (
           <span className="hidden sm:inline shrink-0 text-xs text-gray-500 dark:text-gray-300">{categoryLabel}</span>
         )}
@@ -106,7 +116,7 @@ function ShowcaseBadge({ badge }) {
 
 // Grade: mesmo padrão do admin — card com borda, capa limpa e texto abaixo,
 // todos com a mesma altura na linha
-function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, priority }) {
+function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, priority, reading }) {
   return (
     <article className="skin-card group h-full relative">
       <CardFavorite post={post} className="top-2 right-2" />
@@ -114,7 +124,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, pri
         to={`/blog/${post.slug || post.id}`}
         className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden transition hover:border-blue-400 hover:shadow-md"
       >
-        <div className="aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
+        <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
           {coverSrc ? (
             <CoverImage
               src={coverSrc}
@@ -128,6 +138,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, pri
           ) : (
             <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} />
           )}
+          <ReadBar entry={reading} />
         </div>
 
         <div className="p-4 flex-1 flex flex-col gap-1.5">
@@ -140,6 +151,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, pri
           </div>
           <ShowcaseBadge badge={badge} />
           <SeasonBadge label={seasonLabel} />
+          <ReadChip entry={reading} />
           <h2 className="font-semibold text-lg leading-snug text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {post.title}
           </h2>
@@ -159,7 +171,11 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, pri
 export default function PostCard({ post, variant = "grid", categoryLabel, seasonLabel, badge, priority = false }) {
   const coverSrc = normalizeImageUrl(post.coverImage);
   const date = new Date(post.publishedAt).toLocaleDateString("pt-BR");
-  const props = { post, coverSrc, date, categoryLabel, seasonLabel, badge, priority };
+  // "Lido" / "42% lido" deste navegador (Recursos do blog pode desligar)
+  const history = useReadingHistory();
+  const { readingHistory } = useFeatures();
+  const reading = readingHistory ? history[post.slug] || null : null;
+  const props = { post, coverSrc, date, categoryLabel, seasonLabel, badge, priority, reading };
 
   if (variant === "list") return <ListCard {...props} />;
   if (variant === "compact") return <CompactCard {...props} />;

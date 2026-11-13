@@ -644,6 +644,29 @@ html.terminal .skin-root .skin-progress-bar.skin-progress-bar {
   background-color: var(--raiz-neon);
 }
 
+/* Posts lidos: barra da capa e do resumo em Minhas leituras (classe repetida
+   pelo mesmo motivo da barra de leitura) */
+html.raiz .skin-root .skin-readbar.skin-readbar {
+  background-color: var(--raiz-bg-alt);
+}
+
+html.raiz .skin-root .skin-readbar.skin-readbar > div {
+  background-color: var(--raiz-accent);
+}
+
+html.terminal .skin-root .skin-readbar.skin-readbar > div {
+  background-color: var(--raiz-neon);
+}
+
+html.raiz .skin-root .skin-readchip {
+  font-family: var(--raiz-font-meta);
+}
+
+html.jornal .skin-root .skin-readchip {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
+}
+
 html.raiz .skin-root .skin-toc.skin-toc {
   background-color: var(--raiz-bg-alt);
 }

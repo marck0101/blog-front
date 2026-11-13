@@ -10,6 +10,7 @@ export const FEATURE_DEFAULTS = {
   terminalOffer: true,
   toc: true,
   readingProgress: true,
+  readingHistory: true,
 };
 
 const KEY = "site-features";

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Menu, X, ChevronDown, Heart } from "lucide-react";
+import { Menu, X, ChevronDown, BookMarked } from "lucide-react";
 import { useFavorites } from "../../../utils/favorites";
+import { useReadingHistory } from "../../../utils/readingHistory";
+import { useFeatures } from "../../../utils/features";
 import SubscriberService from "../../../services/subscriber.service";
 import SeasonsService from "../../../services/seasons.service";
 import ThemeToggle from "../../ThemeToggle";
@@ -25,6 +27,10 @@ export default function BlogHeader({ activeNav }) {
   const moreRef = useRef(null);
   // Link "Favoritos" só aparece quando há post salvo neste navegador
   const favoritesCount = useFavorites().length;
+  // "Minhas leituras" aparece com favorito salvo ou post começado neste navegador
+  const historyCount = Object.keys(useReadingHistory()).length;
+  const { readingHistory } = useFeatures();
+  const showReadings = favoritesCount > 0 || (readingHistory && historyCount > 0);
 
   const visibleCategories = categories.slice(0, VISIBLE_CATEGORIES_COUNT);
   const moreCategories = categories.slice(VISIBLE_CATEGORIES_COUNT);
@@ -181,21 +187,23 @@ export default function BlogHeader({ activeNav }) {
 
         {/* Direita: theme toggle + assinar + hamburger (acesso do autor fica no rodapé) */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
-          {favoritesCount > 0 && (
+          {showReadings && (
             <Link
               to="/favoritos"
-              aria-label={`Favoritos (${favoritesCount})`}
-              title="Favoritos"
+              aria-label={favoritesCount > 0 ? `Minhas leituras (${favoritesCount} favoritos)` : "Minhas leituras"}
+              title="Minhas leituras"
               className={`relative p-2 rounded-md transition ${
                 pathname === "/favoritos"
-                  ? "text-red-500"
-                  : "text-gray-600 dark:text-gray-300 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
-              <Heart size={18} />
-              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold leading-4 text-center tabular-nums">
-                {favoritesCount}
-              </span>
+              <BookMarked size={18} />
+              {favoritesCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold leading-4 text-center tabular-nums">
+                  {favoritesCount}
+                </span>
+              )}
             </Link>
           )}
 

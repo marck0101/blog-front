@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
+  BookMarked,
   CheckCircle2,
   CircleOff,
   ListOrdered,
@@ -52,6 +53,14 @@ const FEATURES = [
     subtitle: "Topo da tela",
     on: "Linha fina no topo que enche conforme o leitor avança no texto.",
     off: "Sem a linha no topo.",
+  },
+  {
+    name: "readingHistory",
+    icon: BookMarked,
+    title: "Posts lidos e progresso",
+    subtitle: "Só no navegador do leitor",
+    on: "Selo \"Lido\" e \"42% lido\" nos cartões, \"Retome a leitura\" na home, \"Continuar de onde parou\" no post e o resumo em Minhas leituras.",
+    off: "Nada disso aparece e o progresso deixa de ser anotado. O que o leitor já leu continua guardado no navegador dele.",
   },
 ];
 

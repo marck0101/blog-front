@@ -20,6 +20,7 @@ import useViewMode from "../../hooks/useViewMode";
 import usePageSize from "../../hooks/usePageSize";
 import SubscribeForm from "../../components/SubscribeForm";
 import SeasonCard from "../../components/SeasonCard";
+import ResumeShelf from "../../components/ResumeShelf";
 import { setPageContext, trackEvent } from "../../utils/analytics";
 import { Flame, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
@@ -351,6 +352,9 @@ export default function BlogHome() {
           <WeeklyHighlights posts={highlights} categories={categories} />
         </section>
       )}
+
+      {/* Retome a leitura: posts começados neste navegador (só na primeira página, sem filtro) */}
+      {page === 1 && !hasActiveFilters && <ResumeShelf categories={categories} />}
 
       {/* Destaque das seasons: só na primeira página, sem filtro */}
       {seasons.length > 0 && page === 1 && !hasActiveFilters && (

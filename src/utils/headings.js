@@ -69,6 +69,8 @@ export function tocItems(headings) {
 // Quanto do texto já foi lido (0 a 1), para a barra do topo: começa quando o
 // topo do texto chega ao topo da tela e enche quando o fim dele aparece embaixo.
 export function readingProgress(rect, viewportHeight) {
+  // Texto fora da página (trocando de post, ainda carregando): altura 0 não é "fim"
+  if (!rect || !(rect.height > 0)) return 0;
   const total = rect.height - viewportHeight;
   if (total <= 0) return rect.bottom <= viewportHeight ? 1 : 0;
   return Math.min(1, Math.max(0, -rect.top / total));

@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
           Política de Privacidade
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-300 mb-10">
-          Última atualização: outubro de 2026
+          Última atualização: novembro de 2026
         </p>
 
         <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
@@ -68,8 +68,11 @@ export default function PrivacyPolicy() {
                 Não temos acesso à sua senha nem a outros dados da conta.
               </li>
               <li>
-                <strong>Favoritos e compartilhamentos</strong> — os posts que você
-                favorita ficam salvos só no seu navegador. Ao favoritar ou usar um botão
+                <strong>Favoritos, leituras e compartilhamentos</strong> — os posts que você
+                favorita e quanto você já leu de cada um (para mostrar &quot;Lido&quot;, a
+                porcentagem e &quot;continuar de onde parou&quot;) ficam salvos só no seu
+                navegador e não são enviados para nós. Dá para apagar o histórico em
+                Minhas leituras. Ao favoritar ou usar um botão
                 de compartilhar, contamos o evento no post de forma anônima, sem
                 identificar quem fez. Links compartilhados levam parâmetros como
                 utm_medium=share para sabermos quantas visitas cada canal trouxe.
@@ -156,7 +159,7 @@ export default function PrivacyPolicy() {
             <ul>
               <li>
                 <strong>Essenciais</strong> — necessários para o funcionamento básico
-                do site (preferências de tema, aceite desta política, posts favoritos e
+                do site (preferências de tema, aceite desta política, posts favoritos, progresso de leitura e
                 a sessão de quem entrou com Google para comentar).
               </li>
               <li>
