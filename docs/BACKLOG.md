@@ -84,8 +84,8 @@ ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
   licenças em `LICENSES.txt`, cache de 1 ano no `vercel.json`); o navegador
   só baixa as do estilo em uso: Jornal ~190 KB, Terminal ~50 KB, visual atual
   nada.
-- Imagens no texto do post continuam coloridas (gráfico por cor não perde a
-  informação); fotos dos cards em cinza (Jornal) ou fósforo verde (Terminal).
+- Imagens (capas, fotos e as do texto) com as cores originais em todos os
+  estilos, sem filtro (decisão de 13/11/2026).
 
 **Fase 4 — Detalhes com dados reais:** coluna lateral do post com índice,
 "Tiragem"/estatísticas (leituras e favoritos reais do `PostDailyStat`) e

@@ -250,8 +250,8 @@ html.raiz .skin-card :is(p, span)[class*="text-xs"] {
   font-family: var(--raiz-font-meta);
 }
 
-/* Imagens no texto do post continuam coloridas: gráfico que separa séries por
-   cor não pode perder a informação. Só ganham moldura. */
+/* Imagens (capas, fotos e as do texto) ficam com as cores originais em todos
+   os estilos, sem filtro: decisão de 13/11/2026. As do texto ganham moldura. */
 html.raiz .skin-post .post-content img {
   border: 1px solid var(--raiz-line);
 }
@@ -409,19 +409,6 @@ html.jornal .skin-root .skin-cover > span {
   background: var(--raiz-bg);
   font-family: var(--raiz-font-head);
   text-shadow: none;
-}
-
-/* Fotos dos cards em tons de cinza, como impressas */
-html.jornal .skin-root img {
-  filter: grayscale(1) contrast(1.05);
-}
-
-html.jornal.dark .skin-root img {
-  filter: grayscale(1) brightness(0.85);
-}
-
-html.jornal .skin-post .post-content img {
-  filter: saturate(0.75) sepia(0.15);
 }
 
 /* ---------- Terminal ---------- */
@@ -617,15 +604,6 @@ html.terminal .skin-root .skin-cover > span {
   background: var(--raiz-bg);
   font-family: var(--raiz-font-head);
   font-size: 1.25rem;
-}
-
-/* Fotos dos cards numa cor só, como num monitor de fósforo */
-html.terminal .skin-root img {
-  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.2) brightness(0.9);
-}
-
-html.terminal .skin-post .post-content img {
-  filter: brightness(0.92);
 }
 
 /* ---------- Convite do Terminal (aparece no visual atual e no Jornal) ---------- */
