@@ -32,7 +32,7 @@ import DirectAnswer from "../../components/DirectAnswer";
 import TerminalOffer from "../../components/TerminalOffer";
 import PostToc from "../../components/PostToc";
 import ReadingProgress from "../../components/ReadingProgress";
-import { withHeadingIds } from "../../utils/headings";
+import { hashId, withHeadingIds } from "../../utils/headings";
 import { useFeatures } from "../../utils/features";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
@@ -244,9 +244,9 @@ export default function Post() {
   // Link com âncora (/blog/post#secao) vindo de outra página: o texto chega
   // depois da navegação, então o navegador não rola sozinho até a seção
   useEffect(() => {
-    const id = decodeURIComponent(window.location.hash.slice(1));
-    if (!id || !post?.content) return;
-    document.getElementById(id)?.scrollIntoView();
+    if (!post?.content) return;
+    const id = hashId(window.location.hash);
+    if (id) document.getElementById(id)?.scrollIntoView();
   }, [post?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {

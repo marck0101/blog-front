@@ -11,12 +11,13 @@ import PrivateRoute from "./PrivateRoute";
 import AnalyticsTracker from "../components/AnalyticsTracker";
 import ScrollToTop from "../components/ScrollToTop";
 import lazyPage from "../utils/lazyPage";
+import AppError from "../components/AppError";
 
 import BlogHome from "../pages/Blog/BlogHome";
 import Post from "../pages/Blog/Post";
 
 // Admin e páginas secundárias em chunks separados — o leitor do blog não baixa
-// editor (TipTap), Firebase, datepicker etc. lazyPage recarrega se a aba ficou
+// editor (TipTap), datepicker etc. lazyPage recarrega se a aba ficou
 // com a versão de antes de um deploy.
 const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
 const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
@@ -58,7 +59,7 @@ function RootLayout() {
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-      <Route element={<RootLayout />}>
+      <Route element={<RootLayout />} errorElement={<AppError />}>
         {/* PUBLIC */}
         <Route path="/" element={<Navigate to="/blog" replace />} />
         <Route path="/blog" element={<BlogHome />} />
