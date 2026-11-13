@@ -73,3 +73,13 @@ export function readingProgress(rect, viewportHeight) {
   if (total <= 0) return rect.bottom <= viewportHeight ? 1 : 0;
   return Math.min(1, Math.max(0, -rect.top / total));
 }
+
+// Id da âncora do endereço (#secao). Âncora malformada (#%E0) é erro no
+// decodeURIComponent e derrubava a página do post inteira: vira "sem âncora".
+export function hashId(hash) {
+  try {
+    return decodeURIComponent(String(hash || "").slice(1));
+  } catch {
+    return "";
+  }
+}

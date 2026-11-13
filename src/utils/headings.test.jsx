@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { headingText, readingProgress, slugifyHeading, tocItems, withHeadingIds } from "./headings";
+import { hashId, headingText, readingProgress, slugifyHeading, tocItems, withHeadingIds } from "./headings";
 import PostToc from "../components/PostToc";
 
 vi.mock("./analytics", () => ({ trackEvent: vi.fn() }));
@@ -86,5 +86,35 @@ describe("sumário do post", () => {
   it("não aparece em post curto", () => {
     const { container } = render(<PostToc headings={headings.slice(0, 3)} postSlug="post" />);
     expect(container.innerHTML).toBe("");
+  });
+});
+
+describe("âncora do endereço", () => {
+  it("lê o id com acento codificado", () => {
+    expect(hashId("#a-ponta-do-iceberg")).toBe("a-ponta-do-iceberg");
+    expect(hashId("#se%C3%A7%C3%A3o")).toBe("seção");
+  });
+
+  it("âncora malformada vira vazio em vez de derrubar a página", () => {
+    expect(hashId("#%E0")).toBe("");
+    expect(hashId("#%")).toBe("");
+    expect(hashId("")).toBe("");
+    expect(hashId(undefined)).toBe("");
+  });
+});
+
+describe("conteúdo hostil nos intertítulos", () => {
+  it("texto do intertítulo nunca vira HTML no sumário", () => {
+    const { headings } = withHeadingIds('<h2>&lt;img src=x onerror=alert(1)&gt; Título</h2><h2>Dois</h2><h2>Três</h2>');
+    render(<PostToc headings={headings} postSlug="p" />);
+    const nav = screen.getByRole("navigation", { name: "Sumário do post" });
+    expect(nav.querySelector("img")).toBeNull();
+    expect(nav.textContent).toContain("<img src=x onerror=alert(1)> Título");
+    expect(headings[0].id).toBe("img-src-x-onerror-alert-1-titulo");
+  });
+
+  it("id gerado só tem letras, números e hífen", () => {
+    const { headings } = withHeadingIds('<h2>"><script>x</script> javascript:alert(1)</h2>');
+    expect(headings[0].id).toMatch(/^[a-z0-9-]+$/);
   });
 });
