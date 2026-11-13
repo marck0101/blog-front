@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
 import { BlogPostSchema } from "../../components/StructuredData";
@@ -30,6 +30,9 @@ import RelatedPosts from "../../components/RelatedPosts";
 import PostFaq from "../../components/PostFaq";
 import DirectAnswer from "../../components/DirectAnswer";
 import TerminalOffer from "../../components/TerminalOffer";
+import PostToc from "../../components/PostToc";
+import ReadingProgress from "../../components/ReadingProgress";
+import { withHeadingIds } from "../../utils/headings";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 import { Loading, Skeleton } from "../../components/Skeleton";
@@ -92,6 +95,8 @@ export default function Post() {
   const loading = Boolean(slug) && !hasAnswer(result);
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
+  // Texto com âncoras nos intertítulos (h2/h3) e a lista deles para o sumário
+  const body = useMemo(() => withHeadingIds(safeHtml(post?.content)), [post?.content]);
   // Nomes para exibir: "Negócios" em vez do slug, título da season no breadcrumb
   // Do prerender quando houver: breadcrumb e categoria não mudam depois do primeiro render
   const [categories, setCategories] = useState(() => prerendered("categories") || []);
@@ -233,6 +238,14 @@ export default function Post() {
     });
   }, [post?.content]);
 
+  // Link com âncora (/blog/post#secao) vindo de outra página: o texto chega
+  // depois da navegação, então o navegador não rola sozinho até a seção
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id || !post?.content) return;
+    document.getElementById(id)?.scrollIntoView();
+  }, [post?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return (
       <BlogLayout>
@@ -302,6 +315,7 @@ export default function Post() {
       )}
 
       <TerminalOffer category={post.category} />
+      <ReadingProgress targetRef={contentRef} watch={post.content} />
 
       <main className="skin-post max-w-3xl mx-auto px-6 py-10">
         <BackButton />
@@ -353,11 +367,13 @@ export default function Post() {
 
         <DirectAnswer text={post.directAnswer} />
 
+        <PostToc key={`toc-${post._id}`} headings={body.headings} postSlug={post.slug} />
+
         <div
           ref={contentRef}
           onClick={handleContentClick}
           className="post-content prose prose-lg max-w-none mt-8 dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: safeHtml(post.content) }}
+          dangerouslySetInnerHTML={{ __html: body.html }}
         />
 
         <PostFaq post={post} />

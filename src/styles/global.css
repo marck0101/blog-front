@@ -314,3 +314,9 @@ html.dark .text-gray-900 { color: rgb(255 255 255) !important; }
 .dark .drp-dropdown .react-datepicker__year-read-view--down-arrow {
   border-color: #9ca3af;
 }
+
+/* Âncoras dos intertítulos (sumário, link /blog/post#secao): param abaixo do
+   header fixo, que tem até ~103px nos estilos Jornal e Terminal */
+.post-content :is(h2, h3) {
+  scroll-margin-top: 7.5rem;
+}

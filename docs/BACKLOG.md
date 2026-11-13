@@ -87,7 +87,13 @@ ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
 - Imagens (capas, fotos e as do texto) com as cores originais em todos os
   estilos, sem filtro (decisão de 13/11/2026).
 
-**Fase 4 — Detalhes com dados reais:** coluna lateral do post com índice,
+- Sumário e barra de leitura (13/11/2026, valem para todos os estilos):
+  `src/utils/headings.js` põe id nos h2/h3 a partir do texto, igual no React e
+  no prerender (link `/blog/post#secao` funciona); `PostToc` ("Neste post",
+  só h2, a partir de 3 seções, evento `toc_click`) e `ReadingProgress` (barra
+  fina no topo, cor da paleta de cada estilo).
+
+**Fase 4 — Detalhes com dados reais:** coluna lateral do post com o sumário fixo,
 "Tiragem"/estatísticas (leituras e favoritos reais do `PostDailyStat`) e
 comentários como "Cartas do leitor"/"Mural".
 

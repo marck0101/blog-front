@@ -643,6 +643,70 @@ html.raiz .skin-root .skin-offer.skin-offer button:first-child {
   letter-spacing: 0;
 }
 
+/* ---------- Barra de leitura e sumário do post ---------- */
+
+/* Classe repetida: a barra tem bg-* e a regra geral pintaria ela da cor do papel */
+html.raiz .skin-root .skin-progress-bar.skin-progress-bar {
+  background-color: var(--raiz-accent);
+}
+
+html.terminal .skin-root .skin-progress-bar.skin-progress-bar {
+  background-color: var(--raiz-neon);
+}
+
+html.raiz .skin-root .skin-toc.skin-toc {
+  background-color: var(--raiz-bg-alt);
+}
+
+html.raiz .skin-root .skin-toc summary {
+  font-family: var(--raiz-font-head);
+}
+
+html.raiz .skin-root .skin-toc summary svg {
+  display: none;
+}
+
+html.raiz .skin-root .skin-toc a {
+  color: var(--raiz-ink);
+}
+
+html.raiz .skin-root .skin-toc a:hover {
+  color: var(--raiz-accent);
+}
+
+html.raiz .skin-root .skin-toc li::marker {
+  color: var(--raiz-muted);
+}
+
+html.jornal .skin-root .skin-toc {
+  border-top: 3px double var(--raiz-line);
+  border-bottom: 3px double var(--raiz-line);
+  border-left: 0;
+  border-right: 0;
+}
+
+html.jornal .skin-root .skin-toc summary {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 1.125rem;
+}
+
+html.terminal .skin-root .skin-toc {
+  border-style: dashed;
+}
+
+html.terminal .skin-root .skin-toc summary {
+  color: var(--raiz-accent);
+  font-size: 1.5rem;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+html.terminal .skin-root .skin-toc summary::before {
+  content: "> ";
+  color: var(--raiz-neon);
+}
+
 /* ---------- Celular ---------- */
 
 @media (max-width: 767px) {
