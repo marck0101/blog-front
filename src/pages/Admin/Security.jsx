@@ -9,6 +9,20 @@ import { errorText } from "../../utils/apiError";
 
 const LOW_CODES = 3;
 
+const Row = ({ ok, title, children }) => (
+  <div className="flex items-start gap-3 py-4 border-b last:border-b-0">
+    {ok ? (
+      <CheckCircle2 size={20} className="shrink-0 text-green-600 dark:text-green-400" />
+    ) : (
+      <AlertTriangle size={20} className="shrink-0 text-amber-500" />
+    )}
+    <div className="text-sm">
+      <p className="font-medium text-gray-900 dark:text-gray-100">{title}</p>
+      <div className="text-gray-500 dark:text-gray-300 mt-0.5">{children}</div>
+    </div>
+  </div>
+);
+
 // Status do login: Google, app autenticador, códigos de recuperação e sessões
 export default function Security() {
   const { logout } = useContext(AuthContext);
@@ -37,20 +51,6 @@ export default function Security() {
       setBusy(false);
     }
   };
-
-  const Row = ({ ok, title, children }) => (
-    <div className="flex items-start gap-3 py-4 border-b last:border-b-0">
-      {ok ? (
-        <CheckCircle2 size={20} className="shrink-0 text-green-600 dark:text-green-400" />
-      ) : (
-        <AlertTriangle size={20} className="shrink-0 text-amber-500" />
-      )}
-      <div className="text-sm">
-        <p className="font-medium text-gray-900 dark:text-gray-100">{title}</p>
-        <div className="text-gray-500 dark:text-gray-300 mt-0.5">{children}</div>
-      </div>
-    </div>
-  );
 
   return (
     <>

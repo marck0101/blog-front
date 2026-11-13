@@ -26,6 +26,8 @@ export default defineConfig([
       // Nome em maiúscula = componente usado em JSX (<Icon />), que esta regra não
       // enxerga; vale para variáveis e para parâmetros ({ icon: Icon })
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^[A-Z_]' }],
+      // Só diz se o React Compiler consegue otimizar o componente; o build não usa o compilador
+      'react-hooks/preserve-manual-memoization': 'off',
     },
   },
   {

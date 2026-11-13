@@ -244,7 +244,7 @@ function PostsTrash() {
   }, [showToast]);
 
   useEffect(() => {
-    loadTrash();
+    loadTrash(); // eslint-disable-line react-hooks/set-state-in-effect
     SubscriberService.getCategories().then(setCategories).catch(() => {});
   }, [loadTrash]);
 

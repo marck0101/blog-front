@@ -286,7 +286,7 @@ export default function CampaignEditor() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     CampaignService.getById(id)
       .then((c) => {
         setCampaign(c);

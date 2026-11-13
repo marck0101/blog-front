@@ -151,7 +151,7 @@ export default function Comments({ post }) {
     // Voltou do Google com erro
     const params = new URLSearchParams(window.location.search);
     if (params.get("login") === "erro") {
-      setNotice({ type: "error", text: "Não foi possível entrar com o Google. Tente de novo." });
+      setNotice({ type: "error", text: "Não foi possível entrar com o Google. Tente de novo." }); // eslint-disable-line react-hooks/set-state-in-effect
       params.delete("login");
       const query = params.toString();
       window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);

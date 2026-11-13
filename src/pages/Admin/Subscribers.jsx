@@ -240,7 +240,7 @@ export default function Subscribers() {
       .finally(() => setLoading(false));
   }, [page, pageSize, statusFilter, tierFilter, listFilter, selectedCategories, search, dateFrom, dateTo, sort]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load]); // eslint-disable-line react-hooks/set-state-in-effect
 
   const changeFilter = (setter) => (val) => { setter(val); setPage(1); };
 

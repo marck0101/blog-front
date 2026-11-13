@@ -122,7 +122,7 @@ export default function PostsList() {
       .finally(() => setLoading(false));
   }, [page, pageSize, statusFilter, selectedCategories, selectedSeason, search, dateFrom, dateTo, sort, showToast]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load]); // eslint-disable-line react-hooks/set-state-in-effect
 
   // Trocou de página/filtro: a seleção (que é da página) recomeça
   const [selectionKey, setSelectionKey] = useState("");

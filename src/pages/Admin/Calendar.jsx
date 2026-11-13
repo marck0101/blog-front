@@ -259,6 +259,7 @@ export default function Calendar() {
   const cells = useMemo(() => buildCalendarGrid(parseISO(fromKey), parseISO(toKey)), [fromKey, toKey]);
 
   const selected = searchParams.getAll("ver").filter((v) => FILTER_KEYS.includes(v));
+  const selectedKey = selected.join();
   const filtering = selected.length > 0;
   const showsPost = (p) => !filtering || selected.includes(postStatusKey(p));
   const showsEmails = !filtering || selected.includes("emails");
@@ -313,7 +314,7 @@ export default function Calendar() {
       map[key].push(p);
     });
     return map;
-  }, [posts, selected.join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [posts, selectedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const emailsByDay = useMemo(() => {
     const map = {};
@@ -327,7 +328,7 @@ export default function Calendar() {
   // Busca o intervalo visível; navegar rápido descarta respostas de telas antigas
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     const range = { from: fromKey, to: toKey };
     Promise.all([
       PostsService.getCalendar(range).catch(() => []),

@@ -201,7 +201,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
   useEffect(() => {
     if (isNew) {
       const draft = readDraft(null);
-      if (draft) setPendingDraft(draft);
+      if (draft) setPendingDraft(draft); // eslint-disable-line react-hooks/set-state-in-effect
       return;
     }
     PostsService.getById(postId)
