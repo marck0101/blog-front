@@ -2,7 +2,7 @@
   Estilos de época do blog (src/utils/skin.js e public/theme-init.js). Só é
   baixado por quem escolhe um. Classes no <html>:
     .raiz            qualquer estilo de época (base comum)
-    .jornal          Jornal; com .dark vira o Jornal noturno
+    .jornal          Jornal (sempre papel claro; o tema escuro não vale na época)
     .terminal        Terminal BBS, sempre escuro
   Tudo fica dentro de .skin-root (BlogLayout e o post pré-renderizado): o
   painel e o resto do site não mudam.
@@ -119,16 +119,6 @@ html.jornal {
   --raiz-font-meta: "Libre Caslon Text", Georgia, "Times New Roman", serif;
   --raiz-font-type: "Special Elite", "Courier New", Courier, monospace;
   --raiz-font-mast: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
-}
-
-/* Jornal noturno: papel escuro, tinta clara (quem lê à noite) */
-html.jornal.dark {
-  --raiz-bg: #1b1813;
-  --raiz-bg-alt: #26221b;
-  --raiz-ink: #ece3d0;
-  --raiz-muted: #b9ad98;
-  --raiz-accent: #e0796b;
-  --raiz-line: #ece3d0;
 }
 
 /* Terminal: fósforo sobre preto, com ou sem tema escuro. Texto em verde suave

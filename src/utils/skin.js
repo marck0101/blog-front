@@ -1,8 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { FEATURES_EVENT, isFeatureOn } from "./features";
+import { applyTheme } from "./theme";
 
-// Estilo do blog: "atual" | "jornal" | "terminal". O Jornal segue o tema
-// (claro = papel creme; escuro = Jornal noturno); o Terminal é sempre escuro.
+// Estilo do blog: "atual" | "jornal" | "terminal". Fiéis à época: o Jornal é
+// sempre papel claro e o Terminal sempre escuro; o tema claro/escuro só vale no
+// visual atual (e volta como estava quando o leitor sai da época).
 // Mesma regra de public/theme-init.js, que aplica antes de pintar.
 const KEY = "skin";
 const OFFER_KEY = "skin-offer";
@@ -45,6 +47,7 @@ export function applySkin(skin = getSkin()) {
   classes.toggle("raiz", on);
   classes.toggle("jornal", skin === "jornal");
   classes.toggle("terminal", skin === "terminal");
+  applyTheme(); // tira ou devolve a classe "dark" conforme a época
   return skin;
 }
 

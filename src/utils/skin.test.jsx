@@ -51,11 +51,18 @@ describe("estilos do blog", () => {
     expect(setSkin("neon")).toBe("atual");
   });
 
-  it("não mexe no tema claro/escuro", () => {
+  it("época ignora o tema escuro e devolve ao voltar para o atual", () => {
+    localStorage.setItem("theme", "dark");
     root.classList.add("dark");
+    setSkin("jornal");
+    expect(has("dark")).toBe(false);
+    expect(root.style.colorScheme).toBe("light");
     setSkin("terminal");
+    expect(has("dark")).toBe(false); // o Terminal tem a própria paleta escura
+    expect(root.style.colorScheme).toBe("dark");
     setSkin("atual");
     expect(has("dark")).toBe(true);
+    expect(localStorage.getItem("theme")).toBe("dark");
   });
 });
 
@@ -156,10 +163,18 @@ describe("theme-init.js", () => {
     expect(document.write).not.toHaveBeenCalled();
   });
 
-  it("Jornal + escuro = Jornal noturno (as duas classes)", () => {
+  it("Jornal com tema escuro salvo abre claro (fiel à época)", () => {
     localStorage.setItem("skin", "jornal");
     localStorage.setItem("theme", "dark");
     run();
-    expect(has("jornal") && has("dark")).toBe(true);
+    expect(has("jornal")).toBe(true);
+    expect(has("dark")).toBe(false);
+    expect(root.style.colorScheme).toBe("light");
+  });
+
+  it("visual atual continua seguindo o tema", () => {
+    localStorage.setItem("theme", "dark");
+    run();
+    expect(has("dark")).toBe(true);
   });
 });

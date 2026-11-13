@@ -9,8 +9,6 @@
     /* sem localStorage: segue o tema do sistema */
   }
   if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  document.documentElement.classList.toggle("dark", t === "dark");
-  document.documentElement.style.colorScheme = t;
 
   // Estilo de época (mesma regra de src/utils/skin.js). O painel não tem.
   // document.write, não appendChild: só o <link> escrito pelo parser segura a
@@ -31,5 +29,12 @@
   if ((skin === "jornal" || skin === "terminal") && location.pathname.indexOf("/admin") !== 0) {
     document.documentElement.classList.add("raiz", skin);
     document.write('<link id="skin-raiz" rel="stylesheet" href="/skins/raiz.css">');
+    // Fiel à época: Jornal sempre claro, Terminal sempre escuro (o tema salvo
+    // volta no visual atual). Mesma regra de applyTheme em src/utils/theme.js.
+    t = skin === "terminal" ? "dark" : "light";
+    document.documentElement.classList.remove("dark");
+  } else {
+    document.documentElement.classList.toggle("dark", t === "dark");
   }
+  document.documentElement.style.colorScheme = t;
 })();

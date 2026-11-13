@@ -17,11 +17,18 @@ export function resolveTheme(pref = getThemePref()) {
   return media()?.matches ? "dark" : "light";
 }
 
-// Classe "dark" do Tailwind + color-scheme (barras de rolagem e campos nativos)
+// Classe "dark" do Tailwind + color-scheme (barras de rolagem e campos nativos).
+// Estilo de época ligado (classe "raiz", src/utils/skin.js): a época manda e o
+// tema não vale. Jornal é sempre papel claro; Terminal, sempre escuro. A
+// preferência do leitor continua salva e volta no visual atual.
 export function applyTheme(pref = getThemePref()) {
-  const theme = resolveTheme(pref);
   const root = document.documentElement;
-  root.classList.toggle("dark", theme === "dark");
+  const theme = root.classList.contains("terminal")
+    ? "dark"
+    : root.classList.contains("jornal")
+      ? "light"
+      : resolveTheme(pref);
+  root.classList.toggle("dark", theme === "dark" && !root.classList.contains("raiz"));
   root.style.colorScheme = theme;
   return theme;
 }

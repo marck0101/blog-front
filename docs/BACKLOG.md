@@ -65,8 +65,10 @@ Ver `node-express-mongodb/docs/BACKLOG.md`. Resumo: `BLOG_FAQ` e
 ## Média — Estilos de época: Jornal e Terminal (fase 4)
 
 **O que é:** o leitor escolhe o estilo do blog no ícone ao lado do tema:
-**Visual atual**, **Jornal / máquina de escrever** (claro; no tema escuro vira
-o Jornal noturno) ou **Terminal BBS** (sempre escuro). Post de Tecnologia
+**Visual atual**, **Jornal / máquina de escrever** (sempre papel claro) ou
+**Terminal BBS** (sempre escuro). Fiéis à época: com um deles ligado o botão de
+tema some e o tema escuro não vale; o tema salvo volta no visual atual
+(decisão de 13/11/2026, substitui o Jornal noturno). Post de Tecnologia
 convida para o Terminal uma vez só; aceitando, o blog todo fica no Terminal até
 ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
 

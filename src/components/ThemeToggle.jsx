@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { getThemePref, setThemePref, watchSystemTheme } from "../utils/theme";
+import { useSkin } from "../utils/skin";
 
 // Ciclo claro → escuro → sistema. O ícone mostra o modo atual; o rótulo, a ação.
 const NEXT = { light: "dark", dark: "system", system: "light" };
@@ -13,9 +14,13 @@ const LABEL = {
 
 export default function ThemeToggle() {
   const [pref, setPref] = useState(getThemePref);
+  const skin = useSkin();
 
   // Só reaplica a classe; o ícone continua "sistema"
   useEffect(() => watchSystemTheme(() => {}), []);
+
+  // Jornal e Terminal têm a cor da época: o botão de tema some até voltar ao atual
+  if (skin !== "atual") return null;
 
   const next = NEXT[pref];
   const Icon = ICON[pref];
