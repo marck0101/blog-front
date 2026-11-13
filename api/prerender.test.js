@@ -27,7 +27,7 @@ describe("postRedirectPath", () => {
 
 // Sumário e âncoras: o HTML do servidor sai igual ao do React (PostToc)
 describe("post no prerender", () => {
-  it("tem ids nos intertítulos e o sumário com 3+ seções", async () => {
+  const render = async (tocOn) => {
     const { vi } = await import("vitest");
     const { default: handler } = await import("./prerender");
     const post = {
@@ -44,6 +44,7 @@ describe("post no prerender", () => {
     vi.stubGlobal("fetch", vi.fn(async (url) => {
       const json = (body) => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
       if (String(url).includes("/posts/slug/")) return json(post);
+      if (String(url).includes("/settings/features")) return json({ features: { toc: tocOn } });
       if (String(url).includes("/api/")) return json([]);
       return { ok: true, status: 200, text: async () => shell, json: async () => ({}) };
     }));
@@ -51,11 +52,21 @@ describe("post no prerender", () => {
     const res = { setHeader() {}, status() { return res; }, send(b) { body = b; return res; }, end() { return res; } };
     await handler({ query: { slug: "teste" } }, res);
     vi.unstubAllGlobals();
+    return body;
+  };
 
+  it("tem ids nos intertítulos e o sumário com 3+ seções", async () => {
+    const body = await render(true);
     expect(body).toContain('<h2 id="comeco">Começo</h2>');
     expect(body).toContain('<h2 id="meio-fim">Meio &amp; fim</h2>');
     expect(body).toContain('<h3 id="detalhe">Detalhe</h3>');
     expect(body).toContain('aria-label="Sumário do post"');
     expect(body).toContain('<a href="#meio-fim" class="hover:underline">Meio &amp; fim</a>');
+  });
+
+  it("sumário desligado no painel não entra no HTML (as âncoras ficam)", async () => {
+    const body = await render(false);
+    expect(body).toContain('<h2 id="comeco">Começo</h2>');
+    expect(body).not.toContain('aria-label="Sumário do post"');
   });
 });

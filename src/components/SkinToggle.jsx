@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Newspaper, Palette, SquareTerminal } from "lucide-react";
 import { loadSkinCss, setSkin, useSkin } from "../utils/skin";
 import { trackEvent } from "../utils/analytics";
+import { useFeatures } from "../utils/features";
 
 const OPTIONS = [
   { value: "atual", label: "Visual atual", icon: Palette },
@@ -12,6 +13,7 @@ const OPTIONS = [
 // Escolha do estilo do blog. O ícone mostra o estilo em uso.
 export default function SkinToggle() {
   const skin = useSkin();
+  const { skins: enabled } = useFeatures();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const current = OPTIONS.find((o) => o.value === skin) || OPTIONS[0];
@@ -40,6 +42,9 @@ export default function SkinToggle() {
     setSkin(value);
     trackEvent("skin_toggle", { skin: value, from: skin });
   };
+
+  // Estilos desligados no painel (Recursos do blog): o seletor some
+  if (!enabled) return null;
 
   return (
     <div className="relative" ref={ref}>

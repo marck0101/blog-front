@@ -33,6 +33,7 @@ import TerminalOffer from "../../components/TerminalOffer";
 import PostToc from "../../components/PostToc";
 import ReadingProgress from "../../components/ReadingProgress";
 import { withHeadingIds } from "../../utils/headings";
+import { useFeatures } from "../../utils/features";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 import { Loading, Skeleton } from "../../components/Skeleton";
@@ -95,6 +96,8 @@ export default function Post() {
   const loading = Boolean(slug) && !hasAnswer(result);
   const [lightbox, setLightbox] = useState({ open: false, src: "", alt: "" });
   const contentRef = useRef(null);
+  // Sumário e barra de leitura podem ser desligados no painel (Recursos do blog)
+  const features = useFeatures();
   // Texto com âncoras nos intertítulos (h2/h3) e a lista deles para o sumário
   const body = useMemo(() => withHeadingIds(safeHtml(post?.content)), [post?.content]);
   // Nomes para exibir: "Negócios" em vez do slug, título da season no breadcrumb
@@ -315,7 +318,7 @@ export default function Post() {
       )}
 
       <TerminalOffer category={post.category} />
-      <ReadingProgress targetRef={contentRef} watch={post.content} />
+      {features.readingProgress && <ReadingProgress targetRef={contentRef} watch={post.content} />}
 
       <main className="skin-post max-w-3xl mx-auto px-6 py-10">
         <BackButton />
@@ -367,7 +370,7 @@ export default function Post() {
 
         <DirectAnswer text={post.directAnswer} />
 
-        <PostToc key={`toc-${post._id}`} headings={body.headings} postSlug={post.slug} />
+        {features.toc && <PostToc key={`toc-${post._id}`} headings={body.headings} postSlug={post.slug} />}
 
         <div
           ref={contentRef}

@@ -230,7 +230,7 @@ function readingMinutes(html = "") {
 // da página e o React (que monta com o post do bloco prerendered-post, sem esperar a
 // API) substitui sem a página pular. Alturas fixas = header e linha de
 // favoritar/compartilhar, que só existem no React.
-function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }) {
+function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, features }) {
   const minutes = post.readingMinutes || readingMinutes(post.content);
   const trail = post.season && seasonTitle
     ? `<span class="mx-2">/</span><a href="/seasons" class="hover:underline dark:hover:text-gray-100">Seasons</a>
@@ -239,7 +239,8 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }
   const otherEpisodes = episodes?.season ? episodes.posts?.filter((p) => p.slug !== post.slug) : null;
   // Mesmas âncoras e mesmo sumário do React (PostToc), para não pular ao montar
   const body = withHeadingIds(post.content || "");
-  const toc = tocItems(body.headings);
+  // Sumário desligado no painel (Recursos do blog): também fora do HTML
+  const toc = features?.toc === false ? [] : tocItems(body.headings);
 
   return `${PLACEHOLDER_CSS}
     <div class="skin-root min-h-screen flex flex-col">
@@ -293,7 +294,7 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle }
     </div>`;
 }
 
-function postPage(post, { related = [], episodes = null, categoryLabel = "", seasonTitle = "" } = {}) {
+function postPage(post, { related = [], episodes = null, categoryLabel = "", seasonTitle = "", features = null } = {}) {
   const url = postUrl(post);
   const head = headTags({
     title: postTitle(post),
@@ -323,7 +324,7 @@ function postPage(post, { related = [], episodes = null, categoryLabel = "", sea
   // base de muitos leitores de IA, descartam <noscript>). O React troca tudo no
   // primeiro render; ver postArticleHtml. Os dados vão num bloco JSON, não em
   // script inline (a CSP não libera, SEC-02).
-  const root = postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle });
+  const root = postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, features });
   const body = jsonBlock("prerendered-post", post);
 
   return { head, body, root };
@@ -506,9 +507,10 @@ export default async function handler(req, res) {
       if (post) {
         // Selo da season no topo do post (SeasonNav) e "Continue lendo": entram no
         // HTML como links e vão prontos para o React (sem buscar de novo)
-        const [episodes, related] = await Promise.all([
+        const [episodes, related, settings] = await Promise.all([
           post.season ? fetchOptional(`${API_URL}/posts/season/${encodeURIComponent(post.season)}`) : null,
           fetchOptional(`${API_URL}/posts/public/${encodeURIComponent(post._id)}/related`),
+          fetchOptional(`${API_URL}/settings/features`),
         ]);
         if (episodes) data.seasonEpisodes = episodes;
         if (Array.isArray(related)) data.related = { postId: post._id, posts: related };
@@ -518,6 +520,7 @@ export default async function handler(req, res) {
           episodes,
           categoryLabel: categories.find((c) => c.slug === post.category)?.label,
           seasonTitle: seasons.find((s) => s.slug === post.season)?.title || episodes?.season?.title,
+          features: settings?.features,
         });
       } else {
         page = notFoundPage(slug);

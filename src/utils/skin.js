@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { FEATURES_EVENT, isFeatureOn } from "./features";
 
 // Estilo do blog: "atual" | "jornal" | "terminal". O Jornal segue o tema
 // (claro = papel creme; escuro = Jornal noturno); o Terminal é sempre escuro.
@@ -12,7 +13,10 @@ export const SKIN_CSS_HREF = "/skins/raiz.css";
 // Post desta categoria convida para o Terminal (uma vez só)
 export const TERMINAL_CATEGORY = "tecnologia";
 
+// Desligado no painel (Recursos do blog): todo mundo no visual atual. A escolha
+// do leitor continua salva e volta quando o recurso for religado.
 export function getSkin() {
+  if (!isFeatureOn("skins")) return "atual";
   let saved = null;
   try {
     saved = localStorage.getItem(KEY);
@@ -59,11 +63,21 @@ export function setSkin(skin) {
 
 function subscribe(onChange) {
   window.addEventListener(EVENT, onChange);
+  window.addEventListener(FEATURES_EVENT, onChange);
   window.addEventListener("storage", onChange); // outra aba mudou
   return () => {
     window.removeEventListener(EVENT, onChange);
+    window.removeEventListener(FEATURES_EVENT, onChange);
     window.removeEventListener("storage", onChange);
   };
+}
+
+// Painel ligou/desligou os estilos: a página aberta troca na hora (no painel
+// em si não há estilo de época)
+if (typeof window !== "undefined") {
+  window.addEventListener(FEATURES_EVENT, () => {
+    applySkin(window.location.pathname.startsWith("/admin") ? "atual" : getSkin());
+  });
 }
 
 // Estilo atual, igual em todos os componentes (botão do topo, convite do post)

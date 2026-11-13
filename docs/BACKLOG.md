@@ -93,6 +93,12 @@ ele trocar. Desenhos no canvas "Modo raiz do blog" (claude.ai, privado).
   só h2, a partir de 3 seções, evento `toc_click`) e `ReadingProgress` (barra
   fina no topo, cor da paleta de cada estilo).
 
+- Liga/desliga no painel (13/11/2026): **Painel → Recursos** (`/admin/recursos`)
+  tem um botão para cada recurso: estilos de época, convite do Terminal,
+  sumário e barra de leitura. Backend `GET/PATCH /api/settings/features`
+  (cache de 30 s); o front guarda a última resposta em `site-features`, que o
+  `theme-init.js` lê antes de pintar. API fora do ar = tudo ligado.
+
 **Fase 4 — Detalhes com dados reais:** coluna lateral do post com o sumário fixo,
 "Tiragem"/estatísticas (leituras e favoritos reais do `PostDailyStat`) e
 comentários como "Cartas do leitor"/"Mural".

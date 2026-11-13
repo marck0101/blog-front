@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { answerOffer, TERMINAL_CATEGORY, useOfferAnswer, useSkin } from "../utils/skin";
 import { CONSENT_EVENT, trackEvent } from "../utils/analytics";
+import { useFeatures } from "../utils/features";
 
 // O banner de cookies ocupa o mesmo lugar: o convite espera ele sair
 function useConsentAnswered() {
@@ -27,7 +28,10 @@ export default function TerminalOffer({ category }) {
   const skin = useSkin();
   const answer = useOfferAnswer();
   const consentAnswered = useConsentAnswered();
+  const features = useFeatures();
 
+  // Desligado no painel: o convite (ou os estilos inteiros) não aparece
+  if (!features.skins || !features.terminalOffer) return null;
   if (category !== TERMINAL_CATEGORY || skin === "terminal" || answer !== null || !consentAnswered) return null;
 
   const reply = (accept) => {

@@ -28,6 +28,7 @@ const AdminComments = lazyPage(() => import("../pages/Admin/Comments"));
 const Audiences = lazyPage(() => import("../pages/Admin/Audiences"));
 const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
 const Security = lazyPage(() => import("../pages/Admin/Security"));
+const Features = lazyPage(() => import("../pages/Admin/Features"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
 const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
 const ResetPassword = lazyPage(() => import("../pages/Admin/ResetPassword"));
@@ -212,6 +213,15 @@ const router = createBrowserRouter(
           element={
             <PrivateRoute>
               <Security />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/recursos"
+          element={
+            <PrivateRoute>
+              <Features />
             </PrivateRoute>
           }
         />

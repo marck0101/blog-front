@@ -148,6 +148,14 @@ describe("theme-init.js", () => {
     expect(document.write).not.toHaveBeenCalled();
   });
 
+  it("estilos desligados no painel: abre no visual atual mesmo com escolha salva", () => {
+    localStorage.setItem("skin", "terminal");
+    localStorage.setItem("site-features", JSON.stringify({ skins: false }));
+    run();
+    expect(has("raiz")).toBe(false);
+    expect(document.write).not.toHaveBeenCalled();
+  });
+
   it("Jornal + escuro = Jornal noturno (as duas classes)", () => {
     localStorage.setItem("skin", "jornal");
     localStorage.setItem("theme", "dark");

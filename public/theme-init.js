@@ -22,6 +22,12 @@
     /* sem localStorage: visual atual */
   }
   if (skin === "raiz") skin = "jornal";
+  // Desligado no painel (Recursos do blog; última resposta da API, src/utils/features.js)
+  try {
+    if (JSON.parse(localStorage.getItem("site-features") || "{}").skins === false) skin = null;
+  } catch {
+    /* sem localStorage ou valor estragado: segue o padrão (ligado) */
+  }
   if ((skin === "jornal" || skin === "terminal") && location.pathname.indexOf("/admin") !== 0) {
     document.documentElement.classList.add("raiz", skin);
     document.write('<link id="skin-raiz" rel="stylesheet" href="/skins/raiz.css">');
