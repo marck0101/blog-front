@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { hashId, headingText, readingProgress, slugifyHeading, tocItems, withHeadingIds } from "./headings";
+import { authorNumbered, hashId, headingText, readingProgress, slugifyHeading, tocItems, withHeadingIds } from "./headings";
 import PostToc from "../components/PostToc";
 
 vi.mock("./analytics", () => ({ trackEvent: vi.fn() }));
@@ -116,5 +116,32 @@ describe("conteúdo hostil nos intertítulos", () => {
   it("id gerado só tem letras, números e hífen", () => {
     const { headings } = withHeadingIds('<h2>"><script>x</script> javascript:alert(1)</h2>');
     expect(headings[0].id).toMatch(/^[a-z0-9-]+$/);
+  });
+});
+
+describe("títulos já numerados pelo autor", () => {
+  const items = (...texts) => texts.map((text, i) => ({ id: `h${i}`, text, level: 2 }));
+
+  it("reconhece 1 / 2. / 3) / 4.1 e a maioria numerada", () => {
+    expect(authorNumbered(items("1 Introdução", "2. Objetivo", "3) Hipótese", "4.1 Etapas"))).toBe(true);
+    expect(authorNumbered(items("Resumo", "1 Introdução", "2 Objetivo", "Referências"))).toBe(true);
+    expect(authorNumbered(items("Introdução", "Objetivo", "Conclusão"))).toBe(false);
+    // Número que é conteúdo, não numeração ("2026: o ano…", "5G…")
+    expect(authorNumbered(items("2026: o ano da IA", "5G chegou", "Conclusão"))).toBe(false);
+  });
+
+  it("sumário não numera de novo (era \"1. 1 Introdução\")", () => {
+    const headings = items("1 Introdução", "2 Objetivo", "3 Hipótese");
+    render(<PostToc headings={headings} postSlug="p" />);
+    const ol = screen.getByRole("navigation", { name: "Sumário do post" }).querySelector("ol");
+    expect(ol.className).toContain("list-none");
+    expect(ol.className).not.toContain("list-decimal");
+    expect(ol.querySelector("a").textContent).toBe("1 Introdução");
+  });
+
+  it("títulos sem número continuam com a numeração da lista", () => {
+    render(<PostToc headings={items("Introdução", "Objetivo", "Conclusão")} postSlug="p" />);
+    const ol = screen.getByRole("navigation", { name: "Sumário do post" }).querySelector("ol");
+    expect(ol.className).toContain("list-decimal");
   });
 });

@@ -27,7 +27,7 @@ describe("postRedirectPath", () => {
 
 // Sumário e âncoras: o HTML do servidor sai igual ao do React (PostToc)
 describe("post no prerender", () => {
-  const render = async (tocOn) => {
+  const render = async (tocOn, content) => {
     const { vi } = await import("vitest");
     const { default: handler } = await import("./prerender");
     const post = {
@@ -36,7 +36,7 @@ describe("post no prerender", () => {
       title: "Teste",
       category: "tecnologia",
       publishedAt: "2026-11-13T12:00:00Z",
-      content: "<p>Oi</p><h2>Começo</h2><p>a</p><h2>Meio &amp; fim</h2><h3>Detalhe</h3><h2>Fim</h2>",
+      content: content || "<p>Oi</p><h2>Começo</h2><p>a</p><h2>Meio &amp; fim</h2><h3>Detalhe</h3><h2>Fim</h2>",
     };
     // O index.html do projeto (tem o marcador que o prerender exige)
     const { readFileSync } = await import("node:fs");
@@ -62,6 +62,12 @@ describe("post no prerender", () => {
     expect(body).toContain('<h3 id="detalhe">Detalhe</h3>');
     expect(body).toContain('aria-label="Sumário do post"');
     expect(body).toContain('<a href="#meio-fim" class="hover:underline">Meio &amp; fim</a>');
+  });
+
+  it("títulos já numerados: o sumário do HTML não numera de novo", async () => {
+    const body = await render(true, "<h2>1 Introdução</h2><p>a</p><h2>2 Objetivo</h2><h2>3 Conclusão</h2>");
+    expect(body).toMatch(/<ol class="[^"]*list-none/);
+    expect(body).not.toMatch(/<ol class="[^"]*list-decimal/);
   });
 
   it("sumário desligado no painel não entra no HTML (as âncoras ficam)", async () => {
