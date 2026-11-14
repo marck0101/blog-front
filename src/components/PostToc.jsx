@@ -1,6 +1,6 @@
 import { List } from "lucide-react";
 import { trackEvent } from "../utils/analytics";
-import { tocItems } from "../utils/headings";
+import { authorNumbered, tocItems } from "../utils/headings";
 
 // Sumário "Neste post" antes do texto: os intertítulos principais (h2) com link
 // para a âncora. Começa aberto (igual ao HTML do prerender, sem a página pular);
@@ -22,7 +22,7 @@ export default function PostToc({ headings, postSlug }) {
             ({items.length} seções)
           </span>
         </summary>
-        <ol className="px-5 pb-4 space-y-1.5 list-decimal list-inside marker:text-gray-400">
+        <ol className={`px-5 pb-4 space-y-1.5 ${authorNumbered(items) ? "list-none" : "list-decimal list-inside marker:text-gray-400"}`}>
           {items.map((h, i) => (
             <li key={h.id} className="text-gray-700 dark:text-gray-300">
               <a

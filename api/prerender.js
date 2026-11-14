@@ -32,7 +32,7 @@ import {
   SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
 import { coverSrcSet, GRID_SIZES } from "../src/utils/coverSrcSet.js";
-import { tocItems, withHeadingIds } from "../src/utils/headings.js";
+import { authorNumbered, tocItems, withHeadingIds } from "../src/utils/headings.js";
 
 // Alturas (px) do header do blog e da linha favoritar/compartilhar do post, que o
 // HTML estático reserva para o texto não pular quando o React assumir. No celular
@@ -276,7 +276,7 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, 
               ? `<nav aria-label="Sumário do post" class="skin-toc mt-8 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40">
               <details open>
                 <summary class="cursor-pointer select-none px-5 py-3 flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100"><svg width="18" height="18" aria-hidden="true"></svg>Neste post <span class="font-normal text-sm text-gray-500 dark:text-gray-400">(${toc.length} seções)</span></summary>
-                <ol class="px-5 pb-4 space-y-1.5 list-decimal list-inside marker:text-gray-400">
+                <ol class="px-5 pb-4 space-y-1.5 ${authorNumbered(toc) ? "list-none" : "list-decimal list-inside marker:text-gray-400"}">
                   ${toc.map((h) => `<li class="text-gray-700 dark:text-gray-300"><a href="#${esc(h.id)}" class="hover:underline">${esc(h.text)}</a></li>`).join("")}
                 </ol>
               </details>

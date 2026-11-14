@@ -85,3 +85,15 @@ export function hashId(hash) {
     return "";
   }
 }
+
+// Títulos que já trazem o número do autor ("1 Introdução", "2. Objetivo",
+// "3) Hipótese", "4.1 Etapas"). Se a maioria do sumário é assim, a lista não
+// numera de novo (ficava "1. 1 Introdução"); "Resumo"/"Referências" sem número
+// seguem como estão.
+const AUTHOR_NUMBER = /^\d+(\.\d+)*[.)]?\s/;
+
+export function authorNumbered(items) {
+  if (!items.length) return false;
+  const numbered = items.filter((h) => AUTHOR_NUMBER.test(h.text)).length;
+  return numbered * 2 >= items.length;
+}
