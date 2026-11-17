@@ -15,6 +15,11 @@ da API ficam em `node-express-mongodb/docs/OPERACAO.md`.
   recarregar uma vez resolve (o `lazyPage` já tenta sozinho).
 - `.env.production` (fora do git) aponta para a API de produção. Para testar
   o build contra a API local: `npx vite build --mode development`.
+- **A CSP do `vercel.json` está valendo** (SEC-02, 17/11/2026). Script, vídeo,
+  chat ou pixel de terceiro novo só funciona com o domínio incluído na política
+  no mesmo commit; `api/csp.test.js` trava o resto. Script inline não passa:
+  dado do prerender vai em bloco JSON. O que for bloqueado aparece em
+  `GET /api/csp-report` (logado).
 
 ## SEO e conteúdo para IA
 
