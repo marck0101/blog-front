@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { AuthContext } from "../../context/authContext";
 import { resolveTheme, setThemePref, watchSystemTheme } from "../../utils/theme";
 import { usePendingComments } from "../../utils/pendingComments";
+import { useNewSuggestions } from "../../utils/newSuggestions";
 import {
   LogOut,
   FileText,
@@ -18,7 +19,9 @@ import {
   Layers,
   Menu,
   MessageSquare,
+  Lightbulb,
   ListChecks,
+  Network,
   Pin,
   ShieldCheck,
   ToggleRight,
@@ -36,6 +39,7 @@ const ADMIN_GROUPS = [
       { to: "/admin/posts", label: "Posts", icon: FileText, match: "prefix" },
       { to: "/admin/calendar", label: "Calendário", icon: CalendarDays, match: "exact" },
       { to: "/admin/seasons", label: "Seasons", icon: Layers, match: "exact" },
+      { to: "/admin/mapa", label: "Mapa", icon: Network, match: "exact" },
       { to: "/admin/showcase", label: "Vitrine", icon: Pin, match: "exact" },
       { to: "/admin/recursos", label: "Recursos", icon: ToggleRight, match: "exact" },
       { to: "/admin/trash", label: "Lixeira", icon: Trash, match: "exact" },
@@ -48,6 +52,7 @@ const ADMIN_GROUPS = [
       { to: "/admin/audiences", label: "Públicos", icon: ListChecks, match: "exact" },
       { to: "/admin/campaigns", label: "Envios", icon: Mail, match: "prefix" },
       { to: "/admin/comments", label: "Comentários", icon: MessageSquare, match: "exact", badge: "pendingComments" },
+      { to: "/admin/sugestoes", label: "Sugestões", icon: Lightbulb, match: "exact", badge: "newSuggestions" },
       { to: "/admin/metrics", label: "Métricas", icon: BarChart3, match: "exact" },
     ],
   },
@@ -84,7 +89,8 @@ export default function Header() {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
   const pendingComments = usePendingComments();
-  const badges = { pendingComments };
+  const newSuggestions = useNewSuggestions();
+  const badges = { pendingComments, newSuggestions };
 
   const [theme, setTheme] = useState(() => resolveTheme());
   // Guarda a rota em que o menu mobile foi aberto: ao navegar ele fecha sozinho

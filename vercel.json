@@ -49,6 +49,7 @@
     { "source": "/seasons/:slug", "destination": "/api/prerender?season=:slug" },
     { "source": "/privacidade", "destination": "/index.html" },
     { "source": "/favoritos", "destination": "/index.html" },
+    { "source": "/sugestoes", "destination": "/index.html" },
     { "source": "/cancelar-inscricao", "destination": "/index.html" },
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/admin/:path*", "destination": "/index.html" }

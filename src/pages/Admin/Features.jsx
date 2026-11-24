@@ -5,6 +5,7 @@ import {
   BookMarked,
   CheckCircle2,
   CircleOff,
+  Lightbulb,
   ListOrdered,
   Loader2,
   Newspaper,
@@ -61,6 +62,14 @@ const FEATURES = [
     subtitle: "Só no navegador do leitor",
     on: "Selo \"Lido\" e \"42% lido\" nos cartões, \"Retome a leitura\" na home, \"Continuar de onde parou\" no post e o resumo em Minhas leituras.",
     off: "Nada disso aparece e o progresso deixa de ser anotado. O que o leitor já leu continua guardado no navegador dele.",
+  },
+  {
+    name: "suggestions",
+    icon: Lightbulb,
+    title: "Caixinha de sugestões",
+    subtitle: "/sugestoes e rodapé",
+    on: "Leitor sugere tema ou pede para participar de um conteúdo. Chega em Sugestões, no painel, e fica privado.",
+    off: "A página mostra a caixinha fechada e o link some do rodapé. As sugestões já recebidas continuam no painel.",
   },
 ];
 

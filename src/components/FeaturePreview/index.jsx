@@ -148,7 +148,32 @@ function History({ on }) {
   );
 }
 
-const PREVIEWS = { skins: Skins, terminalOffer: TerminalOffer, toc: Toc, readingProgress: ReadingBar, readingHistory: History };
+// Rodapé com o link "Sugira um tema" e a caixinha aberta
+function Suggestions({ on }) {
+  return (
+    <MiniPage
+      bottom={
+        <div className="absolute inset-x-0 bottom-0 px-3 py-2 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex gap-3">
+          <span className="w-8 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <span className="w-8 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+          {on && <span className="text-[8px] font-semibold text-blue-700 dark:text-blue-300 leading-none">Sugira um tema</span>}
+        </div>
+      }
+    >
+      {on ? (
+        <div className="rounded border border-blue-200 dark:border-blue-900 p-1.5 space-y-1">
+          <div className="h-1.5 w-1/3 rounded-full bg-blue-300 dark:bg-blue-700" />
+          <div className="h-4 rounded bg-gray-100 dark:bg-gray-800" />
+          <div className="h-2 w-10 rounded bg-blue-600" />
+        </div>
+      ) : (
+        <Lines n={3} />
+      )}
+    </MiniPage>
+  );
+}
+
+const PREVIEWS = { skins: Skins, terminalOffer: TerminalOffer, toc: Toc, readingProgress: ReadingBar, readingHistory: History, suggestions: Suggestions };
 
 export default function FeaturePreview({ name, on, className = "h-32" }) {
   const Preview = PREVIEWS[name];

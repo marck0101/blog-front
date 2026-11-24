@@ -11,6 +11,7 @@ export const FEATURE_DEFAULTS = {
   toc: true,
   readingProgress: true,
   readingHistory: true,
+  suggestions: true,
 };
 
 const KEY = "site-features";
