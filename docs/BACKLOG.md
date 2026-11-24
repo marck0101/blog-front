@@ -127,3 +127,20 @@ comentários como "Cartas do leitor"/"Mural".
 abre no estilo salvo sem piscar o atual; texto do post com contraste AA;
 Lighthouse de quem nunca liga igual ao de antes; celular de 390px sem rolagem
 lateral.
+
+## Média — O que o PageSpeed ainda aponta em `/blog` (relatório de 2026-11-09)
+
+**O que é:** celular 94 e computador 99, mas sobram: bloqueio da renderização
+(390 ms no celular, era 350; o único arquivo bloqueante é o CSS principal, ~15 KB),
+JavaScript não usado (224 KiB, era 216; numa execução local: pacote do site 74,
+GA4 72, Pixel 66 KiB), Speed Index de 4,3 s no celular e descoberta da imagem de
+LCP sinalizada no computador. A foto do autor (`author-*.webp`, 22 KB) é servida
+maior do que o tamanho exibido (~18 KiB de sobra).
+
+**Por que importa:** o LCP no celular está em 2,4 s, só 0,1 s dentro da meta, e
+sem dados de campo (Chrome UX Report sem volume). Qualquer regressão pequena estoura.
+
+**Caminho sugerido:** versão menor da foto do autor com srcset; CSS crítico inline
+para tirar o bloqueio; investigar o LCP no computador. Renderização completa no
+servidor é a mudança grande que atacaria Speed Index e JavaScript; medir antes de
+decidir. Comparar sempre pela mediana de 3 execuções.
