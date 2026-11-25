@@ -1,9 +1,10 @@
 import { useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../../context/authContext";
 import { Linkedin, Github, MessageCircle } from "lucide-react";
 import authorPhoto from "../../../assets/author.webp";
 import { contactMethod, trackEvent } from "../../../utils/analytics";
+import { useFeatures } from "../../../utils/features";
 
 // WhatsApp/email = contato (conversão; vai também para o Pixel); demais = rede social
 function trackFooterLink(label, href) {
@@ -46,6 +47,8 @@ export default function BlogFooter() {
   const year = new Date().getFullYear();
   // Logado vai direto ao painel; senão, ao login
   const { user } = useContext(AuthContext);
+  const { suggestions } = useFeatures();
+  const { pathname } = useLocation();
 
   return (
     <footer className="skin-footer bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-16">
@@ -105,6 +108,17 @@ export default function BlogFooter() {
                 Assinar newsletter
               </a>
             </li>
+            {suggestions && (
+              <li>
+                <Link
+                  to={pathname === "/sugestoes" ? "/sugestoes" : `/sugestoes?de=${encodeURIComponent(pathname)}`}
+                  onClick={() => trackEvent("suggestion_link_click", { link_location: "footer" })}
+                  className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
+                >
+                  Sugira um tema
+                </Link>
+              </li>
+            )}
             <li>
               <Link
                 to="/blog#faq"

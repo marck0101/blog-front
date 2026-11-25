@@ -68,6 +68,14 @@ export default function PrivacyPolicy() {
                 Não temos acesso à sua senha nem a outros dados da conta.
               </li>
               <li>
+                <strong>Sugestões</strong> — ao usar a caixinha de sugestões, recebemos o
+                texto, o assunto, seu email e o nome (opcional). A sugestão é privada: só
+                aparece no blog se virar post, com um resumo escrito por nós e o seu
+                primeiro nome apenas se você autorizar no formulário. O email nunca é
+                exibido e serve para avisar quando a sugestão virar post. Enviar uma
+                sugestão não inscreve você na newsletter, a não ser que marque essa opção.
+              </li>
+              <li>
                 <strong>Favoritos, leituras e compartilhamentos</strong> — os posts que você
                 favorita e quanto você já leu de cada um (para mostrar &quot;Lido&quot;, a
                 porcentagem e &quot;continuar de onde parou&quot;) ficam salvos só no seu
@@ -88,6 +96,7 @@ export default function PrivacyPolicy() {
               <li>Melhorar a experiência de navegação no site.</li>
               <li>Medir o desempenho dos emails (taxas de abertura e clique) e dos canais que trazem assinantes.</li>
               <li>Exibir e moderar comentários e responder a eles.</li>
+              <li>Ler as sugestões, responder e avisar quando uma delas virar post.</li>
             </ul>
             <p>
               <strong>Não vendemos, alugamos nem compartilhamos</strong> seus dados
@@ -112,6 +121,10 @@ export default function PrivacyPolicy() {
               excluir o seu a qualquer momento pelo botão "Excluir" no próprio
               comentário (entrando com a mesma conta Google) e sair da sessão de
               comentários pelo botão "Sair". A sessão expira sozinha em 30 dias.
+            </p>
+            <p>
+              Sugestões ficam guardadas até serem atendidas ou descartadas. Para excluir
+              uma sugestão sua, peça pelo email de contato.
             </p>
           </section>
 

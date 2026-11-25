@@ -23,6 +23,7 @@ const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
 const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
 const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
 const Favorites = lazyPage(() => import("../pages/Blog/Favorites"));
+const SuggestionsPage = lazyPage(() => import("../pages/Blog/Suggestions"));
 const Unsubscribe = lazyPage(() => import("../pages/Blog/Unsubscribe"));
 const Showcase = lazyPage(() => import("../pages/Admin/Showcase"));
 const AdminComments = lazyPage(() => import("../pages/Admin/Comments"));
@@ -30,6 +31,8 @@ const Audiences = lazyPage(() => import("../pages/Admin/Audiences"));
 const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
 const Security = lazyPage(() => import("../pages/Admin/Security"));
 const Features = lazyPage(() => import("../pages/Admin/Features"));
+const AdminSuggestions = lazyPage(() => import("../pages/Admin/Suggestions"));
+const ContentMap = lazyPage(() => import("../pages/Admin/ContentMap"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
 const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
 const ResetPassword = lazyPage(() => import("../pages/Admin/ResetPassword"));
@@ -68,6 +71,7 @@ const router = createBrowserRouter(
         <Route path="/seasons" element={<Seasons />} />
         <Route path="/seasons/:slug" element={<SeasonPage />} />
         <Route path="/favoritos" element={<Favorites />} />
+        <Route path="/sugestoes" element={<SuggestionsPage />} />
         <Route path="/cancelar-inscricao" element={<Unsubscribe />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/forgot-password" element={<ForgotPassword />} />
@@ -223,6 +227,24 @@ const router = createBrowserRouter(
           element={
             <PrivateRoute>
               <Features />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/sugestoes"
+          element={
+            <PrivateRoute>
+              <AdminSuggestions />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/mapa"
+          element={
+            <PrivateRoute>
+              <ContentMap />
             </PrivateRoute>
           }
         />

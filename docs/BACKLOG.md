@@ -11,6 +11,14 @@ sem urgência) · **baixa** (higiene, monitorar).
 
 ---
 
+## Baixa — `/sugestoes` fora do sitemap e sem pré-render
+
+A página da caixinha de sugestões é um formulário que só existe no navegador
+(`vercel.json` manda para o `index.html`). Enquanto a vitrine "Vocês pediram,
+saiu" tiver poucos itens, não vale entrar no sitemap. Quando passar de ~5
+sugestões atendidas, pré-renderizar (como `/seasons`) e incluir no sitemap e
+no `llms.txt`.
+
 ## Média — Pré-render da página `/privacidade`
 
 **O que é:** a Política de Privacidade não passa pelo `api/prerender.js`.
