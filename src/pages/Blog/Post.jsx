@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
 import { BlogPostSchema } from "../../components/StructuredData";
@@ -25,8 +25,9 @@ import { recordShareVisit } from "../../utils/share";
 import { recordPostView } from "../../utils/postViews";
 import FavoriteButton from "../../components/FavoriteButton";
 import ShareButtons from "../../components/ShareButtons";
-import Comments from "../../components/Comments";
 import RelatedPosts from "../../components/RelatedPosts";
+import ClusterNav from "../../components/ClusterNav";
+import useClusterData from "../../hooks/useClusterData";
 import PostFaq from "../../components/PostFaq";
 import DirectAnswer from "../../components/DirectAnswer";
 import TerminalOffer from "../../components/TerminalOffer";
@@ -39,6 +40,10 @@ import { useFeatures } from "../../utils/features";
 import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 import { Loading, Skeleton } from "../../components/Skeleton";
+import lazyPage from "../../utils/lazyPage";
+
+// Comentários ficam no fim do post: chunk próprio, fora do JS inicial do leitor
+const Comments = lazyPage(() => import("../../components/Comments"));
 
 const READ_MARKS = [25, 50, 75, 100];
 // Episódio de season conta como lido a partir de 75% do texto
@@ -106,6 +111,8 @@ export default function Post() {
   // Do prerender quando houver: breadcrumb e categoria não mudam depois do primeiro render
   const [categories, setCategories] = useState(() => prerendered("categories") || []);
   const [seasons, setSeasons] = useState(() => prerendered("seasons") || []);
+  // Tema do post: entra no breadcrumb (sem season) e no "Mais deste tema"
+  const clusterData = useClusterData(post);
 
   useEffect(() => {
     SubscriberService.getCategories().then(setCategories).catch(() => {});
@@ -367,6 +374,8 @@ export default function Post() {
                   { label: "Seasons", to: "/seasons" },
                   { label: season.title, to: `/seasons/${season.slug}` },
                 ]
+              : clusterData?.cluster
+              ? [{ label: clusterData.cluster.title, to: `/temas/${clusterData.cluster.slug}` }]
               : []
           }
         />
@@ -427,13 +436,17 @@ export default function Post() {
           <FavoriteButton post={post} location="post_bottom" />
         </div>
 
+        <ClusterNav post={post} data={clusterData} />
+
         <RelatedPosts key={`related-${post._id}`} post={post} categories={categories} seasons={seasons} />
 
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />
         </div>
 
-        <Comments key={`comments-${post._id}`} post={post} />
+        <Suspense fallback={null}>
+          <Comments key={`comments-${post._id}`} post={post} />
+        </Suspense>
       </main>
     </BlogLayout>
   );

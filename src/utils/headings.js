@@ -34,12 +34,16 @@ export function slugifyHeading(text) {
   return slug || "secao";
 }
 
+// Ids que a própria página já usa (BlogLayout, Comments): intertítulo com o
+// mesmo texto ganharia id repetido e o link/atalho iria para o lugar errado.
+export const RESERVED_IDS = ["conteudo-principal", "comentarios", "comentarios-titulo"];
+
 // Devolve o HTML com os ids e a lista dos intertítulos ({ id, text, level }).
 // Id que o texto já trazia é mantido; repetidos ganham -2, -3...
 export function withHeadingIds(html) {
   const headings = [];
   if (!html) return { html: html || "", headings };
-  const used = new Set();
+  const used = new Set(RESERVED_IDS);
 
   const out = html.replace(HEADING, (match, level, attrs = "", inner) => {
     const text = headingText(inner);

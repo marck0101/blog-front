@@ -19,51 +19,6 @@ saiu" tiver poucos itens, não vale entrar no sitemap. Quando passar de ~5
 sugestões atendidas, pré-renderizar (como `/seasons`) e incluir no sitemap e
 no `llms.txt`.
 
-## Média — Pré-render da página `/privacidade`
-
-**O que é:** a Política de Privacidade não passa pelo `api/prerender.js`.
-Quem não executa JavaScript (a maioria dos robôs de IA: GPTBot, ClaudeBot,
-PerplexityBot) recebe uma página sem título e com ~60 caracteres de texto.
-
-**Por que importa:** a página é citada no `/llms.txt` e é onde a IA
-responderia "o blog coleta meus dados?". Hoje ela não consegue ler nada.
-
-**Caminho sugerido:** mover o texto da política para um módulo compartilhado
-(como `src/seo/site.js` faz com o FAQ), renderizar no prerender com
-`robots: "noindex"` (a página continua fora das buscas, de propósito) e
-adicionar no `vercel.json`:
-`{ "source": "/privacidade", "destination": "/api/prerender?page=privacidade" }`
-antes da regra que manda tudo para o `index.html`.
-
-**Decisão já tomada:** a página **não** ganha FAQ/FAQPage. Ela é `noindex`, e
-o Google ignora dados estruturados de página que pediu para não ser indexada.
-
-## Baixa — `noindex` também para quem não executa JavaScript
-
-**O que é:** `/favoritos` e `/privacidade` são `noindex`, mas só pela tag que o
-React coloca depois de carregar (`<SEO robots="noindex">`). O HTML inicial não
-tem nada, nem cabeçalho `X-Robots-Tag`.
-
-**Por que importa:** robô que não roda JavaScript não vê o `noindex` e pode
-indexar uma página vazia (Favoritos é uma lista pessoal, salva no navegador).
-
-**Caminho sugerido:** no `vercel.json`, em `headers`, adicionar
-`X-Robots-Tag: noindex` para `/favoritos` e `/privacidade`, como já existe
-para `/admin(.*)`.
-
-## Baixa — Padronizar os selects de "Desempenho por conteúdo"
-
-**O que é:** em Métricas › Desempenho por conteúdo, os seletores de período,
-métrica, categoria e season usam um estilo próprio (`selectClass`, borda
-`rounded-lg`) diferente do resto do painel (classe `.input`, `rounded`).
-
-**Por que importa:** é a última linha de filtros fora do padrão visual (o
-restante foi padronizado em 2026-11-05).
-
-**Caminho sugerido:** trocar `selectClass` por `.input` em
-`src/components/ContentPerformance/index.jsx` e conferir a altura junto do
-campo de busca, em 390px e em 1280px.
-
 ## Média — Uma fonte só para o FAQ do blog
 
 Ver `node-express-mongodb/docs/BACKLOG.md`. Resumo: `BLOG_FAQ` e
@@ -135,12 +90,14 @@ lateral.
 JavaScript não usado (224 KiB, era 216; numa execução local: pacote do site 74,
 GA4 72, Pixel 66 KiB), Speed Index de 4,3 s no celular e descoberta da imagem de
 LCP sinalizada no computador. A foto do autor (`author-*.webp`, 22 KB) é servida
-maior do que o tamanho exibido (~18 KiB de sobra).
+maior do que o tamanho exibido (~18 KiB de sobra). **Feito em 26/11/2026:** foto do
+autor em 96/256 px com srcset (22 KB → 3,5 KB na home) e comentários em chunk
+próprio (JS inicial do leitor de ~181 para ~176 KB gzip); falta medir no PageSpeed.
 
 **Por que importa:** o LCP no celular está em 2,4 s, só 0,1 s dentro da meta, e
 sem dados de campo (Chrome UX Report sem volume). Qualquer regressão pequena estoura.
 
-**Caminho sugerido:** versão menor da foto do autor com srcset; CSS crítico inline
+**Caminho sugerido:** CSS crítico inline
 para tirar o bloqueio; investigar o LCP no computador. Renderização completa no
 servidor é a mudança grande que atacaria Speed Index e JavaScript; medir antes de
 decidir. Comparar sempre pela mediana de 3 execuções.

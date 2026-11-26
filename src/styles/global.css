@@ -320,3 +320,17 @@ html.dark .text-gray-900 { color: rgb(255 255 255) !important; }
 .post-content :is(h2, h3) {
   scroll-margin-top: 7.5rem;
 }
+
+/* Quem pediu menos movimento no sistema: sem animação, transição nem rolagem
+   suave (skeletons ficam parados). O spinner de carregamento continua girando
+   para não parecer travado. */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

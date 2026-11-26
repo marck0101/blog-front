@@ -13,6 +13,7 @@ import ImageManager from "../ImageManager";
 import CoverImageUpload from "../CoverImageUpload";
 import FilterChips from "../FilterChips";
 import SeasonFields from "../SeasonFields";
+import ClusterFields from "../ClusterFields";
 import FaqFields from "../FaqFields";
 import PostLinksSection from "../PostLinksSection";
 import PostPreview from "../PostPreview";
@@ -51,6 +52,8 @@ const emptyForm = (plannedAt = "") => ({
   category: "",
   season: "",
   seasonOrder: "",
+  cluster: "",
+  isPillar: false,
   status: "draft",
   plannedAt,
   emailNotify: true,
@@ -76,6 +79,8 @@ function formFromPost(post) {
     category: post.category || "",
     season: post.season || "",
     seasonOrder: post.seasonOrder ?? "",
+    cluster: post.cluster || "",
+    isPillar: post.isPillar === true,
     status: post.status || (post.published ? "published" : "draft"),
     plannedAt: post.plannedAt ? new Date(post.plannedAt).toISOString().split("T")[0] : "",
     emailNotify: post.emailNotify !== false,
@@ -575,6 +580,11 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
                   showAll={false}
                 />
               </div>
+              <ClusterFields
+                cluster={form.cluster}
+                isPillar={form.isPillar}
+                onChange={set}
+              />
               <SeasonFields
                 season={form.season}
                 seasonOrder={form.seasonOrder}

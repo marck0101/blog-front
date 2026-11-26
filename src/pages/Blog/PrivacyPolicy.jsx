@@ -1,13 +1,18 @@
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
+import {
+  PRIVACY_DESCRIPTION,
+  PRIVACY_HTML,
+  PRIVACY_TITLE,
+  PRIVACY_UPDATED,
+} from "../../seo/privacy";
 
 export default function PrivacyPolicy() {
-
   return (
     <BlogLayout>
       <SEO
-        title="Política de Privacidade | marck0101"
-        description="Como coletamos, usamos e protegemos seus dados pessoais."
+        title={PRIVACY_TITLE}
+        description={PRIVACY_DESCRIPTION}
         url="/privacidade"
         robots="noindex"
       />
@@ -16,193 +21,14 @@ export default function PrivacyPolicy() {
           Política de Privacidade
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-300 mb-10">
-          Última atualização: novembro de 2026
+          Última atualização: {PRIVACY_UPDATED}
         </p>
 
-        <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
-
-          <section>
-            <h2>1. Quem somos</h2>
-            <p>
-              Este site é operado por <strong>marck0101</strong>, acessível em{" "}
-              <strong>blog.marck0101.com.br</strong>. Para dúvidas sobre privacidade,
-              entre em contato pelo e-mail:{" "}
-              <a href="mailto:marck.mhc@gmail.com">marck.mhc@gmail.com</a>.
-            </p>
-          </section>
-
-          <section>
-            <h2>2. Quais dados coletamos</h2>
-            <ul>
-              <li>
-                <strong>E-mail e nome</strong> — fornecidos voluntariamente ao se
-                inscrever na newsletter.
-              </li>
-              <li>
-                <strong>Categorias de interesse</strong> — selecionadas no formulário
-                de assinatura.
-              </li>
-              <li>
-                <strong>Cookies de sessão e preferências</strong> — armazenados
-                localmente no seu navegador para manter suas configurações (ex: tema
-                claro/escuro, aceite de cookies).
-              </li>
-              <li>
-                <strong>Dados de navegação</strong> — coletados anonimamente por
-                ferramentas de análise para entender o desempenho do conteúdo.
-              </li>
-              <li>
-                <strong>Origem da inscrição</strong> — ao assinar, registramos a página
-                em que você se inscreveu e de onde veio a visita (site de origem e
-                parâmetros de campanha do link, como utm_source).
-              </li>
-              <li>
-                <strong>Interação com os emails</strong> — os emails têm uma imagem de
-                rastreio e links rastreados que indicam se o email foi aberto, quais
-                links foram clicados e se a inscrição foi cancelada por ele.
-              </li>
-              <li>
-                <strong>Comentários</strong> — para comentar, você entra com sua conta
-                Google e recebemos seu nome, email e foto do perfil. Nome e foto aparecem
-                junto do comentário; o email não é exibido e serve só para a moderação.
-                Não temos acesso à sua senha nem a outros dados da conta.
-              </li>
-              <li>
-                <strong>Sugestões</strong> — ao usar a caixinha de sugestões, recebemos o
-                texto, o assunto, seu email e o nome (opcional). A sugestão é privada: só
-                aparece no blog se virar post, com um resumo escrito por nós e o seu
-                primeiro nome apenas se você autorizar no formulário. O email nunca é
-                exibido e serve para avisar quando a sugestão virar post. Enviar uma
-                sugestão não inscreve você na newsletter, a não ser que marque essa opção.
-              </li>
-              <li>
-                <strong>Favoritos, leituras e compartilhamentos</strong> — os posts que você
-                favorita e quanto você já leu de cada um (para mostrar &quot;Lido&quot;, a
-                porcentagem e &quot;continuar de onde parou&quot;) ficam salvos só no seu
-                navegador e não são enviados para nós. Dá para apagar o histórico em
-                Minhas leituras. Ao favoritar ou usar um botão
-                de compartilhar, contamos o evento no post de forma anônima, sem
-                identificar quem fez. Links compartilhados levam parâmetros como
-                utm_medium=share para sabermos quantas visitas cada canal trouxe.
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>3. Como usamos os dados</h2>
-            <ul>
-              <li>Enviar comunicações do blog (novos artigos, atualizações).</li>
-              <li>Personalizar o conteúdo enviado conforme suas categorias de interesse.</li>
-              <li>Melhorar a experiência de navegação no site.</li>
-              <li>Medir o desempenho dos emails (taxas de abertura e clique) e dos canais que trazem assinantes.</li>
-              <li>Exibir e moderar comentários e responder a eles.</li>
-              <li>Ler as sugestões, responder e avisar quando uma delas virar post.</li>
-            </ul>
-            <p>
-              <strong>Não vendemos, alugamos nem compartilhamos</strong> seus dados
-              pessoais com terceiros para fins comerciais.
-            </p>
-          </section>
-
-          <section>
-            <h2>4. Por quanto tempo armazenamos</h2>
-            <p>
-              Seus dados são armazenados enquanto você mantiver a inscrição ativa.
-              Após o cancelamento, os dados são marcados como "cancelado" e podem ser
-              excluídos permanentemente mediante solicitação.
-            </p>
-            <p>
-              Cookies de preferência são armazenados localmente no seu navegador por
-              tempo indeterminado e podem ser removidos a qualquer momento pelas
-              configurações do navegador.
-            </p>
-            <p>
-              Comentários ficam publicados enquanto o post estiver no ar. Você pode
-              excluir o seu a qualquer momento pelo botão "Excluir" no próprio
-              comentário (entrando com a mesma conta Google) e sair da sessão de
-              comentários pelo botão "Sair". A sessão expira sozinha em 30 dias.
-            </p>
-            <p>
-              Sugestões ficam guardadas até serem atendidas ou descartadas. Para excluir
-              uma sugestão sua, peça pelo email de contato.
-            </p>
-          </section>
-
-          <section>
-            <h2>5. Seus direitos (LGPD)</h2>
-            <p>
-              Nos termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018),
-              você tem direito a:
-            </p>
-            <ul>
-              <li>Confirmar a existência do tratamento dos seus dados.</li>
-              <li>Acessar os dados que temos sobre você.</li>
-              <li>Corrigir dados incompletos, inexatos ou desatualizados.</li>
-              <li>Solicitar a exclusão ou anonimização dos seus dados.</li>
-              <li>Revogar o consentimento a qualquer momento.</li>
-            </ul>
-            <p>
-              Para exercer esses direitos, entre em contato por e-mail:{" "}
-              <a href="mailto:marck.mhc@gmail.com">marck.mhc@gmail.com</a>.
-              Responderemos em até 15 dias úteis.
-            </p>
-          </section>
-
-          <section>
-            <h2>6. Como cancelar sua inscrição</h2>
-            <p>
-              Você pode cancelar sua assinatura da newsletter a qualquer momento:
-            </p>
-            <ul>
-              <li>
-                Clicando no link de cancelamento presente em qualquer e-mail que
-                enviamos.
-              </li>
-              <li>
-                Enviando uma solicitação para{" "}
-                <a href="mailto:marck.mhc@gmail.com">marck.mhc@gmail.com</a> com o
-                assunto "Cancelar inscrição".
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>7. Cookies</h2>
-            <p>Utilizamos dois tipos de cookies:</p>
-            <ul>
-              <li>
-                <strong>Essenciais</strong> — necessários para o funcionamento básico
-                do site (preferências de tema, aceite desta política, posts favoritos, progresso de leitura e
-                a sessão de quem entrou com Google para comentar).
-              </li>
-              <li>
-                <strong>Analíticos</strong> — coletam dados anônimos de navegação para
-                melhoria do conteúdo. Usamos o{" "}
-                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
-                  Google Analytics
-                </a>
-                , que mede visitas, páginas vistas e origem do tráfego, e o{" "}
-                <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">
-                  Microsoft Clarity
-                </a>
-                , que registra cliques, rolagem e movimentos na página (mapas de calor
-                e reproduções de sessão) para entender como o blog é usado; textos
-                digitados em formulários não são gravados. Também usamos o{" "}
-                <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer">
-                  Pixel da Meta
-                </a>
-                , que registra as páginas visitadas para medir e direcionar anúncios no
-                Facebook e no Instagram. Você pode recusá-los ao
-                interagir com o banner de cookies.
-              </li>
-            </ul>
-            <p>
-              Você pode gerenciar ou excluir cookies a qualquer momento pelas
-              configurações do seu navegador.
-            </p>
-          </section>
-
-        </div>
+        {/* Texto estático do próprio site (src/seo/privacy.js), o mesmo do prerender */}
+        <div
+          className="prose prose-lg dark:prose-invert max-w-none space-y-8"
+          dangerouslySetInnerHTML={{ __html: PRIVACY_HTML }}
+        />
       </main>
     </BlogLayout>
   );

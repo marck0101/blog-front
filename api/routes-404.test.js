@@ -30,7 +30,7 @@ describe("vercel.json: 404 real para endereço inexistente", () => {
     expect(catchAll).toEqual([]);
   });
 
-  it.each(["/academy", "/precos", "/sobre", "/contato", "/blog/a/b"])("%s não é servido", (path) => {
+  it.each(["/academy", "/precos", "/quem-somos", "/contato", "/blog/a/b"])("%s não é servido", (path) => {
     expect(served(path)).toBe(false);
   });
 });
