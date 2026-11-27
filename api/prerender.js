@@ -8,6 +8,8 @@
 // o post não existe.
 // O React assume normalmente no navegador (ver src/main.jsx e src/pages/Blog/Post.jsx).
 
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import {
   SITE_URL,
   SITE_NAME,
@@ -147,8 +149,31 @@ async function assetsLive(html) {
   return res.ok;
 }
 
-// { html, fresh }: fresh = false quando não deu para confirmar os assets (não cachear a resposta)
+// Shell do próprio deploy: o dist/index.html empacotado com a função (includeFiles no
+// vercel.json). Os assets dele são sempre os do deploy que está respondendo, então
+// a corrida acima não acontece. Em 27/11/2026 a busca pelo domínio pegou o shell do
+// deploy anterior, que ficou no cache da CDN (s-maxage=600) e deixou o /blog em
+// branco por ~8 min. Sem o arquivo (dev, testes), cai na busca pelo domínio.
+let localShell = null; // { path, html } — html null = não existe ou é inválido
+
+async function readLocalShell() {
+  const file = process.env.PRERENDER_SHELL_FILE || join(process.cwd(), "dist", "index.html");
+  if (localShell?.path === file) return localShell.html;
+  let html = null;
+  try {
+    const text = await readFile(file, "utf8");
+    if (text.includes(SHELL_MARKER) && text.includes('id="root"')) html = text;
+  } catch {
+    /* sem arquivo: usa a busca pelo domínio */
+  }
+  localShell = { path: file, html };
+  return html;
+}
+
+// { html, fresh, source }: fresh = false quando não deu para confirmar os assets (não cachear a resposta)
 async function getShell() {
+  const local = await readLocalShell();
+  if (local) return { html: local, fresh: true, source: "local" };
   if (shellCache && Date.now() - shellCache.at < SHELL_TTL_MS) return { html: shellCache.html, fresh: true };
   shellCache = null;
 
@@ -609,6 +634,8 @@ export default async function handler(req, res) {
   }
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  // Diagnóstico: "local" = shell do próprio deploy; "fetch" = buscado pelo domínio
+  res.setHeader("X-Prerender-Shell", shell.source || "fetch");
 
   try {
     let page;

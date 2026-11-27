@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "api/prerender.js": { "includeFiles": "dist/index.html" }
+  },
   "headers": [
     {
       "source": "/(.*)",
