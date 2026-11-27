@@ -38,6 +38,8 @@ const AdminSuggestions = lazyPage(() => import("../pages/Admin/Suggestions"));
 const Cockpit = lazyPage(() => import("../pages/Admin/Cockpit"));
 const CockpitExperiments = lazyPage(() => import("../pages/Admin/CockpitExperiments"));
 const CockpitLinks = lazyPage(() => import("../pages/Admin/CockpitLinks"));
+const CockpitAutomacoes = lazyPage(() => import("../pages/Admin/CockpitAutomacoes"));
+const CockpitPlacar = lazyPage(() => import("../pages/Admin/CockpitPlacar"));
 const ContentMap = lazyPage(() => import("../pages/Admin/ContentMap"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
 const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
@@ -263,6 +265,24 @@ const router = createBrowserRouter(
           element={
             <PrivateRoute>
               <Cockpit />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/cockpit/automacoes"
+          element={
+            <PrivateRoute>
+              <CockpitAutomacoes />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/cockpit/placar"
+          element={
+            <PrivateRoute>
+              <CockpitPlacar />
             </PrivateRoute>
           }
         />
