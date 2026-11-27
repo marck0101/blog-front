@@ -9,6 +9,7 @@ import SeasonsService from "../../../services/seasons.service";
 import ThemeToggle from "../../ThemeToggle";
 import SkinToggle from "../../SkinToggle";
 import { prerendered } from "../../../utils/prerendered";
+import { SuggestTopicChip } from "../../SuggestTopicCard";
 
 const VISIBLE_CATEGORIES_COUNT = 3;
 
@@ -21,6 +22,7 @@ export default function BlogHeader({ activeNav }) {
   const [hasSeasons, setHasSeasons] = useState(() => (prerendered("seasons") || []).length > 0);
   const { pathname } = useLocation();
   const onSeasons = pathname.startsWith("/seasons");
+  const onReadings = pathname === "/favoritos";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -188,13 +190,21 @@ export default function BlogHeader({ activeNav }) {
         {/* Direita: theme toggle + assinar + hamburger (acesso do autor fica no rodapé) */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {showReadings && (
+            // Liga/desliga: em Minhas leituras, o mesmo botão volta para todas as publicações
             <Link
-              to="/favoritos"
-              aria-label={favoritesCount > 0 ? `Minhas leituras (${favoritesCount} favoritos)` : "Minhas leituras"}
-              title="Minhas leituras"
+              to={onReadings ? "/blog" : "/favoritos"}
+              aria-pressed={onReadings}
+              aria-label={
+                onReadings
+                  ? "Sair de Minhas leituras e ver todas as publicações"
+                  : favoritesCount > 0
+                  ? `Minhas leituras (${favoritesCount} favoritos)`
+                  : "Minhas leituras"
+              }
+              title={onReadings ? "Ver todas as publicações" : "Minhas leituras"}
               className={`relative p-2 rounded-md transition ${
-                pathname === "/favoritos"
-                  ? "text-blue-600 dark:text-blue-400"
+                onReadings
+                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 ring-1 ring-blue-200 dark:ring-blue-800"
                   : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
@@ -206,6 +216,8 @@ export default function BlogHeader({ activeNav }) {
               )}
             </Link>
           )}
+
+          <SuggestTopicChip location="header" className="hidden lg:inline-flex" />
 
           <ThemeToggle />
           <SkinToggle />
@@ -272,7 +284,8 @@ export default function BlogHeader({ activeNav }) {
             </Link>
           ))}
 
-          <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2 flex flex-col gap-1">
+          <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2 flex flex-col gap-2">
+            <SuggestTopicChip location="mobile_menu" className="justify-center py-2" onClick={() => setMenuOpen(false)} />
             <a
               href="#assinar"
               onClick={() => setMenuOpen(false)}
