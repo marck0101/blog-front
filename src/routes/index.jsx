@@ -34,6 +34,7 @@ const AdminSeasons = lazyPage(() => import("../pages/Admin/Seasons"));
 const Security = lazyPage(() => import("../pages/Admin/Security"));
 const Features = lazyPage(() => import("../pages/Admin/Features"));
 const AdminSuggestions = lazyPage(() => import("../pages/Admin/Suggestions"));
+const Cockpit = lazyPage(() => import("../pages/Admin/Cockpit"));
 const ContentMap = lazyPage(() => import("../pages/Admin/ContentMap"));
 const Login = lazyPage(() => import("../pages/Admin/Login"));
 const ForgotPassword = lazyPage(() => import("../pages/Admin/ForgotPassword"));
@@ -249,6 +250,15 @@ const router = createBrowserRouter(
           element={
             <PrivateRoute>
               <ContentMap />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/cockpit"
+          element={
+            <PrivateRoute>
+              <Cockpit />
             </PrivateRoute>
           }
         />

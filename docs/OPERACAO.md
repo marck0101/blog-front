@@ -54,6 +54,17 @@ da API ficam em `node-express-mongodb/docs/OPERACAO.md`.
   dentro precisa de `grid-cols-1`; contêiner `overflow-x-auto` com texto
   `sr-only` dentro precisa de `relative`.
 
+## Cockpit (`/admin/cockpit`)
+
+- Página "Hoje": 6 tiles (receita do mês, prospecção, leituras, inscritos, automações,
+  precisa de ação) lidos de `GET /api/cockpit/hoje`. Código: `pages/Admin/Cockpit.jsx`,
+  textos e contas em `utils/cockpit.js`.
+- Cada tile mostra "fonte · atualizado há X"; retrato com mais de 2x o esperado
+  (`staleAfterSec` da API) fica acinzentado e escrito "desatualizado".
+- Status sempre com texto e símbolo (✓ ▲ ✕ –), nunca só cor.
+- **Deploy: backend antes do front** (a rota `/api/cockpit/hoje` precisa existir).
+  Regras e variáveis: SISTEMA.md seção 21 e OPERACAO.md do backend.
+
 ## Qualidade antes do push
 
 - `npx eslint src` sem erros e `npx vite build --mode development` passando.
