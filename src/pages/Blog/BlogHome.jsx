@@ -19,6 +19,7 @@ import Pagination from "../../components/Pagination";
 import ViewToggle from "../../components/ViewToggle";
 import useViewMode from "../../hooks/useViewMode";
 import usePageSize from "../../hooks/usePageSize";
+import PreDiagnosticoCard from "../../components/PreDiagnosticoCard";
 import SubscribeForm from "../../components/SubscribeForm";
 import SeasonCard from "../../components/SeasonCard";
 import ResumeShelf from "../../components/ResumeShelf";
@@ -492,6 +493,8 @@ export default function BlogHome() {
             className="mt-10"
           />
         )}
+
+        <PreDiagnosticoCard location="home" className="mt-16 max-w-3xl" />
 
         <PostFaq items={BLOG_FAQ} className="mt-16 max-w-3xl" />
 

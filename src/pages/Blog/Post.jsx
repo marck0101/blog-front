@@ -7,6 +7,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import BackButton from "../../components/BackButton";
 import Lightbox from "../../components/Lightbox";
 import PostsService from "../../services/posts.service";
+import PreDiagnosticoCard from "../../components/PreDiagnosticoCard";
 import SubscribeForm from "../../components/SubscribeForm";
 import { contactMethod, setPageContext, trackEvent } from "../../utils/analytics";
 import SeasonNav from "../../components/SeasonNav";
@@ -439,6 +440,8 @@ export default function Post() {
         <ClusterNav post={post} data={clusterData} />
 
         <RelatedPosts key={`related-${post._id}`} post={post} categories={categories} seasons={seasons} />
+
+        <PreDiagnosticoCard location="post" />
 
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />

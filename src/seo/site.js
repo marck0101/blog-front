@@ -321,7 +321,7 @@ export function postFaq(post) {
 }
 
 // O mesmo FAQ que o leitor vê na página (o Google exige que o conteúdo esteja visível)
-function faqPageSchema(items, id) {
+export function faqPageSchema(items, id) {
   const pairs = cleanFaq(items);
   if (pairs.length === 0) return null;
 

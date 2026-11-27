@@ -1,5 +1,5 @@
 // Vercel Serverless Function — pré-renderização de SEO para /blog, /blog/:slug,
-// /seasons, /seasons/:slug, /temas/:slug e /privacidade.
+// /seasons, /seasons/:slug, /temas/:slug, /sobre, /pre-diagnostico e /privacidade.
 //
 // O app é uma SPA: sem isto, crawlers recebem um <head> genérico e um <div id="root">
 // vazio. Aqui buscamos o index.html estático, injetamos title/meta/canonical/JSON-LD
@@ -35,6 +35,7 @@ import {
   SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
 import { ABOUT_DESCRIPTION, ABOUT_HTML, ABOUT_TITLE, ABOUT_URL, aboutSchema } from "../src/seo/about.js";
+import { PRE_DESCRIPTION, PRE_FAQ, PRE_H1, PRE_CHECKS, PRE_STEPS, PRE_NOT, PRE_NOT_NOTE, PRE_TITLE, PRE_URL, preDiagnosticoSchema } from "../src/seo/preDiagnostico.js";
 import { PRIVACY_DESCRIPTION, PRIVACY_HTML, PRIVACY_TITLE, PRIVACY_UPDATED } from "../src/seo/privacy.js";
 import { coverSrcSet, GRID_SIZES } from "../src/utils/coverSrcSet.js";
 import { authorNumbered, tocItems, withHeadingIds } from "../src/utils/headings.js";
@@ -483,6 +484,35 @@ export function aboutPage() {
   return { head, body };
 }
 
+// Pré-diagnóstico gratuito: texto e FAQ para quem não roda JS
+export function preDiagnosticoPage() {
+  const head = headTags({
+    title: PRE_TITLE,
+    description: PRE_DESCRIPTION,
+    url: PRE_URL,
+    image: DEFAULT_IMAGE,
+    type: "website",
+    robots: ROBOTS_INDEX,
+    schema: preDiagnosticoSchema(),
+  });
+
+  const body = `<noscript>
+      <p><a href="/blog">Blog</a> / Pré-diagnóstico</p>
+      <h1>${esc(PRE_H1)}</h1>
+      <p>${esc(PRE_DESCRIPTION)}</p>
+      <h2>O que eu verifico</h2>
+      <ul>${PRE_CHECKS.map((c) => `<li><strong>${esc(c.title)}:</strong> ${esc(c.text)}</li>`).join("")}</ul>
+      <h2>Como funciona</h2>
+      <ol>${PRE_STEPS.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+      <h2>O que isto não é</h2>
+      <ul>${PRE_NOT.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+      <p>${esc(PRE_NOT_NOTE)}</p>
+      ${faqHtml(PRE_FAQ)}
+    </noscript>`;
+
+  return { head, body };
+}
+
 // Tema (cluster): o artigo principal e os relacionados, em links para quem não roda JS
 export function clusterPage({ cluster, pillar, posts = [] }) {
   const head = headTags({
@@ -564,6 +594,7 @@ export default async function handler(req, res) {
   const isSeasons = req.query.page === "seasons";
   const isPrivacy = req.query.page === "privacidade";
   const isAbout = req.query.page === "sobre";
+  const isPre = req.query.page === "pre-diagnostico";
   const clusterSlug = typeof req.query.cluster === "string" ? req.query.cluster : "";
 
   let shell;
@@ -589,6 +620,8 @@ export default async function handler(req, res) {
       page = privacyPage();
     } else if (isAbout) {
       page = aboutPage();
+    } else if (isPre) {
+      page = preDiagnosticoPage();
     } else if (clusterSlug) {
       const data = await fetchJson(`${API_URL}/clusters/${encodeURIComponent(clusterSlug)}`);
       if (data) {
