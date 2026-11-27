@@ -43,6 +43,7 @@ import { PRIVACY_DESCRIPTION, PRIVACY_HTML, PRIVACY_TITLE, PRIVACY_UPDATED } fro
 import { coverSrcSet, GRID_SIZES } from "../src/utils/coverSrcSet.js";
 import { authorNumbered, tocItems, withHeadingIds } from "../src/utils/headings.js";
 import { clusterLinks } from "../src/utils/clusterLinks.js";
+import { SERVICES_INTRO, SERVICES_TITLE, servicesForCluster } from "../src/utils/clusterServices.js";
 
 // Alturas (px) do header do blog e da linha favoritar/compartilhar do post, que o
 // HTML estático reserva para o texto não pular quando o React assumir. No celular
@@ -267,6 +268,7 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, 
   const minutes = post.readingMinutes || readingMinutes(post.content);
   // Tema do post (mesma regra do React: utils/clusterLinks.js)
   const links = clusterLinks(post, cluster);
+  const postService = servicesForCluster(post.cluster)[0];
   const trail = post.season && seasonTitle
     ? `<span class="mx-2">/</span><a href="/seasons" class="hover:underline dark:hover:text-gray-100">Seasons</a>
           <span class="mx-2">/</span><a href="/seasons/${esc(post.season)}" class="hover:underline dark:hover:text-gray-100">${esc(seasonTitle)}</a>`
@@ -326,6 +328,7 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, 
           </article>
           ${otherEpisodes ? linkListHtml(`Season: ${episodes.season.title}`, otherEpisodes) : ""}
           ${links ? linkListHtml(`${links.isPillar ? "Neste tema" : "Mais deste tema"}: ${links.cluster.title}`, [links.pillar, ...links.items].filter(Boolean)) : ""}
+          ${postService ? `<p>Serviço relacionado: <a href="${esc(postService.url)}">${esc(postService.name)}</a></p>` : ""}
           ${linkListHtml("Continue lendo", related)}
         </main>
       </div>
@@ -568,12 +571,22 @@ export function clusterPage({ cluster, pillar, posts = [] }) {
       </ul>`
     : "";
 
+  const services = servicesForCluster(cluster.slug);
+  const servicesHtml = services.length
+    ? `<h2>${esc(SERVICES_TITLE)}</h2>
+      <p>${esc(SERVICES_INTRO)}</p>
+      <ul>
+          ${services.map((s) => `<li><a href="${esc(s.url)}">${esc(s.name)}</a></li>`).join("\n          ")}
+      </ul>`
+    : "";
+
   const body = `<noscript>
       <p><a href="/blog">Blog</a> / ${esc(cluster.title)}</p>
       <h1>${esc(cluster.title)}</h1>
       <p>${esc(cluster.description)}</p>
       ${pillarHtml}
       ${listHtml}
+      ${servicesHtml}
     </noscript>`;
 
   return { head, body };
@@ -613,6 +626,9 @@ export function postRedirectPath(requestedSlug, post, query = {}) {
   const search = params.toString();
   return `/blog/${encodeURIComponent(post.slug)}${search ? `?${search}` : ""}`;
 }
+
+// 200 do bot: cacheável no CDN (evita cold start de ~11 s a cada deploy/expiração)
+export const PRERENDER_CACHE_OK = "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400";
 
 export default async function handler(req, res) {
   const slug = typeof req.query.slug === "string" ? req.query.slug : "";
@@ -728,7 +744,7 @@ export default async function handler(req, res) {
       !shell.fresh
         ? "no-store"
         : status === 200
-        ? "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+        ? PRERENDER_CACHE_OK
         : "public, max-age=0, s-maxage=60"
     );
     res.status(status).send(render(shell.html, page.head, page.body, page.root));

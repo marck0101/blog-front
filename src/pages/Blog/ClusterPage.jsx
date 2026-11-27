@@ -11,6 +11,7 @@ import { setPageContext, trackEvent } from "../../utils/analytics";
 import { clusterTitle } from "../../seo/site";
 import { ClusterSchema } from "../../components/StructuredData";
 import { Loading, Skeleton } from "../../components/Skeleton";
+import { ClusterServices } from "../../components/ClusterServices/ClusterServices";
 
 function Cover({ post, className }) {
   const cover = normalizeImageUrl(post.coverImage);
@@ -177,6 +178,8 @@ export default function ClusterPage() {
             </ul>
           </section>
         )}
+
+        <ClusterServices clusterSlug={cluster.slug} />
 
         <div className="mt-12">
           <SubscribeForm />

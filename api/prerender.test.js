@@ -228,3 +228,38 @@ describe("prerender: shell do próprio deploy", () => {
     expect(headers["X-Prerender-Shell"]).toBe("fetch");
   });
 });
+
+describe("serviços no prerender (R8.2)", () => {
+  it("tema com serviços lista os links no HTML", () => {
+    const cluster = { slug: "trafego-pago-medido", title: "Tráfego", description: "d" };
+    const { body } = clusterPage({ cluster, pillar: null, posts: [] });
+    expect(body).toContain("Quer que eu faça isso por você?");
+    expect(body).toContain('<a href="https://servicos.marck0101.com.br/servicos/trafego">Anúncios no Google e no Instagram (tráfego pago)</a>');
+    expect(body).toContain("/servicos/tagueamento");
+  });
+
+  it("tema sem serviços não ganha o bloco", () => {
+    const cluster = { slug: "seguranca-na-diretoria", title: "Segurança", description: "d" };
+    expect(clusterPage({ cluster, pillar: null, posts: [] }).body).not.toContain("Quer que eu faça isso");
+  });
+
+  it("post do tema mostra um link de serviço relacionado", () => {
+    const post = { _id: "a".repeat(24), slug: "p", title: "P", category: "x", publishedAt: "2026-11-13T12:00:00Z", content: "<p>Oi</p>", cluster: "dashboards-e-bi" };
+    const { root } = postPage(post, {});
+    expect(root).toContain('Serviço relacionado: <a href="https://servicos.marck0101.com.br/servicos/dashboard">');
+  });
+
+  it("200 do bot é cacheável no CDN por 1 h", async () => {
+    const { vi } = await import("vitest");
+    process.env.PRERENDER_SHELL_FILE = "index.html";
+    const { default: handler, PRERENDER_CACHE_OK } = await import("./prerender");
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, json: async () => [], text: async () => "[]" })));
+    const headers = {};
+    const res = { setHeader(k, v) { headers[k] = v; }, status() { return res; }, send() { return res; } };
+    await handler({ query: { page: "privacidade" } }, res);
+    vi.unstubAllGlobals();
+    delete process.env.PRERENDER_SHELL_FILE;
+    expect(PRERENDER_CACHE_OK).toBe("public, max-age=0, s-maxage=3600, stale-while-revalidate=86400");
+    expect(headers["Cache-Control"]).toBe(PRERENDER_CACHE_OK);
+  });
+});

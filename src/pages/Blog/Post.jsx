@@ -28,6 +28,7 @@ import { recordPostView } from "../../utils/postViews";
 import FavoriteButton from "../../components/FavoriteButton";
 import ShareButtons from "../../components/ShareButtons";
 import RelatedPosts from "../../components/RelatedPosts";
+import { PostServiceLink } from "../../components/ClusterServices/ClusterServices";
 import ClusterNav from "../../components/ClusterNav";
 import useClusterData from "../../hooks/useClusterData";
 import GeneratedCover from "../../components/GeneratedCover";
@@ -447,6 +448,8 @@ export default function Post() {
         </div>
 
         <ClusterNav post={post} data={clusterData} />
+
+        <PostServiceLink clusterSlug={post.cluster} />
 
         <RelatedPosts key={`related-${post._id}`} post={post} categories={categories} seasons={seasons} />
 
