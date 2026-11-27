@@ -78,6 +78,54 @@ describe("PreDiagnostico", () => {
   });
 });
 
+describe("PreDiagnostico com origem (R4)", () => {
+  const renderFrom = (de) => {
+    window.history.pushState({}, "", `/pre-diagnostico?de=${de}`);
+    return render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={[`/pre-diagnostico?de=${de}`]}>
+          <PreDiagnostico />
+        </MemoryRouter>
+      </HelmetProvider>,
+    );
+  };
+  const text = (href) => decodeURIComponent(href.split("text=")[1]);
+
+  it("WhatsApp termina com [ref: blog-<slug>] e o evento leva origin_path", () => {
+    renderFrom("/blog/meu-post");
+    const link = screen.getAllByRole("link", { name: /WhatsApp/ })[0];
+    expect(text(link.getAttribute("href"))).toBe(`${PRE_MESSAGE}
+[ref: blog-meu-post]`);
+    fireEvent.click(link);
+    expect(trackEvent).toHaveBeenCalledWith("pre_diagnostico_cta", expect.objectContaining({ origin_path: "/blog/meu-post" }));
+  });
+
+  it("a pessoa edita a referência e ela vai na mensagem; apagada, some", () => {
+    renderFrom("/blog/meu-post");
+    const field = screen.getByLabelText(/Referência/);
+    expect(field.value).toBe("blog-meu-post");
+    fireEvent.change(field, { target: { value: "Indicação do João" } });
+    expect(text(screen.getAllByRole("link", { name: /WhatsApp/ })[1].getAttribute("href"))).toContain("[ref: indica-o-do-jo-o]");
+    fireEvent.change(field, { target: { value: "" } });
+    expect(text(screen.getAllByRole("link", { name: /WhatsApp/ })[1].getAttribute("href"))).toBe(PRE_MESSAGE);
+  });
+
+  it("origem inválida (query, admin, site externo) é ignorada: sem campo, sem ref, sem origin_path", () => {
+    renderFrom("https://evil.com/x");
+    expect(screen.queryByLabelText(/Referência/)).toBeNull();
+    const link = screen.getAllByRole("link", { name: /WhatsApp/ })[0];
+    expect(text(link.getAttribute("href"))).toBe(PRE_MESSAGE);
+    fireEvent.click(link);
+    expect(trackEvent.mock.calls.find((c) => c[0] === "pre_diagnostico_cta")[1]).not.toHaveProperty("origin_path");
+  });
+
+  it("e-mail também leva a linha de referência", () => {
+    renderFrom("/blog/meu-post");
+    const mail = screen.getAllByRole("link", { name: /e-mail/ })[0].getAttribute("href");
+    expect(decodeURIComponent(mail)).toMatch(/Cidade: \n\[ref: blog-meu-post\]$/);
+  });
+});
+
 describe("PreDiagnosticoCard", () => {
   it("leva a /pre-diagnostico e registra o clique", () => {
     render(
@@ -89,5 +137,17 @@ describe("PreDiagnosticoCard", () => {
     expect(link.getAttribute("href")).toBe("/pre-diagnostico");
     fireEvent.click(link);
     expect(trackEvent).toHaveBeenCalledWith("pre_diagnostico_card_click", { link_location: "post" });
+  });
+
+  it("dentro de um post, o link e o evento levam a origem (sem query string)", () => {
+    render(
+      <MemoryRouter initialEntries={["/blog/meu-post?utm_source=x&email=a@b.com"]}>
+        <PreDiagnosticoCard location="post" />
+      </MemoryRouter>,
+    );
+    const link = screen.getByRole("link", { name: /Quero o meu/ });
+    expect(link.getAttribute("href")).toBe("/pre-diagnostico?de=/blog/meu-post");
+    fireEvent.click(link);
+    expect(trackEvent).toHaveBeenCalledWith("pre_diagnostico_card_click", { link_location: "post", origin_path: "/blog/meu-post" });
   });
 });

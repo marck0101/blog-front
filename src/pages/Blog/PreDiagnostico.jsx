@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Mail, MessageCircle, Check, ShieldCheck } from "lucide-react";
 import BlogLayout from "../../layouts/BlogLayout";
 import SEO from "../../components/SEO";
@@ -7,7 +8,8 @@ import PostFaq from "../../components/PostFaq";
 import {
   PRE_CHECKS,
   PRE_DESCRIPTION,
-  PRE_EMAIL_URL,
+  PRE_EMAIL,
+  PRE_EMAIL_BODY,
   PRE_FAQ,
   PRE_H1,
   PRE_NOT,
@@ -15,29 +17,35 @@ import {
   PRE_PATH,
   PRE_STEPS,
   PRE_TITLE,
-  PRE_WHATSAPP_URL,
+  PRE_MESSAGE,
+  PRE_WHATSAPP_NUMBER,
   preDiagnosticoSchema,
 } from "../../seo/preDiagnostico";
 import { trackPreDiagnosticoCta } from "../../utils/preDiagnostico";
+import { cleanRef, originPath, originRef, refLine } from "../../utils/preOrigin";
 
 const H2 = "text-2xl font-bold text-gray-900 dark:text-gray-100";
 
-function CtaButtons({ location }) {
+function CtaButtons({ location, refText, origin }) {
+  // R4: a referência (editável pela pessoa) vira a última linha da mensagem
+  const line = refLine(refText);
+  const whatsapp = `https://wa.me/${PRE_WHATSAPP_NUMBER}?text=${encodeURIComponent(line ? `${PRE_MESSAGE}\n${line}` : PRE_MESSAGE)}`;
+  const email = `mailto:${PRE_EMAIL}?subject=${encodeURIComponent("Pré-diagnóstico gratuito")}&body=${encodeURIComponent(line ? `${PRE_EMAIL_BODY}\n${line}` : PRE_EMAIL_BODY)}`;
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <a
-        href={PRE_WHATSAPP_URL}
+        href={whatsapp}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackPreDiagnosticoCta("whatsapp", location)}
+        onClick={() => trackPreDiagnosticoCta("whatsapp", location, origin)}
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-3 transition"
       >
         <MessageCircle size={20} aria-hidden="true" />
         Pedir pelo WhatsApp
       </a>
       <a
-        href={PRE_EMAIL_URL}
-        onClick={() => trackPreDiagnosticoCta("email", location)}
+        href={email}
+        onClick={() => trackPreDiagnosticoCta("email", location, origin)}
         className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold px-5 py-3 transition"
       >
         <Mail size={20} aria-hidden="true" />
@@ -49,6 +57,10 @@ function CtaButtons({ location }) {
 
 // /pre-diagnostico — landing do pré-diagnóstico gratuito (o mesmo texto do prerender)
 export default function PreDiagnostico() {
+  // R4: ?de=/blog/<slug> (vindo do cartão do post) vira a referência da mensagem; a pessoa pode editar ou apagar
+  const [params] = useSearchParams();
+  const origin = originPath(params.get("de"));
+  const [ref, setRef] = useState(() => originRef(origin));
   return (
     <BlogLayout>
       <SEO title={PRE_TITLE} description={PRE_DESCRIPTION} url={PRE_PATH} />
@@ -66,7 +78,7 @@ export default function PreDiagnostico() {
             cidade e te mando um relatório curto com o que está travando.
           </p>
           <div className="mt-6">
-            <CtaButtons location="hero" />
+            <CtaButtons location="hero" refText={ref} origin={origin} />
           </div>
         </header>
 
@@ -123,7 +135,24 @@ export default function PreDiagnostico() {
           <p className="mt-2 mb-4 text-gray-700 dark:text-gray-300">
             Me mande o endereço do site e a cidade onde você atende. O texto já vem pronto no WhatsApp.
           </p>
-          <CtaButtons location="bottom" />
+          {origin && (
+            <div className="mb-4">
+              <label htmlFor="pre-ref" className="block text-sm font-medium text-gray-800 dark:text-gray-100">
+                Referência que vai no fim da mensagem
+              </label>
+              <input
+                id="pre-ref"
+                value={ref}
+                maxLength={70}
+                onChange={(e) => setRef(cleanRef(e.target.value))}
+                className="mt-1 w-full sm:w-80 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-300">
+                Só diz de qual texto você veio, para eu saber o que ajudou. Pode apagar se preferir.
+              </p>
+            </div>
+          )}
+          <CtaButtons location="bottom" refText={ref} origin={origin} />
         </section>
 
         <PostFaq items={PRE_FAQ} className="mt-14" />
