@@ -1,6 +1,7 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CookieBanner from ".";
+import { openCookiePreferences } from "../../utils/analytics";
 
 // Lint zero: a decisão de mostrar saiu do useEffect (estado inicial calculado)
 describe("CookieBanner", () => {
@@ -44,5 +45,27 @@ describe("CookieBanner", () => {
     render(<CookieBanner />);
     expect(() => fireEvent.click(buttons()[0])).not.toThrow();
     expect(buttons()).toHaveLength(0);
+  });
+
+  it("Recusar guarda 'essential' e Aceitar guarda 'all'", () => {
+    render(<CookieBanner />);
+    fireEvent.click(screen.getByRole("button", { name: "Recusar" }));
+    expect(localStorage.getItem("cookiesAccepted")).toBe("essential");
+    act(() => openCookiePreferences());
+    fireEvent.click(screen.getByRole("button", { name: "Aceitar" }));
+    expect(localStorage.getItem("cookiesAccepted")).toBe("all");
+  });
+
+  it("Preferências de cookies reabre o banner para quem já respondeu", () => {
+    localStorage.setItem("cookiesAccepted", "all");
+    render(<CookieBanner />);
+    expect(buttons()).toHaveLength(0);
+    act(() => openCookiePreferences());
+    expect(screen.getByRole("button", { name: "Recusar" })).toBeTruthy();
+  });
+
+  it("não diz que continuar navegando é aceitar", () => {
+    render(<CookieBanner />);
+    expect(screen.queryByText(/continuar navegando/i)).toBeNull();
   });
 });

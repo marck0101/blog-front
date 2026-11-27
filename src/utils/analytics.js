@@ -1,6 +1,6 @@
 // Ferramentas de análise do blog público: Microsoft Clarity (mapas de calor e
 // gravações), Google Analytics 4 e Meta Pixel. Só rodam no domínio de produção, fora do
-// /admin e se o visitante não recusou cookies analíticos.
+// /admin e só depois que o visitante clicou em Aceitar no banner de cookies.
 import { aiSource, getAttribution } from "./attribution";
 
 const CLARITY_ID = "yv1fb9k675";
@@ -12,15 +12,23 @@ export const CONSENT_EVENT = "cookie-consent";
 
 const isProdHost = () => PROD_HOSTS.includes(window.location.hostname);
 
-// "essential" = recusou analíticos | "all" ou sem resposta = permitido
-// (o banner informa que continuar navegando é aceitar)
-const analyticsAllowed = () => {
+export const CONSENT_KEY = "cookiesAccepted";
+// Reabre o banner (botão "Preferências de cookies" no rodapé)
+export const PREFERENCES_EVENT = "cookie-preferences";
+
+// LGPD: só "all" (clicou em Aceitar) libera. Sem resposta, "essential" ou sem
+// localStorage = GA4, Clarity e Pixel não carregam e nenhuma requisição sai para eles.
+export const analyticsAllowed = () => {
   try {
-    return localStorage.getItem("cookiesAccepted") !== "essential";
+    return localStorage.getItem(CONSENT_KEY) === "all";
   } catch {
-    return true;
+    return false;
   }
 };
+
+export function openCookiePreferences() {
+  window.dispatchEvent(new Event(PREFERENCES_EVENT));
+}
 
 // Navegador do autor não entra nas métricas (filtro por IP não pega celular nem
 // rede móvel): marcado ao entrar no painel (indicador "user" do AuthContext) ou
