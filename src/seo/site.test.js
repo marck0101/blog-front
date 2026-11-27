@@ -30,3 +30,12 @@ describe("imagem de compartilhamento do post (capa automática)", () => {
     expect(post.image).toEqual([postImage(base)]);
   });
 });
+
+describe("autoCoverUrl", () => {
+  it("acrescenta tema e versão; sem slug devolve vazio", async () => {
+    const { autoCoverUrl } = await import("./site");
+    expect(autoCoverUrl({ slug: "a", updatedAt: "2026-11-01T00:00:00Z" }, "escuro")).toMatch(/\/posts\/slug\/a\/cover\.png\?v=\d+&tema=escuro$/);
+    expect(autoCoverUrl({ slug: "a" })).toMatch(/cover\.png$/);
+    expect(autoCoverUrl({})).toBe("");
+  });
+});

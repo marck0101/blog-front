@@ -13,9 +13,18 @@ export const API_URL = "https://api.blog.marck0101.com.br/api";
 // ?v= (data da última edição) só serve para CDN e redes sociais renovarem o cache.
 export function postImage(post) {
   if (post?.coverImage) return post.coverImage;
-  if (!post?.slug) return DEFAULT_IMAGE;
+  return autoCoverUrl(post) || DEFAULT_IMAGE;
+}
+
+// URL da capa automática (PNG 1200x630, padrão Relatório) ou "" sem slug.
+// tema "claro" | "escuro" escolhe o tema da imagem; sem tema, a API usa o padrão.
+export function autoCoverUrl(post, tema) {
+  if (!post?.slug) return "";
+  const q = [];
   const v = post.updatedAt ? new Date(post.updatedAt).getTime() : NaN;
-  return `${API_URL}/posts/slug/${encodeURIComponent(post.slug)}/cover.png${Number.isNaN(v) ? "" : `?v=${v}`}`;
+  if (!Number.isNaN(v)) q.push(`v=${v}`);
+  if (tema) q.push(`tema=${tema}`);
+  return `${API_URL}/posts/slug/${encodeURIComponent(post.slug)}/cover.png${q.length ? `?${q.join("&")}` : ""}`;
 }
 
 export const HOME_TITLE = "Marcos Henrique Corrêa | Blog de marketing, tráfego e dev";

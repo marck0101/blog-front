@@ -27,7 +27,7 @@ function ListCard({ post, coverSrc, date, categoryLabel, seasonLabel, reading })
           {coverSrc ? (
             <CoverImage src={coverSrc} alt={post.coverImageAlt || ""} width={320} height={180} sizes="(min-width: 640px) 224px, 112px" className="w-full h-full object-cover" />
           ) : (
-            <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
+            <GeneratedCover post={post} title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
           )}
           <ReadBar entry={reading} />
         </div>
@@ -136,7 +136,7 @@ function GridCard({ post, coverSrc, date, categoryLabel, seasonLabel, badge, pri
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} />
+            <GeneratedCover post={post} title={post.title} category={post.category} categoryLabel={categoryLabel} />
           )}
           <ReadBar entry={reading} />
         </div>
