@@ -190,3 +190,41 @@ describe("og:image do post no prerender", () => {
     expect(head).not.toContain("cover.png");
   });
 });
+
+// Shell local: o dist/index.html do próprio deploy evita servir o shell do deploy anterior
+describe("prerender: shell do próprio deploy", () => {
+  it("usa o arquivo local e não busca index.html pelo domínio", async () => {
+    const { vi } = await import("vitest");
+    process.env.PRERENDER_SHELL_FILE = "index.html";
+    const { default: handler } = await import("./prerender");
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => [], text: async () => "[]" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const headers = {};
+    let body = "";
+    const res = { setHeader(k, v) { headers[k] = v; }, status() { return res; }, send(b) { body = b; return res; }, end() { return res; } };
+    await handler({ query: { page: "privacidade" } }, res);
+    vi.unstubAllGlobals();
+    delete process.env.PRERENDER_SHELL_FILE;
+    expect(headers["X-Prerender-Shell"]).toBe("local");
+    expect(body).toContain('id="root"');
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes("index.html"))).toBe(false);
+  });
+
+  it("sem o arquivo, volta a buscar pelo domínio", async () => {
+    const { vi } = await import("vitest");
+    process.env.PRERENDER_SHELL_FILE = "nao-existe/index.html";
+    const { default: handler } = await import("./prerender");
+    const { readFileSync } = await import("node:fs");
+    const shell = readFileSync("index.html", "utf8");
+    vi.stubGlobal("fetch", vi.fn(async (url) =>
+      String(url).includes("/api/")
+        ? { ok: true, status: 200, json: async () => [], text: async () => "[]" }
+        : { ok: true, status: 200, text: async () => shell, json: async () => ({}) }));
+    const headers = {};
+    const res = { setHeader(k, v) { headers[k] = v; }, status() { return res; }, send() { return res; }, end() { return res; } };
+    await handler({ query: { page: "privacidade" } }, res);
+    vi.unstubAllGlobals();
+    delete process.env.PRERENDER_SHELL_FILE;
+    expect(headers["X-Prerender-Shell"]).toBe("fetch");
+  });
+});
