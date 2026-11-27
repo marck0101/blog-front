@@ -128,6 +128,17 @@ export default function CockpitPlacar() {
               </button>
             </div>
 
+            <section aria-label="Search Console" className="rounded-xl border border-dashed bg-white dark:bg-gray-900 p-4">
+              <h2 className="font-semibold">Search Console: aguardando acesso</h2>
+              <p className={`text-sm mt-1 ${NOTE}`}>
+                Impressões, cliques e posição no Google entram aqui quando o acesso for liberado. Até lá, nenhum número é mostrado.
+              </p>
+              <p className={`text-sm mt-1 ${NOTE}`}>
+                Pedidos de pré-diagnóstico por texto: o pedido sai pelo WhatsApp ou e-mail e não é guardado aqui. A origem aparece no GA4
+                (evento pre_diagnostico_cta, parâmetro origin_path) e na mensagem recebida, na linha [ref: blog-...].
+              </p>
+            </section>
+
             <section aria-label="Últimas 13 semanas" className="space-y-2">
               <h2 className="font-semibold">Últimas 13 semanas</h2>
               {data.numeros.map((n) => (

@@ -79,6 +79,16 @@ describe("Cockpit: Placar", () => {
     expect(within(details).getAllByRole("row")).toHaveLength(14);
   });
 
+  it("mostra o aviso do Search Console sem número e aceita meta nos números de e-mail", async () => {
+    const p = placar();
+    p.numeros.push({ key: "aberturas_email", label: "Aberturas de e-mail", unit: "n", meta: 30, current: { value: 12, status: "abaixo" }, previous: { value: 9 }, serie: serie(12, "abaixo") });
+    CockpitService.getPlacar.mockResolvedValue(p);
+    render(<MemoryRouter><CockpitPlacar /></MemoryRouter>);
+    expect(await screen.findByText("Search Console: aguardando acesso")).toBeTruthy();
+    expect(screen.getByLabelText("Meta semanal de Aberturas de e-mail").value).toBe("30");
+    expect(screen.queryByText(/impressões:/i)).toBeNull();
+  });
+
   it("salva só a meta alterada; campo vazio apaga; negativo bloqueia", async () => {
     CockpitService.getPlacar.mockResolvedValue(placar());
     CockpitService.savePlacarMetas.mockResolvedValue({});

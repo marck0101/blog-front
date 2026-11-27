@@ -2,6 +2,12 @@
 
 Formato livre, mais recente primeiro.
 
+## 27/11/2026 · Sprint R4 · Placar do conteúdo
+
+- Pré-diagnóstico: o cartão em post/home leva `?de=/blog/<slug>`; a página mostra um campo editável de referência e a mensagem (WhatsApp e e-mail) termina com `[ref: blog-<slug>]`. O evento GA4 `pre_diagnostico_cta` (e `pre_diagnostico_card_click`) ganha `origin_path`. Só slug de página do blog: sem query string, sem dado pessoal, até 70 caracteres; origem inválida é ignorada. Registrar `origin_path` como dimensão de evento no GA4.
+- Placar (admin): aviso "Search Console: aguardando acesso" (sem número) e nota sobre a origem dos pedidos; números de e-mail aparecem sozinhos. **Depende do backend (R4) para as linhas de aberturas e cliques.**
+- Não guarda pedido em lugar nenhum: o pedido sai por WhatsApp/e-mail.
+
 ## 27/11/2026 · Sprint R5 · Experimentos no site
 
 - Novo: `useExperiment(alvo)` sorteia a variante de texto do botão do pré-diagnóstico, só com consentimento de cookies; escolha guardada por experimento; revogar apaga e volta ao texto padrão.

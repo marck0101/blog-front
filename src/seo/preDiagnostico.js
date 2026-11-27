@@ -14,7 +14,8 @@ export const PRE_WHATSAPP_NUMBER = "5555963370494";
 export const PRE_EMAIL = "marck.mhc@gmail.com";
 export const PRE_MESSAGE = "Olá, Marcos! Quero o pré-diagnóstico gratuito. Site: ___ Cidade: ___";
 export const PRE_WHATSAPP_URL = `https://wa.me/${PRE_WHATSAPP_NUMBER}?text=${encodeURIComponent(PRE_MESSAGE)}`;
-export const PRE_EMAIL_URL = `mailto:${PRE_EMAIL}?subject=${encodeURIComponent("Pré-diagnóstico gratuito")}&body=${encodeURIComponent("Olá, Marcos!\nQuero o pré-diagnóstico gratuito.\nSite: \nCidade: ")}`;
+export const PRE_EMAIL_BODY = "Olá, Marcos!\nQuero o pré-diagnóstico gratuito.\nSite: \nCidade: ";
+export const PRE_EMAIL_URL = `mailto:${PRE_EMAIL}?subject=${encodeURIComponent("Pré-diagnóstico gratuito")}&body=${encodeURIComponent(PRE_EMAIL_BODY)}`;
 
 export const PRE_CHECKS = [
   { title: "Google Meu Negócio", text: "Se a ficha está completa, correta e aparece quando alguém da sua cidade procura o que você vende." },
