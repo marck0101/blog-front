@@ -26,4 +26,4 @@ A capa é desenhada pela API (decisões, layout e temas em `blog-backend/docs/CA
 
 ## Fora do escopo desta entrega
 
-Os cards (`GeneratedCover`) ainda usam o fallback em CSS com degradê por categoria, que contraria o padrão Relatório. Trocar por um cartão plano nos tokens do tema é um próximo passo (ver `docs/BACKLOG.md`).
+Os cards (`GeneratedCover`) ainda usam o fallback em CSS com degradê por categoria, que contraria o padrão Relatório. Trocar por um cartão plano nos tokens do tema é um próximo passo.
