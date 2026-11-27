@@ -47,7 +47,7 @@ export const PRE_FAQ = [
   },
   {
     question: "Para quem é?",
-    answer: "Para donos de pequenas e médias empresas e agências, principalmente do noroeste do Rio Grande do Sul. Atendo empresas de todo o Brasil.",
+    answer: "Para donos de negócios locais e agências, principalmente do noroeste do Rio Grande do Sul. Atendo empresas de todo o Brasil.",
   },
 ];
 

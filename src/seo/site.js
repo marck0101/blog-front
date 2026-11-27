@@ -98,7 +98,7 @@ export const PERSON = {
   image: `${PORTFOLIO_URL}marcos-henrique-correa.webp`,
   jobTitle: "Desenvolvedor Full Stack & Gestor de Tráfego",
   description:
-    "Gestor de tráfego e desenvolvedor full stack no noroeste do RS: tráfego pago, rastreamento, dashboards e SEO para PMEs e agências.",
+    "Gestor de tráfego e desenvolvedor full stack no noroeste do RS: tráfego pago, rastreamento, dashboards e SEO para negócios locais e agências.",
   // Onde atua e o que domina: sinais de autoridade e de região para buscadores e IAs
   address: { "@type": "PostalAddress", addressRegion: "RS", addressCountry: "BR" },
   areaServed: [
