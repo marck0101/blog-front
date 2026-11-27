@@ -41,6 +41,7 @@ const QUICK_LINKS = [
   { label: "Início", to: "/blog" },
   { label: "Blog", to: "/blog" },
   { label: "Sobre o autor", to: "/sobre" },
+  { label: "Pré-diagnóstico gratuito", to: "/pre-diagnostico" },
   { label: "Privacidade", to: "/privacidade" },
 ];
 

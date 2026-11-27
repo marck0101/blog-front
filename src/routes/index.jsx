@@ -25,6 +25,7 @@ const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
 const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
 const ClusterPage = lazyPage(() => import("../pages/Blog/ClusterPage"));
 const Favorites = lazyPage(() => import("../pages/Blog/Favorites"));
+const PreDiagnostico = lazyPage(() => import("../pages/Blog/PreDiagnostico"));
 const SuggestionsPage = lazyPage(() => import("../pages/Blog/Suggestions"));
 const Unsubscribe = lazyPage(() => import("../pages/Blog/Unsubscribe"));
 const Showcase = lazyPage(() => import("../pages/Admin/Showcase"));
@@ -78,6 +79,7 @@ const router = createBrowserRouter(
         <Route path="/seasons/:slug" element={<SeasonPage />} />
         <Route path="/temas/:slug" element={<ClusterPage />} />
         <Route path="/favoritos" element={<Favorites />} />
+        <Route path="/pre-diagnostico" element={<PreDiagnostico />} />
         <Route path="/sugestoes" element={<SuggestionsPage />} />
         <Route path="/cancelar-inscricao" element={<Unsubscribe />} />
         <Route path="/admin/login" element={<Login />} />

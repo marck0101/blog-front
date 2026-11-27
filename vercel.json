@@ -54,6 +54,7 @@
     { "source": "/seasons/:slug", "destination": "/api/prerender?season=:slug" },
     { "source": "/temas/:slug", "destination": "/api/prerender?cluster=:slug" },
     { "source": "/privacidade", "destination": "/api/prerender?page=privacidade" },
+    { "source": "/pre-diagnostico", "destination": "/api/prerender?page=pre-diagnostico" },
     { "source": "/sobre", "destination": "/api/prerender?page=sobre" },
     { "source": "/favoritos", "destination": "/index.html" },
     { "source": "/sugestoes", "destination": "/index.html" },
