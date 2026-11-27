@@ -18,6 +18,7 @@ import {
   SITE_URL,
   postTitle,
   postDescription,
+  postImage,
 } from "../../seo/site";
 import { readingMinutes } from "../../utils/readingTime";
 import { markEpisodeRead } from "../../utils/seasonProgress";
@@ -345,8 +346,8 @@ export default function Post() {
       <SEO
         title={postTitle(post)}
         description={postDescription(post)}
-        image={post.coverImage}
-        imageAlt={post.coverImageAlt}
+        image={postImage(post)}
+        imageAlt={post.coverImage ? post.coverImageAlt : undefined}
         url={`/blog/${post.slug}`}
         type="article"
         publishedAt={post.publishedAt}

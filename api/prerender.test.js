@@ -174,3 +174,19 @@ describe("página sobre no prerender", () => {
     expect(body).toContain("noroeste do Rio Grande do Sul");
   });
 });
+
+describe("og:image do post no prerender", () => {
+  const post = { _id: "b".repeat(24), slug: "sem-capa", title: "Sem capa", category: "tecnologia", publishedAt: "2026-11-13T12:00:00Z", content: "<p>Oi</p>" };
+
+  it("sem capa própria aponta para a capa automática", () => {
+    const { head } = postPage(post);
+    expect(head).toContain('property="og:image" content="https://api.blog.marck0101.com.br/api/posts/slug/sem-capa/cover.png');
+    expect(head).toContain('name="twitter:image" content="https://api.blog.marck0101.com.br/api/posts/slug/sem-capa/cover.png');
+  });
+
+  it("capa própria continua valendo", () => {
+    const { head } = postPage({ ...post, coverImage: "https://x.com/capa.webp" });
+    expect(head).toContain('property="og:image" content="https://x.com/capa.webp"');
+    expect(head).not.toContain("cover.png");
+  });
+});
