@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../../context/authContext";
 import { Linkedin, Github, MessageCircle } from "lucide-react";
 import authorPhoto from "../../../assets/author-96.webp?no-inline";
-import { contactMethod, trackEvent } from "../../../utils/analytics";
+import { contactMethod, openCookiePreferences, trackEvent } from "../../../utils/analytics";
 import { useFeatures } from "../../../utils/features";
 
 // WhatsApp/email = contato (conversão; vai também para o Pixel); demais = rede social
@@ -139,6 +139,15 @@ export default function BlogFooter() {
               >
                 Contato
               </a>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={openCookiePreferences}
+                className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition"
+              >
+                Preferências de cookies
+              </button>
             </li>
           </ul>
         </div>
