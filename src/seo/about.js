@@ -10,7 +10,7 @@ import { AUTHOR_NAME, PERSON, PORTFOLIO_URL, SITE_URL, WEBSITE_ID } from "./site
 
 export const ABOUT_TITLE = `Sobre ${AUTHOR_NAME} | Gestor de tráfego e desenvolvedor no RS`;
 export const ABOUT_DESCRIPTION =
-  "Gestor de tráfego e desenvolvedor full stack no noroeste do RS. Tráfego pago, tracking, dashboards e SEO para pequenas e médias empresas e agências.";
+  "Gestor de tráfego e desenvolvedor full stack no noroeste do RS. Tráfego pago, tracking, dashboards e SEO para negócios locais e agências.";
 export const ABOUT_REGION = "noroeste do Rio Grande do Sul";
 
 export const ABOUT_HTML = `
@@ -29,7 +29,7 @@ export const ABOUT_HTML = `
   </section>
   <section>
     <h2>Para quem</h2>
-    <p>Pequenas e médias empresas que já investem em tráfego e conteúdo, mas não sabem o que realmente traz venda, com foco inicial no noroeste do RS. E agências e times que precisam de tracking, dashboards e automação sem montar uma equipe de desenvolvimento.</p>
+    <p>Negócios locais que já investem em tráfego e conteúdo, mas não sabem o que realmente traz venda, com foco inicial no noroeste do RS. E agências e times que precisam de tracking, dashboards e automação sem montar uma equipe de desenvolvimento.</p>
   </section>
   <section>
     <h2>Como eu trabalho</h2>
