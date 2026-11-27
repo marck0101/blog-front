@@ -118,9 +118,10 @@ export const PERSON = {
     "Desenvolvimento web",
   ],
   sameAs: [
-    "https://github.com/marck0101",
     "https://www.linkedin.com/in/marcos-henrique-corr%C3%AAa-618392209/",
-    SITE_URL,
+    "https://github.com/marck0101",
+    "https://marck0101.com.br",
+    "https://servicos.marck0101.com.br",
   ],
 };
 

@@ -39,3 +39,15 @@ describe("autoCoverUrl", () => {
     expect(autoCoverUrl({})).toBe("");
   });
 });
+
+describe("Person schema", () => {
+  it("sameAs exato", async () => {
+    const { PERSON } = await import("./site");
+    expect(PERSON.sameAs).toEqual([
+      "https://www.linkedin.com/in/marcos-henrique-corr%C3%AAa-618392209/",
+      "https://github.com/marck0101",
+      "https://marck0101.com.br",
+      "https://servicos.marck0101.com.br",
+    ]);
+  });
+});
