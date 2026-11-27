@@ -23,6 +23,7 @@ import PreDiagnosticoCard from "../../components/PreDiagnosticoCard";
 import SubscribeForm from "../../components/SubscribeForm";
 import SeasonCard from "../../components/SeasonCard";
 import ResumeShelf from "../../components/ResumeShelf";
+import SuggestTopicCard from "../../components/SuggestTopicCard";
 import { setPageContext, trackEvent } from "../../utils/analytics";
 import { Flame, Pin } from "lucide-react";
 import { normalizeImageUrl } from "../../utils/imageUrl";
@@ -495,6 +496,8 @@ export default function BlogHome() {
         )}
 
         <PreDiagnosticoCard location="home" className="mt-16 max-w-3xl" />
+
+        <SuggestTopicCard location="home" className="mt-12" />
 
         <PostFaq items={BLOG_FAQ} className="mt-16 max-w-3xl" />
 

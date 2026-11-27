@@ -19,6 +19,7 @@ import {
   SITE_URL,
   postTitle,
   postDescription,
+  postImage,
 } from "../../seo/site";
 import { readingMinutes } from "../../utils/readingTime";
 import { markEpisodeRead } from "../../utils/seasonProgress";
@@ -42,6 +43,7 @@ import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 import { Loading, Skeleton } from "../../components/Skeleton";
 import lazyPage from "../../utils/lazyPage";
+import SuggestTopicCard from "../../components/SuggestTopicCard";
 
 // Comentários ficam no fim do post: chunk próprio, fora do JS inicial do leitor
 const Comments = lazyPage(() => import("../../components/Comments"));
@@ -345,8 +347,8 @@ export default function Post() {
       <SEO
         title={postTitle(post)}
         description={postDescription(post)}
-        image={post.coverImage}
-        imageAlt={post.coverImageAlt}
+        image={postImage(post)}
+        imageAlt={post.coverImage ? post.coverImageAlt : undefined}
         url={`/blog/${post.slug}`}
         type="article"
         publishedAt={post.publishedAt}
@@ -442,6 +444,8 @@ export default function Post() {
         <RelatedPosts key={`related-${post._id}`} post={post} categories={categories} seasons={seasons} />
 
         <PreDiagnosticoCard location="post" />
+
+        <SuggestTopicCard location="post" compact className="mt-12" />
 
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />

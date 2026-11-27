@@ -101,3 +101,12 @@ sem dados de campo (Chrome UX Report sem volume). Qualquer regressão pequena es
 para tirar o bloqueio; investigar o LCP no computador. Renderização completa no
 servidor é a mudança grande que atacaria Speed Index e JavaScript; medir antes de
 decidir. Comparar sempre pela mediana de 3 execuções.
+
+## Média — Cockpit: editar meta e rotinas pelo painel
+
+**O que é:** a C0 entregou a página Hoje (só leitura). A API já tem `GET/PUT /api/cockpit/meta`
+e `GET/POST/PUT /api/cockpit/jobs`, mas o painel ainda não tem tela para mudar a meta mensal
+nem a agenda esperada de cada rotina (hoje só por chamada direta à API).
+
+**Caminho sugerido:** seção "Configurar" no próprio `/admin/cockpit`, no padrão de
+`Features.jsx` (confirmação + aviso de resultado).
