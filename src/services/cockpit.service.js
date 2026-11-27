@@ -8,6 +8,22 @@ const CockpitService = {
     return data;
   },
 
+  // Automações: estado e últimas execuções de cada rotina
+  async getAutomacoes() {
+    const { data } = await api.get("/cockpit/automacoes");
+    return data;
+  },
+
+  // Placar semanal: 10 números x 13 semanas e metas semanais
+  async getPlacar() {
+    const { data } = await api.get("/cockpit/placar");
+    return data;
+  },
+  async savePlacarMetas(metas) {
+    const { data } = await api.put("/cockpit/placar/metas", { metas });
+    return data.metas;
+  },
+
   // ===== Experimentos =====
   async listExperiments(params = {}) {
     const { data } = await api.get("/cockpit/experiments", { params });

@@ -102,6 +102,11 @@ para tirar o bloqueio; investigar o LCP no computador. Renderização completa n
 servidor é a mudança grande que atacaria Speed Index e JavaScript; medir antes de
 decidir. Comparar sempre pela mediana de 3 execuções.
 
+## Baixa — Cockpit: Automações e Placar (C5 e C3, front)
+
+Feitos em 27/11/2026: páginas `/admin/cockpit/automacoes` e `/admin/cockpit/placar`. Pendências:
+gráfico de linha das 13 semanas (hoje é tabela, acessível) e edição da agenda esperada das rotinas.
+
 ## Média — Cockpit: editar meta e rotinas pelo painel
 
 **O que é:** a C0 entregou a página Hoje (só leitura). A API já tem `GET/PUT /api/cockpit/meta`

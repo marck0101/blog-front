@@ -54,3 +54,43 @@ export const JOB_STATUS = {
   atrasada: { label: "Atrasada", symbol: "▲" },
   falhou: { label: "Falhou", symbol: "✕" },
 };
+
+// ===== Automações e Placar (marca: tinta, nota e tijolo; sem semáforo) =====
+
+// Destaque por tinta (normal), nota (apagado) e tijolo (precisa de atenção)
+export const INK = "text-gray-900 dark:text-gray-100";
+export const NOTE = "text-gray-500 dark:text-gray-400";
+export const BRICK = "text-[#9a3b26] dark:text-[#e59a85]";
+
+export const AUTOMACAO_STATUS = {
+  ok: { label: "OK", symbol: "✓", tone: INK },
+  rodando: { label: "Rodando", symbol: "…", tone: NOTE },
+  atrasada: { label: "Atrasada", symbol: "▲", tone: BRICK },
+  falhou: { label: "Falhou", symbol: "✕", tone: BRICK },
+  nunca_rodou: { label: "Nunca rodou", symbol: "–", tone: NOTE },
+};
+
+export const PLACAR_STATUS = {
+  abaixo: { label: "Abaixo da meta", symbol: "▼", tone: BRICK },
+  na_meta: { label: "Na meta", symbol: "=", tone: INK },
+  acima: { label: "Acima da meta", symbol: "▲", tone: INK },
+  sem_meta: { label: "Sem meta", symbol: "–", tone: NOTE },
+  sem_dados: { label: "Sem dado", symbol: "–", tone: NOTE },
+};
+
+/** 1500 -> "1,5 s"; 90000 -> "1 min 30 s"; sem valor: "—" */
+export function duration(ms) {
+  if (!Number.isFinite(ms)) return "—";
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  const s = ms / 1000;
+  if (s < 60) return `${s.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} s`;
+  const m = Math.floor(s / 60);
+  const rest = Math.round(s % 60);
+  return rest ? `${m} min ${rest} s` : `${m} min`;
+}
+
+/** "2026-W48" + início "2026-11-23" -> "23/11" */
+export const dayMonth = (key) => (key ? `${key.slice(8, 10)}/${key.slice(5, 7)}` : "");
+
+/** Valor do placar: reais para receita, número para o resto */
+export const placarValue = (value, unit) => (unit === "brl" ? brl(value) : num(value));

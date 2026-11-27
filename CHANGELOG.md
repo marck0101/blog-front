@@ -2,6 +2,12 @@
 
 Formato livre, mais recente primeiro.
 
+## 27/11/2026 · Sprints C5 e C3 · Automações e Placar
+
+- Novo: `/admin/cockpit/automacoes` (estado, última execução, 10 últimas execuções e duração de cada rotina; texto e símbolo, sem semáforo).
+- Novo: `/admin/cockpit/placar` (10 números da semana, meta semanal editável, 13 semanas, "abaixo/na meta/acima" em texto).
+- Sub-navegação do Cockpit: Hoje | Placar | Automações | Experimentos | Links. **Backend antes do front.**
+
 ## 27/11/2026 · Sprint R6 · Capa automática nos cards
 
 - `GeneratedCover` troca o degradê por categoria pela capa automática da API (`<img>` 1200x630, tema claro/escuro). Se falhar, bloco liso no padrão Relatório (papel, traço tijolo, Plex Mono, Fraunces).

@@ -62,7 +62,14 @@ da API ficam em `node-express-mongodb/docs/OPERACAO.md`.
 - Cada tile mostra "fonte · atualizado há X"; retrato com mais de 2x o esperado
   (`staleAfterSec` da API) fica acinzentado e escrito "desatualizado".
 - Status sempre com texto e símbolo (✓ ▲ ✕ –), nunca só cor.
-- Sub-navegação (`components/CockpitNav`): Hoje | Experimentos | Links.
+- Sub-navegação (`components/CockpitNav`): Hoje | Placar | Automações | Experimentos | Links.
+- **Automações** (`/admin/cockpit/automacoes`, `pages/Admin/CockpitAutomacoes.jsx`): por rotina, status
+  (OK, Rodando, Atrasada, Falhou, Nunca rodou), última execução e tabela das 10 últimas com duração.
+  Destaque só em tinta, nota e tijolo (sem verde/amarelo/vermelho). Lê `GET /api/cockpit/automacoes`.
+- **Placar** (`/admin/cockpit/placar`, `pages/Admin/CockpitPlacar.jsx`): 10 números da semana atual
+  (segunda a domingo, Brasília), meta semanal editável (`PUT /api/cockpit/placar/metas`; campo vazio
+  apaga a meta), status em texto (abaixo/na meta/acima) e as 13 semanas em tabela por número.
+  Resumo da manhã no Telegram é do backend (variáveis `TELEGRAM_*` no OPERACAO.md de lá).
 - **Experimentos** (`/admin/cockpit/experimentos`, `pages/Admin/CockpitExperiments.jsx`): colunas por
   status (empilham no celular), mudança de status por botões (nada depende de arrastar), formulário com
   sliders ICE (1 a 5) e nota calculada, "ideia" ordenada por ICE, "rodando" com dias restantes e amostra
