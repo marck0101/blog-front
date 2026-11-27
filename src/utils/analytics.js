@@ -75,6 +75,12 @@ function syncClarity(enabled) {
 /* ================= GOOGLE ANALYTICS 4 ================= */
 
 let gaLoaded = false;
+// Fila de eventos do GA4 enquanto ele não carregou: com o carregamento adiado (até 3 s
+// ou a primeira interação), eventos do primeiro render, como experiment_impression,
+// se perderiam. Só entra na fila quem já aceitou os cookies, no domínio de produção e
+// fora das páginas privadas; limite de 50 para não crescer sem fim.
+const pendingGA = [];
+const PENDING_MAX = 50;
 
 function loadGA() {
   const script = document.createElement("script");
@@ -89,6 +95,8 @@ function loadGA() {
   // contadas pela medição otimizada do GA4 (mudanças no histórico do navegador)
   window.gtag("config", GA_ID);
   gaLoaded = true;
+  // Eventos que chegaram antes do GA4 carregar (carregamento adiado, ver abaixo)
+  pendingGA.splice(0).forEach(([n, p]) => window.gtag("event", n, p));
 }
 
 function syncGA(enabled) {
@@ -227,8 +235,17 @@ const gaActive = () => gaLoaded && !window[`ga-disable-${GA_ID}`];
  * - Clarity: `name` como evento, para filtrar gravações e montar funis
  * - Pixel: só se `pixel` for informado (evento padrão da Meta, ex.: "Lead")
  */
+const canQueueGA = () =>
+  isProdHost() && analyticsAllowed() && !isPrivatePath(window.location.pathname) && !isAuthorBrowser();
+
+/** Só para testes: eventos na fila do GA4 */
+export const _pendingGA = () => pendingGA.slice();
+
 export function trackEvent(name, params = {}, { pixel, pixelParams } = {}) {
   if (gaActive()) window.gtag("event", name, params);
+  else if (!gaLoaded && canQueueGA()) {
+    if (pendingGA.length < PENDING_MAX) pendingGA.push([name, params]);
+  }
   if (clarityRunning) window.clarity("event", name);
   if (pixel && pixelLoaded && lastPixelPath) window.fbq("track", pixel, pixelParams ?? {});
 }
