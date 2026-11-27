@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Activity, BookOpen, CircleAlert, Gauge, Handshake, Users, Wallet } from "lucide-react";
 import Header from "../../components/Header";
 import SEO from "../../components/SEO";
+import CockpitNav from "../../components/CockpitNav";
 import { Loading, Skeleton } from "../../components/Skeleton";
 import CockpitService from "../../services/cockpit.service";
 import { errorText } from "../../utils/apiError";
@@ -150,6 +152,9 @@ function Acoes({ data }) {
             <li key={i.id}>
               <p className="font-semibold text-red-700 dark:text-red-300"><span aria-hidden="true">✕</span> {i.title}</p>
               <p className="text-gray-600 dark:text-gray-300">{i.detail}</p>
+              {i.id === "experimentos-vencidos" && (
+                <Link to="/admin/cockpit/experimentos" className="text-blue-700 dark:text-blue-300 hover:underline">Ver experimentos</Link>
+              )}
             </li>
           ))}
         </ul>
@@ -173,6 +178,7 @@ export default function Cockpit() {
       <SEO robots="noindex, nofollow" />
       <Header />
       <main className="admin-content max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+        <CockpitNav />
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Gauge size={22} aria-hidden="true" /> Hoje</h1>
           <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">

@@ -62,7 +62,17 @@ da API ficam em `node-express-mongodb/docs/OPERACAO.md`.
 - Cada tile mostra "fonte · atualizado há X"; retrato com mais de 2x o esperado
   (`staleAfterSec` da API) fica acinzentado e escrito "desatualizado".
 - Status sempre com texto e símbolo (✓ ▲ ✕ –), nunca só cor.
+- Sub-navegação (`components/CockpitNav`): Hoje | Experimentos | Links.
+- **Experimentos** (`/admin/cockpit/experimentos`, `pages/Admin/CockpitExperiments.jsx`): colunas por
+  status (empilham no celular), mudança de status por botões (nada depende de arrastar), formulário com
+  sliders ICE (1 a 5) e nota calculada, "ideia" ordenada por ICE, "rodando" com dias restantes e amostra
+  mínima, concluído com decisão e aprendizado. A API valida as regras (SISTEMA.md do backend, R-COCKPIT-06);
+  o front só mostra a mensagem. Mapa de status espelhado em `utils/experiments.js`.
+- **Links** (`/admin/cockpit/links`, `pages/Admin/CockpitLinks.jsx`): atalhos por grupo, abrem em nova aba
+  com `rel="noopener noreferrer"`; só https (o front confere e a API recusa o resto).
+- "Precisa de ação" mostra "Experimentos rodando: N passou do prazo" com link para o quadro.
 - **Deploy: backend antes do front** (a rota `/api/cockpit/hoje` precisa existir).
+  C4/C6 usam `/api/cockpit/experiments` e `/api/cockpit/links`.
   Regras e variáveis: SISTEMA.md seção 21 e OPERACAO.md do backend.
 
 ## Qualidade antes do push

@@ -1,4 +1,5 @@
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../components/Header", () => ({ default: () => null }));
@@ -35,7 +36,7 @@ const hoje = (over = {}) => ({
 
 const renderPage = async (data) => {
   CockpitService.getHoje.mockResolvedValue(data);
-  render(<Cockpit />);
+  render(<MemoryRouter initialEntries={["/admin/cockpit"]}><Cockpit /></MemoryRouter>);
   await screen.findByLabelText("Receita do mês");
 };
 
@@ -105,9 +106,26 @@ describe("Cockpit: página Hoje", () => {
     expect(within(screen.getByLabelText("Precisa de ação")).getByText(/Nada pendente/)).toBeTruthy();
   });
 
+  it("sub-navegação Hoje | Experimentos | Links, com a aba atual marcada", async () => {
+    await renderPage(hoje());
+    const nav = within(screen.getByRole("navigation", { name: "Cockpit" }));
+    expect(nav.getByText("Hoje").getAttribute("aria-current")).toBe("page");
+    expect(nav.getByText("Experimentos").getAttribute("href")).toBe("/admin/cockpit/experimentos");
+    expect(nav.getByText("Links").getAttribute("href")).toBe("/admin/cockpit/links");
+  });
+
+  it("experimentos vencidos aparecem em precisa de ação com link para o quadro", async () => {
+    await renderPage(
+      hoje({ acoes: { ...tile("cockpit"), staleAfterSec: null, items: [{ id: "experimentos-vencidos", title: "Experimentos rodando: 2 passou do prazo", detail: "Título A, Título B", count: 2 }] } })
+    );
+    const acoes = within(screen.getByLabelText("Precisa de ação"));
+    expect(acoes.getByText(/Experimentos rodando: 2/)).toBeTruthy();
+    expect(acoes.getByText("Ver experimentos").getAttribute("href")).toBe("/admin/cockpit/experimentos");
+  });
+
   it("erro da API aparece como alerta", async () => {
     CockpitService.getHoje.mockRejectedValue({ response: { data: { error: "Sessão inválida" } } });
-    render(<Cockpit />);
+    render(<MemoryRouter initialEntries={["/admin/cockpit"]}><Cockpit /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
   });
 });
