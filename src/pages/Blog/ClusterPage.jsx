@@ -19,7 +19,7 @@ function Cover({ post, className }) {
       {cover ? (
         <img src={cover} alt={post.coverImageAlt || ""} width={320} height={180} loading="lazy" decoding="async" className="w-full h-full object-cover" />
       ) : (
-        <GeneratedCover category={post.category} size="sm" />
+        <GeneratedCover post={post} title={post.title} category={post.category} size="sm" />
       )}
     </div>
   );

@@ -87,7 +87,7 @@ function WeeklyHighlights({ posts, categories }) {
                 {cover ? (
                   <CoverImage src={cover} alt={post.coverImageAlt || ""} width={160} height={90} sizes="80px" className="w-full h-full object-cover" />
                 ) : (
-                  <GeneratedCover title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
+                  <GeneratedCover post={post} title={post.title} category={post.category} categoryLabel={categoryLabel} size="sm" />
                 )}
               </div>
               <div className="min-w-0">

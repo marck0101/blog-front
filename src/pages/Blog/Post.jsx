@@ -30,6 +30,7 @@ import ShareButtons from "../../components/ShareButtons";
 import RelatedPosts from "../../components/RelatedPosts";
 import ClusterNav from "../../components/ClusterNav";
 import useClusterData from "../../hooks/useClusterData";
+import GeneratedCover from "../../components/GeneratedCover";
 import PostFaq from "../../components/PostFaq";
 import DirectAnswer from "../../components/DirectAnswer";
 import TerminalOffer from "../../components/TerminalOffer";
@@ -418,6 +419,12 @@ export default function Post() {
         {features.readingHistory && <ResumeReading key={`resume-${post.slug}`} slug={post.slug} contentRef={contentRef} />}
 
         <SeasonNav post={post} variant="badge" />
+
+        {!post.coverImage && (
+          <div className="mt-6 aspect-[1200/630] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <GeneratedCover post={post} title={post.title} category={post.category} categoryLabel={categoryLabel} priority />
+          </div>
+        )}
 
         <DirectAnswer text={post.directAnswer} />
 
