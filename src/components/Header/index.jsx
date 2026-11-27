@@ -36,7 +36,7 @@ const ADMIN_GROUPS = [
   {
     label: "Conteúdo",
     links: [
-      { to: "/admin/cockpit", label: "Cockpit", icon: Gauge, match: "exact" },
+      { to: "/admin/cockpit", label: "Cockpit", icon: Gauge, match: "prefix" },
       { to: "/admin", label: "Dashboard", icon: LayoutDashboard, match: "exact" },
       { to: "/admin/posts", label: "Posts", icon: FileText, match: "prefix" },
       { to: "/admin/calendar", label: "Calendário", icon: CalendarDays, match: "exact" },
