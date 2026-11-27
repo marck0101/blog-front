@@ -41,6 +41,7 @@ import { prerendered, readBlock } from "../../utils/prerendered";
 import { safeHtml } from "../../utils/safeHtml";
 import { Loading, Skeleton } from "../../components/Skeleton";
 import lazyPage from "../../utils/lazyPage";
+import SuggestTopicCard from "../../components/SuggestTopicCard";
 
 // Comentários ficam no fim do post: chunk próprio, fora do JS inicial do leitor
 const Comments = lazyPage(() => import("../../components/Comments"));
@@ -439,6 +440,8 @@ export default function Post() {
         <ClusterNav post={post} data={clusterData} />
 
         <RelatedPosts key={`related-${post._id}`} post={post} categories={categories} seasons={seasons} />
+
+        <SuggestTopicCard location="post" compact className="mt-12" />
 
         <div className="mt-12">
           <SubscribeForm location="post" postCategory={post.category} postSlug={post.slug} compact />
