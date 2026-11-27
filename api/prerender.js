@@ -1,5 +1,5 @@
 // Vercel Serverless Function — pré-renderização de SEO para /blog, /blog/:slug,
-// /seasons e /seasons/:slug.
+// /seasons, /seasons/:slug, /temas/:slug e /privacidade.
 //
 // O app é uma SPA: sem isto, crawlers recebem um <head> genérico e um <div id="root">
 // vazio. Aqui buscamos o index.html estático, injetamos title/meta/canonical/JSON-LD
@@ -25,14 +25,20 @@ import {
   seasonUrl,
   seasonsIndexSchema,
   seasonSchema,
+  clusterUrl,
+  clusterTitle,
+  clusterSchema,
   cleanFaq,
   ROBOTS_INDEX,
   BLOG_FAQ,
   SEASONS_FAQ,
   SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
+import { ABOUT_DESCRIPTION, ABOUT_HTML, ABOUT_TITLE, ABOUT_URL, aboutSchema } from "../src/seo/about.js";
+import { PRIVACY_DESCRIPTION, PRIVACY_HTML, PRIVACY_TITLE, PRIVACY_UPDATED } from "../src/seo/privacy.js";
 import { coverSrcSet, GRID_SIZES } from "../src/utils/coverSrcSet.js";
 import { authorNumbered, tocItems, withHeadingIds } from "../src/utils/headings.js";
+import { clusterLinks } from "../src/utils/clusterLinks.js";
 
 // Alturas (px) do header do blog e da linha favoritar/compartilhar do post, que o
 // HTML estático reserva para o texto não pular quando o React assumir. No celular
@@ -230,11 +236,15 @@ function readingMinutes(html = "") {
 // da página e o React (que monta com o post do bloco prerendered-post, sem esperar a
 // API) substitui sem a página pular. Alturas fixas = header e linha de
 // favoritar/compartilhar, que só existem no React.
-function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, features }) {
+function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, features, cluster }) {
   const minutes = post.readingMinutes || readingMinutes(post.content);
+  // Tema do post (mesma regra do React: utils/clusterLinks.js)
+  const links = clusterLinks(post, cluster);
   const trail = post.season && seasonTitle
     ? `<span class="mx-2">/</span><a href="/seasons" class="hover:underline dark:hover:text-gray-100">Seasons</a>
           <span class="mx-2">/</span><a href="/seasons/${esc(post.season)}" class="hover:underline dark:hover:text-gray-100">${esc(seasonTitle)}</a>`
+    : cluster?.cluster && post.cluster === cluster.cluster.slug
+    ? `<span class="mx-2">/</span><a href="/temas/${esc(cluster.cluster.slug)}" class="hover:underline dark:hover:text-gray-100">${esc(cluster.cluster.title)}</a>`
     : "";
   const otherEpisodes = episodes?.season ? episodes.posts?.filter((p) => p.slug !== post.slug) : null;
   // Mesmas âncoras e mesmo sumário do React (PostToc), para não pular ao montar
@@ -288,13 +298,14 @@ function postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, 
             ${faqHtml(postFaq(post))}
           </article>
           ${otherEpisodes ? linkListHtml(`Season: ${episodes.season.title}`, otherEpisodes) : ""}
+          ${links ? linkListHtml(`${links.isPillar ? "Neste tema" : "Mais deste tema"}: ${links.cluster.title}`, [links.pillar, ...links.items].filter(Boolean)) : ""}
           ${linkListHtml("Continue lendo", related)}
         </main>
       </div>
     </div>`;
 }
 
-function postPage(post, { related = [], episodes = null, categoryLabel = "", seasonTitle = "", features = null } = {}) {
+export function postPage(post, { related = [], episodes = null, categoryLabel = "", seasonTitle = "", features = null, cluster = null } = {}) {
   const url = postUrl(post);
   const head = headTags({
     title: postTitle(post),
@@ -324,7 +335,7 @@ function postPage(post, { related = [], episodes = null, categoryLabel = "", sea
   // base de muitos leitores de IA, descartam <noscript>). O React troca tudo no
   // primeiro render; ver postArticleHtml. Os dados vão num bloco JSON, não em
   // script inline (a CSP não libera, SEC-02).
-  const root = postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, features });
+  const root = postArticleHtml(post, { related, episodes, categoryLabel, seasonTitle, features, cluster });
   const body = jsonBlock("prerendered-post", post);
 
   return { head, body, root };
@@ -396,6 +407,28 @@ function seasonsIndexPage(seasons) {
   return { head, body };
 }
 
+// Política de Privacidade: texto completo para quem não roda JS (é ela que
+// responde "o blog coleta meus dados?"); continua noindex, fora das buscas.
+export function privacyPage() {
+  const head = headTags({
+    title: PRIVACY_TITLE,
+    description: PRIVACY_DESCRIPTION,
+    url: `${SITE_URL}/privacidade`,
+    image: DEFAULT_IMAGE,
+    type: "website",
+    robots: "noindex",
+  });
+
+  const body = `<noscript>
+      <p><a href="/blog">Blog</a> / Política de Privacidade</p>
+      <h1>Política de Privacidade</h1>
+      <p>Última atualização: ${esc(PRIVACY_UPDATED)}</p>
+      ${PRIVACY_HTML}
+    </noscript>`;
+
+  return { head, body };
+}
+
 function seasonPage({ season, posts }) {
   const description = season.description || `Season com ${posts.length} artigos sobre ${season.title}.`;
   const head = headTags({
@@ -428,10 +461,74 @@ function seasonPage({ season, posts }) {
   return { head, body };
 }
 
-// path: "blog" (post) ou "seasons"
+// Sobre o autor: quem escreve e onde atua, para buscadores e IAs (E-E-A-T)
+export function aboutPage() {
+  const head = headTags({
+    title: ABOUT_TITLE,
+    description: ABOUT_DESCRIPTION,
+    url: ABOUT_URL,
+    image: DEFAULT_IMAGE,
+    type: "profile",
+    robots: ROBOTS_INDEX,
+    schema: aboutSchema(),
+  });
+
+  const body = `<noscript>
+      <p><a href="/blog">Blog</a> / Sobre</p>
+      <h1>Sobre o autor</h1>
+      <p>${esc(ABOUT_DESCRIPTION)}</p>
+      ${ABOUT_HTML}
+    </noscript>`;
+
+  return { head, body };
+}
+
+// Tema (cluster): o artigo principal e os relacionados, em links para quem não roda JS
+export function clusterPage({ cluster, pillar, posts = [] }) {
+  const head = headTags({
+    title: clusterTitle(cluster),
+    description: cluster.description,
+    url: clusterUrl(cluster),
+    image: (pillar || posts[0])?.coverImage || DEFAULT_IMAGE,
+    type: "website",
+    robots: ROBOTS_INDEX,
+    schema: clusterSchema(cluster, pillar, posts),
+  });
+
+  const item = (p) =>
+    `<li><a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? ` — ${esc(p.excerpt)}` : ""}</li>`;
+  const pillarHtml = pillar
+    ? `<h2>Comece por aqui</h2>
+      <p><a href="/blog/${esc(pillar.slug)}">${esc(pillar.title)}</a></p>
+      ${pillar.directAnswer || pillar.excerpt ? `<p>${esc(pillar.directAnswer || pillar.excerpt)}</p>` : ""}`
+    : cluster.season
+      ? `<h2>Comece pela série</h2>
+      <p><a href="/seasons/${esc(cluster.season)}">Ver a série completa deste tema</a></p>`
+      : "";
+  const listHtml = posts.length
+    ? `<h2>${pillar ? "Para aprofundar" : "Artigos do tema"}</h2>
+      <ul>
+          ${posts.map(item).join("\n          ")}
+      </ul>`
+    : "";
+
+  const body = `<noscript>
+      <p><a href="/blog">Blog</a> / ${esc(cluster.title)}</p>
+      <h1>${esc(cluster.title)}</h1>
+      <p>${esc(cluster.description)}</p>
+      ${pillarHtml}
+      ${listHtml}
+    </noscript>`;
+
+  return { head, body };
+}
+
+const NOT_FOUND_TITLE = { blog: "Post não encontrado", seasons: "Season não encontrada", temas: "Tema não encontrado" };
+
+// path: "blog" (post), "seasons" ou "temas"
 function notFoundPage(slug, path = "blog") {
   const head = headTags({
-    title: `${path === "seasons" ? "Season não encontrada" : "Post não encontrado"} | ${SITE_NAME}`,
+    title: `${NOT_FOUND_TITLE[path] || NOT_FOUND_TITLE.blog} | ${SITE_NAME}`,
     description: HOME_DESCRIPTION,
     url: `${SITE_URL}/${path}/${encodeURIComponent(slug)}`,
     image: DEFAULT_IMAGE,
@@ -444,7 +541,7 @@ function notFoundPage(slug, path = "blog") {
 }
 
 // Parâmetros que a reescrita do vercel.json usa para escolher a página (não são do visitante)
-const ROUTING_PARAMS = ["slug", "season", "page"];
+const ROUTING_PARAMS = ["slug", "season", "cluster", "page"];
 
 /**
  * Endereço antigo de um post (R-POST-17 no backend): a API devolve o post com o
@@ -465,6 +562,9 @@ export default async function handler(req, res) {
   const slug = typeof req.query.slug === "string" ? req.query.slug : "";
   const seasonSlug = typeof req.query.season === "string" ? req.query.season : "";
   const isSeasons = req.query.page === "seasons";
+  const isPrivacy = req.query.page === "privacidade";
+  const isAbout = req.query.page === "sobre";
+  const clusterSlug = typeof req.query.cluster === "string" ? req.query.cluster : "";
 
   let shell;
   try {
@@ -485,7 +585,19 @@ export default async function handler(req, res) {
     const shared = sharedData();
     const data = {};
 
-    if (seasonSlug) {
+    if (isPrivacy) {
+      page = privacyPage();
+    } else if (isAbout) {
+      page = aboutPage();
+    } else if (clusterSlug) {
+      const data = await fetchJson(`${API_URL}/clusters/${encodeURIComponent(clusterSlug)}`);
+      if (data) {
+        page = clusterPage(data);
+      } else {
+        page = notFoundPage(clusterSlug, "temas");
+        status = 404;
+      }
+    } else if (seasonSlug) {
       const data = await fetchJson(`${API_URL}/seasons/${encodeURIComponent(seasonSlug)}`);
       if (data) {
         page = seasonPage(data);
@@ -507,12 +619,14 @@ export default async function handler(req, res) {
       if (post) {
         // Selo da season no topo do post (SeasonNav) e "Continue lendo": entram no
         // HTML como links e vão prontos para o React (sem buscar de novo)
-        const [episodes, related, settings] = await Promise.all([
+        const [episodes, related, settings, cluster] = await Promise.all([
           post.season ? fetchOptional(`${API_URL}/posts/season/${encodeURIComponent(post.season)}`) : null,
           fetchOptional(`${API_URL}/posts/public/${encodeURIComponent(post._id)}/related`),
           fetchOptional(`${API_URL}/settings/features`),
+          post.cluster ? fetchOptional(`${API_URL}/clusters/${encodeURIComponent(post.cluster)}`) : null,
         ]);
         if (episodes) data.seasonEpisodes = episodes;
+        if (cluster) data.clusterPosts = cluster;
         if (Array.isArray(related)) data.related = { postId: post._id, posts: related };
         const { categories = [], seasons = [] } = await shared;
         page = postPage(post, {
@@ -521,6 +635,7 @@ export default async function handler(req, res) {
           categoryLabel: categories.find((c) => c.slug === post.category)?.label,
           seasonTitle: seasons.find((s) => s.slug === post.season)?.title || episodes?.season?.title,
           features: settings?.features,
+          cluster,
         });
       } else {
         page = notFoundPage(slug);

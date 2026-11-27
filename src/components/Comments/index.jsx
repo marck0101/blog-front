@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LogOut, MessageSquare, Reply, Trash2 } from "lucide-react";
 import CommentsService from "../../services/comments.service";
-import authorPhoto from "../../assets/author.webp";
+import authorPhoto from "../../assets/author-96.webp?no-inline";
 import { AUTHOR_NAME } from "../../seo/site";
 import { trackEvent } from "../../utils/analytics";
 import { errorText } from "../../utils/apiError";
@@ -39,6 +39,8 @@ function Avatar({ comment, size = 36 }) {
         width={size}
         height={size}
         style={style}
+        loading="lazy"
+        decoding="async"
         // Foto do Google não carrega com Referer de outro site
         referrerPolicy="no-referrer"
         onError={() => setBroken(true)}

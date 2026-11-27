@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { postRedirectPath } from "./prerender";
+import { aboutPage, clusterPage, postPage, postRedirectPath, privacyPage } from "./prerender";
 
 // BIZ-04: link antigo de post vira 301 para o endereço atual
 describe("postRedirectPath", () => {
@@ -74,5 +74,103 @@ describe("post no prerender", () => {
     const body = await render(false);
     expect(body).toContain('<h2 id="comeco">Começo</h2>');
     expect(body).not.toContain('aria-label="Sumário do post"');
+  });
+});
+
+describe("política de privacidade no prerender", () => {
+  const { head, body } = privacyPage();
+
+  it("noindex, título e canonical próprios", () => {
+    expect(head).toContain('name="robots" content="noindex"');
+    expect(head).toContain("<title data-prerender>Política de Privacidade");
+    expect(head).toContain('rel="canonical" href="https://blog.marck0101.com.br/privacidade"');
+  });
+
+  it("texto completo para quem não roda JavaScript", () => {
+    expect(body).toContain("<h1>Política de Privacidade</h1>");
+    expect(body).toContain("Quais dados coletamos");
+    expect(body).toContain("Seus direitos (LGPD)");
+    expect(body.length).toBeGreaterThan(5000);
+  });
+
+  it("sem dados estruturados (página noindex)", () => {
+    expect(head).not.toContain("application/ld+json");
+  });
+});
+
+describe("tema (cluster) no prerender", () => {
+  const cluster = { slug: "dashboards-e-bi", title: "Dashboards e BI de marketing", description: "Dashboards que o cliente abre todo dia." };
+  const pillar = { _id: "1", slug: "pilar", title: "Pilar <b>", directAnswer: "Resposta direta do pilar." };
+  const posts = [{ _id: "2", slug: "satelite", title: "Satélite", excerpt: "Resumo" }];
+  const { head, body } = clusterPage({ cluster, pillar, posts });
+
+  it("título, canonical e CollectionPage com o pilar primeiro", () => {
+    expect(head).toContain("<title data-prerender>Dashboards e BI de marketing | Tema |");
+    expect(head).toContain('rel="canonical" href="https://blog.marck0101.com.br/temas/dashboards-e-bi"');
+    const schema = JSON.parse(head.match(/<script data-prerender type="application\/ld\+json">(.*?)<\/script>/s)[1]);
+    const page = schema["@graph"].find((n) => n["@type"] === "CollectionPage");
+    expect(page.mainEntity.itemListElement.map((i) => i.url)).toEqual([
+      "https://blog.marck0101.com.br/blog/pilar",
+      "https://blog.marck0101.com.br/blog/satelite",
+    ]);
+  });
+
+  it("links do pilar e dos relacionados para quem não roda JS, com HTML escapado", () => {
+    expect(body).toContain('<a href="/blog/pilar">Pilar &lt;b&gt;</a>');
+    expect(body).toContain("Resposta direta do pilar.");
+    expect(body).toContain('<li><a href="/blog/satelite">Satélite</a> — Resumo</li>');
+  });
+
+  it("tema sem pilar e com season: a série vira a porta de entrada", () => {
+    const seg = { slug: "seguranca-na-diretoria", title: "Segurança", description: "x", season: "seguranca-e-pauta-de-diretoria" };
+    const out = clusterPage({ cluster: seg, pillar: null, posts }).body;
+    expect(out).toContain("Comece pela série");
+    expect(out).toContain('href="/seasons/seguranca-e-pauta-de-diretoria"');
+    // Com pilar, o pilar vem primeiro e a série não aparece
+    expect(clusterPage({ cluster: seg, pillar, posts }).body).not.toContain("Comece pela série");
+  });
+});
+
+describe("post com tema no prerender", () => {
+  const cluster = {
+    cluster: { slug: "dashboards-e-bi", title: "Dashboards e BI" },
+    pillar: { slug: "pilar", title: "O pilar" },
+    posts: [{ slug: "atual", title: "Atual" }, { slug: "vizinho", title: "Vizinho" }],
+  };
+  const post = { _id: "1", slug: "atual", title: "Atual", content: "<p>Texto do post.</p>", category: "tecnologia", cluster: "dashboards-e-bi", publishedAt: "2026-11-20" };
+
+  it("tema no breadcrumb, pilar e vizinhos no fim, isPartOf aponta a página do tema", () => {
+    const { head, root } = postPage(post, { cluster });
+    expect(root).toContain('<a href="/temas/dashboards-e-bi" class="hover:underline dark:hover:text-gray-100">Dashboards e BI</a>');
+    expect(root).toContain('aria-label="Mais deste tema: Dashboards e BI"');
+    expect(root).toContain('<a href="/blog/pilar"');
+    expect(root).toContain('<a href="/blog/vizinho"');
+    expect(root).not.toContain('<a href="/blog/atual"');
+    expect(head).toContain('"@id":"https://blog.marck0101.com.br/temas/dashboards-e-bi#page"');
+  });
+
+  it("post sem tema não muda", () => {
+    const { root } = postPage({ ...post, cluster: null }, { cluster: null });
+    expect(root).not.toContain("/temas/");
+  });
+});
+
+describe("página sobre no prerender", () => {
+  const { head, body } = aboutPage();
+
+  it("indexável, com ProfilePage e o Person com área atendida", () => {
+    expect(head).toContain('name="robots" content="index, follow');
+    expect(head).toContain('rel="canonical" href="https://blog.marck0101.com.br/sobre"');
+    const schema = JSON.parse(head.match(/<script data-prerender type="application\/ld\+json">(.*?)<\/script>/s)[1]);
+    const types = schema["@graph"].map((n) => n["@type"]);
+    expect(types).toEqual(expect.arrayContaining(["ProfilePage", "Person"]));
+    const person = schema["@graph"].find((n) => n["@type"] === "Person");
+    expect(person.areaServed.map((a) => a.name)).toContain("Noroeste do Rio Grande do Sul");
+  });
+
+  it("texto completo para quem não roda JavaScript", () => {
+    expect(body).toContain("<h1>Sobre o autor</h1>");
+    expect(body).toContain("Quem escreve");
+    expect(body).toContain("noroeste do Rio Grande do Sul");
   });
 });

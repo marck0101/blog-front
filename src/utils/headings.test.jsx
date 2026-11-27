@@ -19,6 +19,11 @@ describe("âncoras dos intertítulos", () => {
     expect(headingText("<strong>Prós</strong> &amp; contras&nbsp;")).toBe("Prós & contras");
   });
 
+  it("não repete id que a página já usa (comentários, pular para o conteúdo)", () => {
+    const { headings } = withHeadingIds("<h2>Comentários</h2><h2>Conteúdo principal</h2>");
+    expect(headings.map((h) => h.id)).toEqual(["comentarios-2", "conteudo-principal-2"]);
+  });
+
   it("põe id em h2 e h3, numera repetidos e mantém id existente", () => {
     const { html, headings } = withHeadingIds(
       '<h2>Começo</h2><p>x</p><h3 class="a">Detalhe</h3><h2>Começo</h2><h2 id="meu">Fim</h2><h4>Não</h4>'

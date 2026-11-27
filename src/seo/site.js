@@ -77,6 +77,26 @@ export const PERSON = {
   url: PORTFOLIO_URL,
   image: `${PORTFOLIO_URL}marcos-henrique-correa.webp`,
   jobTitle: "Desenvolvedor Full Stack & Gestor de Tráfego",
+  description:
+    "Gestor de tráfego e desenvolvedor full stack no noroeste do RS: tráfego pago, rastreamento, dashboards e SEO para PMEs e agências.",
+  // Onde atua e o que domina: sinais de autoridade e de região para buscadores e IAs
+  address: { "@type": "PostalAddress", addressRegion: "RS", addressCountry: "BR" },
+  areaServed: [
+    { "@type": "AdministrativeArea", name: "Noroeste do Rio Grande do Sul" },
+    { "@type": "Country", name: "Brasil" },
+  ],
+  knowsAbout: [
+    "Tráfego pago",
+    "Google Ads",
+    "Meta Ads",
+    "Google Analytics 4",
+    "Google Tag Manager",
+    "Rastreamento de conversões",
+    "Dashboards de marketing",
+    "Business Intelligence",
+    "SEO técnico",
+    "Desenvolvimento web",
+  ],
   sameAs: [
     "https://github.com/marck0101",
     "https://www.linkedin.com/in/marcos-henrique-corr%C3%AAa-618392209/",
@@ -237,6 +257,56 @@ export function seasonSchema(season, posts = []) {
   return { "@context": "https://schema.org", "@graph": graph };
 }
 
+export function clusterUrl(cluster) {
+  return `${SITE_URL}/temas/${cluster.slug}`;
+}
+
+// Título da página de um tema (o mesmo no React e no prerender)
+export function clusterTitle(cluster) {
+  return `${cluster.title} | Tema | ${AUTHOR_NAME}`;
+}
+
+// Página de um tema (cluster): o artigo principal (pilar) primeiro, depois os
+// relacionados. CollectionPage + ItemList ligam todos ao mesmo assunto.
+export function clusterSchema(cluster, pillar, posts = []) {
+  const url = clusterUrl(cluster);
+  const all = [pillar, ...posts].filter(Boolean);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#page`,
+        url,
+        name: cluster.title,
+        description: cluster.description,
+        inLanguage: "pt-BR",
+        isPartOf: { "@id": WEBSITE_ID },
+        author: { "@id": PERSON_ID },
+        about: { "@type": "Thing", name: cluster.title },
+        ...(pillar && { mainEntityOfPage: postUrl(pillar) }),
+        mainEntity: {
+          "@type": "ItemList",
+          itemListElement: all.map((p, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            url: postUrl(p),
+            name: p.title,
+          })),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Blog", item: `${SITE_URL}/blog` },
+          { "@type": "ListItem", position: 2, name: cluster.title, item: url },
+        ],
+      },
+      PERSON,
+    ],
+  };
+}
+
 export const SEASONS_DESCRIPTION =
   "Séries de artigos que se complementam: comece pelo primeiro episódio e avance do básico ao avançado.";
 
@@ -293,7 +363,10 @@ export function postSchema(post) {
       articleSection: post.category,
       mainEntityOfPage: url,
       url,
-      isPartOf: { "@id": WEBSITE_ID },
+      // Post de um tema: faz parte do site e da página do tema (CollectionPage)
+      isPartOf: post.cluster
+        ? [{ "@id": WEBSITE_ID }, { "@id": `${SITE_URL}/temas/${post.cluster}#page` }]
+        : { "@id": WEBSITE_ID },
       author: { "@id": PERSON_ID },
       publisher: { "@id": PERSON_ID },
     },

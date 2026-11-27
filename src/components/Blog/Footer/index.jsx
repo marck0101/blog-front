@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../../context/authContext";
 import { Linkedin, Github, MessageCircle } from "lucide-react";
-import authorPhoto from "../../../assets/author.webp";
+import authorPhoto from "../../../assets/author-96.webp?no-inline";
 import { contactMethod, trackEvent } from "../../../utils/analytics";
 import { useFeatures } from "../../../utils/features";
 
@@ -40,6 +40,7 @@ const SOCIAL_LINKS = [
 const QUICK_LINKS = [
   { label: "Início", to: "/blog" },
   { label: "Blog", to: "/blog" },
+  { label: "Sobre o autor", to: "/sobre" },
   { label: "Privacidade", to: "/privacidade" },
 ];
 
@@ -61,6 +62,8 @@ export default function BlogFooter() {
               alt="Marcos Henrique Corrêa"
               width={40}
               height={40}
+              loading="lazy"
+              decoding="async"
               className="w-10 h-10 rounded-full object-cover object-top shrink-0"
             />
             <Link

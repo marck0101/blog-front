@@ -17,6 +17,12 @@
       ]
     },
     {
+      "source": "/(favoritos|privacidade|cancelar-inscricao)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    },
+    {
       "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
@@ -46,7 +52,9 @@
     { "source": "/blog/:slug", "destination": "/api/prerender?slug=:slug" },
     { "source": "/seasons", "destination": "/api/prerender?page=seasons" },
     { "source": "/seasons/:slug", "destination": "/api/prerender?season=:slug" },
-    { "source": "/privacidade", "destination": "/index.html" },
+    { "source": "/temas/:slug", "destination": "/api/prerender?cluster=:slug" },
+    { "source": "/privacidade", "destination": "/api/prerender?page=privacidade" },
+    { "source": "/sobre", "destination": "/api/prerender?page=sobre" },
     { "source": "/favoritos", "destination": "/index.html" },
     { "source": "/sugestoes", "destination": "/index.html" },
     { "source": "/cancelar-inscricao", "destination": "/index.html" },

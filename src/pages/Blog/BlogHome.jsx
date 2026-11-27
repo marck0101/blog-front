@@ -1,5 +1,6 @@
 import BlogLayout from "../../layouts/BlogLayout";
-import authorPhoto from "../../assets/author.webp";
+import authorPhoto from "../../assets/author-256.webp?no-inline";
+import authorPhotoLarge from "../../assets/author.webp";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PostCard from "../../components/PostCard";
@@ -311,9 +312,13 @@ export default function BlogHome() {
 
           <img
             src={authorPhoto}
+            // Exibida a 96/128 px: 256 cobre telas 2x; a de 400 só em telas 3x
+            srcSet={`${authorPhoto} 256w, ${authorPhotoLarge} 400w`}
+            sizes="(min-width: 768px) 128px, 96px"
             alt={AUTHOR_NAME}
             width={128}
             height={128}
+            decoding="async"
             className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full object-cover object-top shadow-lg"
           />
         </div>

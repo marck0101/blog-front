@@ -20,8 +20,10 @@ import Post from "../pages/Blog/Post";
 // editor (TipTap), datepicker etc. lazyPage recarrega se a aba ficou
 // com a versão de antes de um deploy.
 const PrivacyPolicy = lazyPage(() => import("../pages/Blog/PrivacyPolicy"));
+const About = lazyPage(() => import("../pages/Blog/About"));
 const Seasons = lazyPage(() => import("../pages/Blog/Seasons"));
 const SeasonPage = lazyPage(() => import("../pages/Blog/SeasonPage"));
+const ClusterPage = lazyPage(() => import("../pages/Blog/ClusterPage"));
 const Favorites = lazyPage(() => import("../pages/Blog/Favorites"));
 const SuggestionsPage = lazyPage(() => import("../pages/Blog/Suggestions"));
 const Unsubscribe = lazyPage(() => import("../pages/Blog/Unsubscribe"));
@@ -68,8 +70,10 @@ const router = createBrowserRouter(
         <Route path="/blog" element={<BlogHome />} />
         <Route path="/blog/:slug" element={<Post />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
+        <Route path="/sobre" element={<About />} />
         <Route path="/seasons" element={<Seasons />} />
         <Route path="/seasons/:slug" element={<SeasonPage />} />
+        <Route path="/temas/:slug" element={<ClusterPage />} />
         <Route path="/favoritos" element={<Favorites />} />
         <Route path="/sugestoes" element={<SuggestionsPage />} />
         <Route path="/cancelar-inscricao" element={<Unsubscribe />} />

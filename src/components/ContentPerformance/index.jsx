@@ -29,8 +29,8 @@ const SORTS = ["total", "low", "up", "down", "peak", "peak_low", "recent", "olde
 // Linhas visíveis por vez (a maioria dos posts antigos fica em zero no período)
 const PAGE = 15;
 
-const selectClass =
-  "rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500";
+// Mesmo padrão dos filtros do painel (SortSelect): .input, largura do conteúdo a partir do sm
+const selectClass = "input py-1.5 text-sm sm:!w-auto";
 
 const fmtDay = (key) => {
   const [, m, d] = key.split("-");
