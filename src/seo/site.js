@@ -6,6 +6,17 @@ export const PORTFOLIO_URL = "https://marck0101.com.br/";
 export const SITE_NAME = "Blog do Marcos Henrique Corrêa";
 export const AUTHOR_NAME = "Marcos Henrique Corrêa";
 export const DEFAULT_IMAGE = `${SITE_URL}/og-default.png`;
+export const API_URL = "https://api.blog.marck0101.com.br/api";
+
+// Imagem de compartilhamento do post (og:image, JSON-LD). Capa própria sempre ganha;
+// sem capa, usa a capa automática 1200x630 gerada pela API (Sprint R6, docs/CAPAS.md).
+// ?v= (data da última edição) só serve para CDN e redes sociais renovarem o cache.
+export function postImage(post) {
+  if (post?.coverImage) return post.coverImage;
+  if (!post?.slug) return DEFAULT_IMAGE;
+  const v = post.updatedAt ? new Date(post.updatedAt).getTime() : NaN;
+  return `${API_URL}/posts/slug/${encodeURIComponent(post.slug)}/cover.png${Number.isNaN(v) ? "" : `?v=${v}`}`;
+}
 
 export const HOME_TITLE = "Marcos Henrique Corrêa | Blog de marketing, tráfego e dev";
 export const HOME_DESCRIPTION =
@@ -356,7 +367,7 @@ export function postSchema(post) {
               ? { "@type": "ImageObject", url: post.coverImage, caption: post.coverImageAlt }
               : post.coverImage,
           ]
-        : [DEFAULT_IMAGE],
+        : [postImage(post)],
       datePublished: post.publishedAt,
       dateModified: post.updatedAt || post.publishedAt,
       inLanguage: "pt-BR",
