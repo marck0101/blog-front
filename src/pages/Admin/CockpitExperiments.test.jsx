@@ -131,6 +131,48 @@ describe("Cockpit: Experimentos", () => {
     expect(CockpitService.createExperiment.mock.calls[0][0].ice).toEqual({ impact: 5, confidence: 4, ease: 2 });
   });
 
+  it("sorteio no site: escolher o espaço pede chave e 2 textos, e envia alvo, chave e variantes", async () => {
+    await renderPage([]);
+    fireEvent.click(screen.getByRole("button", { name: /Novo experimento/ }));
+    const form = await screen.findByRole("form", { name: "Novo experimento" });
+    fireEvent.change(within(form).getByLabelText("Título"), { target: { value: "Texto do botão" } });
+    fireEvent.change(within(form).getByLabelText(/^Hipótese/), { target: { value: "Se mudar, então melhora, porque sim" } });
+    fireEvent.change(within(form).getByLabelText("Espaço do site"), { target: { value: "pre-diagnostico-cta" } });
+
+    CockpitService.createExperiment.mockResolvedValue({});
+    fireEvent.click(within(form).getByRole("button", { name: "Criar experimento" }));
+    expect(within(form).getByRole("alert").textContent).toMatch(/Chave do experimento/);
+    expect(CockpitService.createExperiment).not.toHaveBeenCalled();
+
+    fireEvent.change(within(form).getByLabelText(/^Chave do experimento/), { target: { value: "cta-diagnostico" } });
+    fireEvent.change(within(form).getByLabelText("Chave do texto 1"), { target: { value: "controle" } });
+    fireEvent.change(within(form).getByLabelText("Texto do botão 1"), { target: { value: "Quero o meu" } });
+    fireEvent.change(within(form).getByLabelText("Chave do texto 2"), { target: { value: "curto" } });
+    fireEvent.change(within(form).getByLabelText("Texto do botão 2"), { target: { value: "Descobrir meu cenário" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Criar experimento" }));
+    await waitFor(() => expect(CockpitService.createExperiment).toHaveBeenCalled());
+    const body = CockpitService.createExperiment.mock.calls[0][0];
+    expect(body.alvo).toBe("pre-diagnostico-cta");
+    expect(body.chave).toBe("cta-diagnostico");
+    expect(body.variantes).toEqual([
+      { chave: "controle", texto: "Quero o meu" },
+      { chave: "curto", texto: "Descobrir meu cenário" },
+    ]);
+  });
+
+  it("sem espaço do site escolhido, nada de sorteio é enviado", async () => {
+    await renderPage([]);
+    fireEvent.click(screen.getByRole("button", { name: /Novo experimento/ }));
+    const form = await screen.findByRole("form", { name: "Novo experimento" });
+    fireEvent.change(within(form).getByLabelText("Título"), { target: { value: "Só registro" } });
+    fireEvent.change(within(form).getByLabelText(/^Hipótese/), { target: { value: "Se mudar, então melhora, porque sim" } });
+    CockpitService.createExperiment.mockResolvedValue({});
+    fireEvent.click(within(form).getByRole("button", { name: "Criar experimento" }));
+    await waitFor(() => expect(CockpitService.createExperiment).toHaveBeenCalled());
+    const body = CockpitService.createExperiment.mock.calls[0][0];
+    expect(body).toMatchObject({ alvo: null, chave: null, variantes: [] });
+  });
+
   it("erro ao carregar vira alerta", async () => {
     CockpitService.listExperiments.mockRejectedValue({ response: { data: { error: "Sessão inválida" } } });
     render(<MemoryRouter><CockpitExperiments /></MemoryRouter>);

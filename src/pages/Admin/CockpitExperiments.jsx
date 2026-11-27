@@ -7,7 +7,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import { Loading, Skeleton } from "../../components/Skeleton";
 import CockpitService from "../../services/cockpit.service";
 import { errorText } from "../../utils/apiError";
-import { AREAS, DECISIONS, HYPOTHESIS_RE, MOVE_LABEL, STATUSES, TRANSITIONS, daysLeft, daysLeftText, iceScore, sortByIce } from "../../utils/experiments";
+import { ALVOS, AREAS, DECISIONS, HYPOTHESIS_RE, MOVE_LABEL, SLUG_RE, STATUSES, TRANSITIONS, VARIANTES_MAX, VARIANTES_MIN, daysLeft, daysLeftText, iceScore, sortByIce } from "../../utils/experiments";
 import { useToast } from "../../hooks/useToast";
 
 const labelCls = "text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1";
@@ -34,7 +34,12 @@ const EMPTY = {
   minSample: "",
   plannedEnd: "",
   variants: [{ name: "A (controle)", description: "" }, { name: "B", description: "" }],
+  alvo: "",
+  chave: "",
+  variantes: [],
 };
+
+const VARIANTE_VAZIA = { chave: "", texto: "" };
 
 function Slider({ id, label, hint, value, onChange }) {
   return (
@@ -64,6 +69,9 @@ function ExperimentForm({ experiment, onSaved, onCancel }) {
           minSample: experiment.minSample ?? "",
           plannedEnd: toDateInput(experiment.plannedEnd),
           variants: (experiment.variants || []).map((v) => ({ name: v.name, description: v.description || "" })),
+          alvo: experiment.alvo || "",
+          chave: experiment.chave || "",
+          variantes: (experiment.variantes || []).map((v) => ({ chave: v.chave, texto: v.texto })),
         }
       : EMPTY
   );
@@ -74,8 +82,20 @@ function ExperimentForm({ experiment, onSaved, onCancel }) {
 
   const setVariant = (i, patch) => set({ variants: form.variants.map((v, j) => (j === i ? { ...v, ...patch } : v)) });
 
+  const setVariante = (i, patch) => set({ variantes: form.variantes.map((v, j) => (j === i ? { ...v, ...patch } : v)) });
+  const escolherAlvo = (alvo) => set({ alvo, variantes: alvo && form.variantes.length === 0 ? [{ ...VARIANTE_VAZIA }, { ...VARIANTE_VAZIA }] : form.variantes });
+
   const submit = async (e) => {
     e.preventDefault();
+    if (form.alvo) {
+      const lista = form.variantes;
+      const chaves = lista.map((v) => v.chave.trim());
+      if (!SLUG_RE.test(form.chave.trim())) return setError("Chave do experimento: use só letras minúsculas, números e hífen");
+      if (lista.length < VARIANTES_MIN || lista.some((v) => !v.texto.trim() || !SLUG_RE.test(v.chave.trim()))) {
+        return setError("Sorteio no site: cada variante precisa de chave (minúsculas, números e hífen) e texto");
+      }
+      if (new Set(chaves).size !== chaves.length) return setError("Sorteio no site: as chaves das variantes não podem se repetir");
+    }
     if (!HYPOTHESIS_RE.test(form.hypothesis)) {
       setError('Escreva a hipótese no formato "Se … então … porque …"');
       return;
@@ -94,6 +114,10 @@ function ExperimentForm({ experiment, onSaved, onCancel }) {
         minSample: num(form.minSample),
         plannedEnd: fromDateInput(form.plannedEnd),
         variants: form.variants.filter((v) => v.name.trim()).map((v) => ({ name: v.name, description: v.description })),
+        // sem alvo, o sorteio no site fica desligado (chave, alvo e variantes saem juntos)
+        alvo: form.alvo || null,
+        chave: form.alvo ? form.chave.trim() : null,
+        variantes: form.alvo ? form.variantes.map((v) => ({ chave: v.chave.trim(), texto: v.texto.trim() })) : [],
       };
       const saved = isEdit ? await CockpitService.updateExperiment(experiment._id, body) : await CockpitService.createExperiment(body);
       onSaved(saved, isEdit);
@@ -173,6 +197,43 @@ function ExperimentForm({ experiment, onSaved, onCancel }) {
         ))}
         {form.variants.length < 6 && (
           <button type="button" onClick={() => set({ variants: [...form.variants, { name: "", description: "" }] })} className="text-sm text-blue-700 dark:text-blue-300 hover:underline">+ Adicionar variante</button>
+        )}
+      </fieldset>
+
+      <fieldset className="rounded-lg border p-3 space-y-3">
+        <legend className="px-1 text-sm font-semibold">Sorteio no site <span className="font-normal text-gray-500 dark:text-gray-400">(opcional)</span></legend>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Quando o experimento estiver rodando, o site sorteia uma destas variantes, só para quem aceitou os cookies. Sem espaço escolhido, nada muda no site.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="expAlvo" className={labelCls}>Espaço do site</label>
+            <select id="expAlvo" className="input" value={form.alvo} onChange={(e) => escolherAlvo(e.target.value)}>
+              <option value="">Nenhum (só registro)</option>
+              {Object.entries(ALVOS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
+          </div>
+          {form.alvo && (
+            <div>
+              <label htmlFor="expChave" className={labelCls}>Chave do experimento <span className="font-normal text-gray-500 dark:text-gray-400">(vai para o GA4)</span></label>
+              <input id="expChave" className="input" maxLength={60} placeholder="ex.: cta-diagnostico-texto" value={form.chave} onChange={(e) => set({ chave: e.target.value })} />
+            </div>
+          )}
+        </div>
+        {form.alvo && (
+          <div className="space-y-2">
+            {form.variantes.map((v, i) => (
+              <div key={i} className="grid gap-2 sm:grid-cols-[12rem_1fr_auto]">
+                <input aria-label={`Chave do texto ${i + 1}`} className="input" maxLength={40} placeholder="chave (ex.: controle)" value={v.chave} onChange={(e) => setVariante(i, { chave: e.target.value })} />
+                <input aria-label={`Texto do botão ${i + 1}`} className="input" maxLength={200} placeholder="Texto exibido no site" value={v.texto} onChange={(e) => setVariante(i, { texto: e.target.value })} />
+                <button type="button" disabled={form.variantes.length <= VARIANTES_MIN} onClick={() => set({ variantes: form.variantes.filter((_, j) => j !== i) })} aria-label={`Remover texto ${i + 1}`} className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50">Remover</button>
+              </div>
+            ))}
+            {form.variantes.length < VARIANTES_MAX && (
+              <button type="button" onClick={() => set({ variantes: [...form.variantes, { ...VARIANTE_VAZIA }] })} className="text-sm text-blue-700 dark:text-blue-300 hover:underline">+ Adicionar texto</button>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400">De {VARIANTES_MIN} a {VARIANTES_MAX} textos. Mantenha um igual ao atual do site para servir de controle.</p>
+          </div>
         )}
       </fieldset>
 

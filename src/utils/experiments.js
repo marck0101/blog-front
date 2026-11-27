@@ -12,6 +12,12 @@ export const AREAS = {
   oferta: "Oferta",
 };
 
+// Espaços do site que aceitam variante (mesma lista da API: app/config/cockpitExperiments.js)
+export const ALVOS = { "pre-diagnostico-cta": "Pré-diagnóstico: texto do botão" };
+export const VARIANTES_MIN = 2;
+export const VARIANTES_MAX = 4;
+export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 export const DECISIONS = { adotar: "Adotar", descartar: "Descartar", repetir: "Repetir" };
 
 // Colunas na ordem do fluxo; símbolo + texto (nunca só cor)

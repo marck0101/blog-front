@@ -4,7 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 
 vi.mock("../../layouts/BlogLayout", () => ({ default: ({ children }) => <div>{children}</div> }));
 vi.mock("../../components/SEO", () => ({ default: () => null }));
-vi.mock("../../utils/analytics", () => ({ trackEvent: vi.fn() }));
+vi.mock("../../utils/analytics", async (importOriginal) => ({ ...(await importOriginal()), trackEvent: vi.fn() }));
+vi.mock("../../services/experiments.service", () => ({ default: { getAtivos: vi.fn().mockResolvedValue([]) } }));
 
 import { trackEvent } from "../../utils/analytics";
 import PreDiagnostico from "./PreDiagnostico";
