@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { trackEvent } from "../../utils/analytics";
+import useExperiment from "../../hooks/useExperiment";
 
 /** CTA compacto para o pré-diagnóstico gratuito (home e fim dos posts). */
 export default function PreDiagnosticoCard({ location = "card", className = "mt-12" }) {
+  // Experimento "pre-diagnostico-cta": só o texto do botão muda (mesmo elemento, sem salto de layout).
+  // Sem experimento, sem consentimento ou com a API fora do ar, vale o texto padrão.
+  const { texto, params } = useExperiment("pre-diagnostico-cta");
   return (
     <aside
       aria-label="Pré-diagnóstico gratuito"
@@ -17,10 +21,10 @@ export default function PreDiagnosticoCard({ location = "card", className = "mt-
       </div>
       <Link
         to="/pre-diagnostico"
-        onClick={() => trackEvent("pre_diagnostico_card_click", { link_location: location })}
+        onClick={() => trackEvent("pre_diagnostico_card_click", { link_location: location, ...params })}
         className="mt-4 sm:mt-0 shrink-0 inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 transition"
       >
-        Quero o meu
+        {texto || "Quero o meu"}
         <ArrowRight size={16} aria-hidden="true" />
       </Link>
     </aside>

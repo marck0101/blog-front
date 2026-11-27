@@ -2,6 +2,12 @@
 
 Formato livre, mais recente primeiro.
 
+## 27/11/2026 · Sprint R5 · Experimentos no site
+
+- Novo: `useExperiment(alvo)` sorteia a variante de texto do botão do pré-diagnóstico, só com consentimento de cookies; escolha guardada por experimento; revogar apaga e volta ao texto padrão.
+- GA4: `experiment_impression` e `experiment_id`/`variant_id` no clique (registrar as duas dimensões de evento no GA4; ver README).
+- Admin Experimentos: campos "Espaço do site", chave e 2 a 4 textos. **Depende do backend (R5) já publicado.**
+
 ## 27/11/2026 · Sprints C5 e C3 · Automações e Placar
 
 - Novo: `/admin/cockpit/automacoes` (estado, última execução, 10 últimas execuções e duração de cada rotina; texto e símbolo, sem semáforo).

@@ -53,6 +53,14 @@ npm run build         # build de produção em dist/
 
 Variáveis `VITE_*` entram no código que vai para o navegador: **nunca coloque segredo nelas**.
 
+## Experimentos no site (GA4)
+
+`useExperiment(alvo)` (`src/hooks/useExperiment.js`) sorteia a variante de texto de um espaço do site (hoje só `pre-diagnostico-cta`, no `PreDiagnosticoCard`) a partir de `GET /api/experiments/ativos`. Só depois do consentimento (`cookiesAccepted === "all"`): sem ele, mostra o texto padrão, não grava nada e não envia evento. A escolha fica em `localStorage` (`exp:<chave>`); ao revogar o consentimento, as escolhas são apagadas e volta o texto padrão.
+
+Eventos no GA4: `experiment_impression` (1 por página e experimento) e o evento de clique do espaço (`pre_diagnostico_card_click`), ambos com `experiment_id` (chave do experimento) e `variant_id` (chave da variante).
+
+**Configuração única no GA4:** Administrador > Definições personalizadas > Dimensões personalizadas > Criar dimensão personalizada, escopo **Evento**, uma para `experiment_id` e outra para `variant_id` (parâmetro do evento com o mesmo nome). Sem isso os eventos chegam, mas os relatórios não conseguem separar por variante. Para medir conversão, marque `pre_diagnostico_card_click` como evento-chave e compare por `variant_id` numa exploração.
+
 ## Onde fica cada coisa
 
 ```
@@ -60,7 +68,7 @@ src/
   pages/Blog/       páginas públicas (home, post, seasons, favoritos, cancelar inscrição)
   pages/Admin/      telas do painel (posts, calendário, envios, assinantes, métricas…)
   components/       componentes (editor, ConfirmDialog, ToastProvider, AuthProvider, SEO…)
-  hooks/            useToast (aviso de resultado), useSEO, usePageSize, useViewMode
+  hooks/            useToast (aviso de resultado), useSEO, usePageSize, useViewMode, useExperiment (sorteio de variante)
   context/          objetos de contexto: sessão do admin (authContext) e aviso (toastContext)
   services/         chamadas à API, uma por recurso (posts.service.js…)
   utils/            regras de tela: status do post, HTML seguro, erro da API, análises
