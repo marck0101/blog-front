@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { firstSchedulableDay, isOverdue, postDayKey, postStatusKey } from "./postStatus";
+import { POST_STATUS, firstSchedulableDay, isOverdue, localDateKey, postDayKey, postStatusDate, postStatusKey, toDateInput } from "./postStatus";
 
 // R-POST-16: mesma regra do backend (post.rules.firstSchedulableDay)
 describe("firstSchedulableDay", () => {
@@ -61,5 +61,45 @@ describe("postDayKey (dia no calendário)", () => {
 
   it("rascunho sem data não tem dia", () => {
     expect(postDayKey({ status: "draft" })).toBeNull();
+  });
+});
+
+describe("postStatusKey (casos extras)", () => {
+  it("sem status nem published: rascunho", () => {
+    expect(postStatusKey({})).toBe("draft");
+  });
+  it("todo status tem rótulo e estilo para a tela", () => {
+    for (const key of ["draft", "planned", "published", "trash"]) {
+      expect(POST_STATUS[key].label).toBeTruthy();
+      expect(POST_STATUS[key].style).toBeTruthy();
+    }
+    expect(POST_STATUS[postStatusKey({ status: "planned" })].label).toBe("Agendado");
+  });
+});
+
+describe("postStatusDate", () => {
+  it("publicado mostra a data de publicação (dd/mm)", () => {
+    expect(postStatusDate({ status: "published", published: true, publishedAt: "2026-11-05T12:00:00.000Z" })).toBe("05/11");
+  });
+  it("agendado e rascunho mostram a data planejada", () => {
+    expect(postStatusDate({ status: "planned", plannedAt: "2026-11-10T12:00:00.000Z" })).toBe("10/11");
+    expect(postStatusDate({ status: "draft", plannedAt: "2026-11-12T12:00:00.000Z" })).toBe("12/11");
+  });
+  it("na lixeira ou sem data: vazio", () => {
+    expect(postStatusDate({ status: "planned", plannedAt: "2026-11-10T12:00:00.000Z", deletedAt: "2026-11-11" })).toBe("");
+    expect(postStatusDate({ status: "draft" })).toBe("");
+  });
+});
+
+describe("toDateInput / localDateKey", () => {
+  it("toDateInput devolve YYYY-MM-DD sem voltar um dia", () => {
+    expect(toDateInput("2026-11-10T12:00:00.000Z")).toBe("2026-11-10");
+  });
+  it("toDateInput sem data: vazio", () => {
+    expect(toDateInput("")).toBe("");
+    expect(toDateInput(null)).toBe("");
+  });
+  it("localDateKey usa o fuso local e completa com zero", () => {
+    expect(localDateKey(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
   });
 });
