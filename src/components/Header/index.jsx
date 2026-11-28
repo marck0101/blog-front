@@ -25,6 +25,7 @@ import {
   Network,
   Pin,
   ShieldCheck,
+  ScrollText,
   ToggleRight,
   Moon,
   Sun,
@@ -60,7 +61,10 @@ const ADMIN_GROUPS = [
   },
   {
     label: "Conta",
-    links: [{ to: "/admin/security", label: "Segurança", icon: ShieldCheck, match: "exact" }],
+    links: [
+      { to: "/admin/security", label: "Segurança", icon: ShieldCheck, match: "exact" },
+      { to: "/admin/auditoria", label: "Auditoria", icon: ScrollText, match: "exact" },
+    ],
   },
 ];
 const ADMIN_LINKS = ADMIN_GROUPS.flatMap((g) => g.links);
