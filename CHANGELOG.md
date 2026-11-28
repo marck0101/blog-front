@@ -1,6 +1,10 @@
 # Changelog
 
 Formato livre, mais recente primeiro.
+## 28/11/2026 · MAP-02 · Sugestão de link interno no editor
+
+- Novo painel "Links internos sugeridos" abaixo do editor de texto: até 5 posts publicados com tags em comum que o texto ainda não linka. Um clique insere o link (trecho selecionado vira a âncora; sem seleção entra "Leia também: <título>" no fim). Usa as tags e o texto da tela, salvos ou não. **Depende do backend (`POST /api/content-map/suggestions`): publicar o backend primeiro.**
+
 
 ## 27/11/2026 · Sprint R4 · Placar do conteúdo
 

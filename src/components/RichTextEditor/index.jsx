@@ -28,6 +28,7 @@ import {
 import PostsService from "../../services/posts.service";
 import { uploadImage } from "../../services/uploadImage";
 import AltTextInput from "../AltTextInput";
+import LinkSuggestions from "../LinkSuggestions";
 import { Loading, Skeleton } from "../Skeleton";
 
 // Imagens do texto com a posição no documento (para editar o alt de cada uma)
@@ -98,7 +99,7 @@ function Sep() {
   return <span className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-0.5 shrink-0" />;
 }
 
-export default function RichTextEditor({ value, onChange }) {
+export default function RichTextEditor({ value, onChange, postId, tags }) {
   const [showModal, setShowModal] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
@@ -270,6 +271,8 @@ export default function RichTextEditor({ value, onChange }) {
           [&_.tiptap_p.is-editor-empty:first-child_::before]:h-0
         "
       />
+
+      <LinkSuggestions editor={editor} postId={postId} tags={tags} content={value} />
 
       {/* ── Alt das imagens do texto ── */}
       {images.length > 0 && (

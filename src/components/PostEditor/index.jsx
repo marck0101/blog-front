@@ -486,7 +486,7 @@ export default function PostEditor({ postId, initialPlannedAt = "" }) {
 
             <div>
               <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Conteúdo</p>
-              <RichTextEditor value={form.content} onChange={(content) => set({ content })} />
+              <RichTextEditor value={form.content} onChange={(content) => set({ content })} postId={postId} tags={form.tags} />
             </div>
 
             <FaqFields value={form.faq} onChange={(faq) => set({ faq })} />
