@@ -10,8 +10,8 @@ function JsonLd({ data }) {
   );
 }
 
-export function BlogSchema({ posts = [] }) {
-  return <JsonLd data={blogHomeSchema(posts)} />;
+export function BlogSchema({ posts = [], faq }) {
+  return <JsonLd data={blogHomeSchema(posts, faq)} />;
 }
 
 export function BlogPostSchema({ post }) {
@@ -19,8 +19,8 @@ export function BlogPostSchema({ post }) {
   return <JsonLd data={postSchema(post)} />;
 }
 
-export function SeasonsIndexSchema({ seasons = [] }) {
-  return <JsonLd data={seasonsIndexSchema(seasons)} />;
+export function SeasonsIndexSchema({ seasons = [], faq }) {
+  return <JsonLd data={seasonsIndexSchema(seasons, faq)} />;
 }
 
 export function SeasonSchema({ season, posts = [] }) {

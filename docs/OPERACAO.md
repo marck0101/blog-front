@@ -30,8 +30,15 @@ da API ficam em `node-express-mongodb/docs/OPERACAO.md`.
 - Schema FAQPage: só com o mesmo conteúdo que aparece **visível** na página
   (regra do Google). Hoje: home, `/seasons`, cada season e cada post, todos
   montados em `src/seo/site.js`.
-- `BLOG_FAQ` e `SEASONS_FAQ` (em `src/seo/site.js`) têm **cópia na API**
-  (`app/config/siteFaq.js`) para o `/llms-full.txt`. Mudou aqui, mude lá.
+- FAQ da home e de `/seasons` (OPS-01): a **fonte única é a API**
+  (`GET /api/site/faq`, de `app/config/siteFaq.js` no backend). O prerender
+  busca de lá e põe o FAQ no HTML e no schema FAQPage; a página lê do bloco
+  `siteFaq` injetado (ou busca da API em navegação interna). `BLOG_FAQ` e
+  `SEASONS_FAQ` em `src/seo/site.js` são só a **reserva** se a API cair ou
+  responder fora do formato. Para mudar o texto: 1) edite `siteFaq.js` no
+  backend; 2) copie para a reserva aqui; 3) atualize `FAQ_HASH` em
+  `src/seo/site.test.js` e em `tests/site/faq.test.mjs` (backend) com o mesmo
+  valor. Esquecer qualquer passo derruba um teste. Deploy: backend primeiro.
 - `/llms.txt`, `/llms-full.txt`, `/sitemap.xml`, `/rss.xml` e
   `/indexnow-key.txt` são gerados pela API; o `vercel.json` só reescreve o
   endereço. Essas regras precisam ficar **antes** da regra final que manda

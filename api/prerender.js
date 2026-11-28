@@ -33,8 +33,7 @@ import {
   clusterSchema,
   cleanFaq,
   ROBOTS_INDEX,
-  BLOG_FAQ,
-  SEASONS_FAQ,
+  resolveSiteFaq,
   SEASONS_DESCRIPTION,
 } from "../src/seo/site.js";
 import { ABOUT_DESCRIPTION, ABOUT_HTML, ABOUT_TITLE, ABOUT_URL, aboutSchema } from "../src/seo/about.js";
@@ -85,6 +84,14 @@ function fetchOptional(url) {
     console.error("[prerender]", err.message);
     return null;
   });
+}
+
+// FAQ da home e de /seasons (fonte única na API, OPS-01). Falhou ou veio fora do
+// formato: null, e as páginas usam a reserva embutida em src/seo/site.js (o FAQ nunca
+// some do HTML nem do schema). Roda em paralelo com a busca principal da rota.
+async function fetchSiteFaq() {
+  const raw = await fetchOptional(`${API_URL}/site/faq`);
+  return raw && typeof raw === "object" ? resolveSiteFaq(raw) : null;
 }
 
 // Categorias e seasons: header, chips e breadcrumb saem completos no primeiro render
@@ -372,7 +379,7 @@ export function postPage(post, { related = [], episodes = null, categoryLabel = 
 }
 
 // home: { posts, pinned }; preload só sem filtro, quando a vitrine aparece
-function homePage(home, withPreload) {
+function homePage(home, withPreload, faq) {
   const posts = [...home.pinned, ...home.posts];
   const head = headTags({
     title: HOME_TITLE,
@@ -381,7 +388,7 @@ function homePage(home, withPreload) {
     image: DEFAULT_IMAGE,
     type: "website",
     robots: ROBOTS_INDEX,
-    schema: blogHomeSchema(posts),
+    schema: blogHomeSchema(posts, faq.blog),
     // Com fixados, a capa do 1º é a maior imagem visível ao abrir (ver BlogHome)
     extra: withPreload ? imagePreload(home.pinned[0]?.coverImage) : "",
   });
@@ -400,13 +407,13 @@ function homePage(home, withPreload) {
           ${items}
       </ul>
       <p><a href="/seasons">Seasons: séries de artigos em sequência</a></p>
-      ${faqHtml(BLOG_FAQ)}
+      ${faqHtml(faq.blog)}
     </noscript>`;
 
   return { head, body };
 }
 
-function seasonsIndexPage(seasons) {
+function seasonsIndexPage(seasons, faq = resolveSiteFaq()) {
   const head = headTags({
     title: `Seasons | ${AUTHOR_NAME}`,
     description: SEASONS_DESCRIPTION,
@@ -414,7 +421,7 @@ function seasonsIndexPage(seasons) {
     image: DEFAULT_IMAGE,
     type: "website",
     robots: ROBOTS_INDEX,
-    schema: seasonsIndexSchema(seasons),
+    schema: seasonsIndexSchema(seasons, faq.seasons),
   });
 
   const items = seasons
@@ -431,7 +438,7 @@ function seasonsIndexPage(seasons) {
       <ul>
           ${items}
       </ul>
-      ${faqHtml(SEASONS_FAQ)}
+      ${faqHtml(faq.seasons)}
     </noscript>`;
 
   return { head, body };
@@ -683,7 +690,9 @@ export default async function handler(req, res) {
         status = 404;
       }
     } else if (isSeasons) {
-      page = seasonsIndexPage((await fetchJson(`${API_URL}/seasons`)) || []);
+      const [list, faq] = await Promise.all([fetchJson(`${API_URL}/seasons`), fetchSiteFaq()]);
+      if (faq) data.siteFaq = faq;
+      page = seasonsIndexPage(list || [], faq || undefined);
     } else if (slug) {
       const post = await fetchJson(`${API_URL}/posts/slug/${encodeURIComponent(slug)}`);
       const redirectTo = postRedirectPath(slug, post, req.query);
@@ -720,10 +729,11 @@ export default async function handler(req, res) {
       }
     } else {
       // limit 48 = maior opção de "itens por página" da BlogHome: serve qualquer escolha
-      const [list, pinned, highlights] = await Promise.all([
+      const [list, pinned, highlights, faq] = await Promise.all([
         fetchJson(`${API_URL}/posts/published?page=1&limit=48&excludePinned=1&fields=card`),
         fetchOptional(`${API_URL}/posts/pinned`),
         fetchOptional(`${API_URL}/posts/highlights`),
+        fetchSiteFaq(),
       ]);
       // Lista e vitrine só valem para /blog sem filtro (com ?categoria=, ?q=… a
       // BlogHome busca no navegador). Sem fixados/destaques (falha da API), idem.
@@ -733,7 +743,8 @@ export default async function handler(req, res) {
       if (defaultView && Array.isArray(pinned) && Array.isArray(highlights)) {
         data.home = { posts, total: list?.total || 0, pinned, highlights };
       }
-      page = homePage({ posts, pinned: pinned || [] }, defaultView);
+      if (faq) data.siteFaq = faq;
+      page = homePage({ posts, pinned: pinned || [] }, defaultView, faq || resolveSiteFaq());
     }
 
     Object.assign(data, await shared);
