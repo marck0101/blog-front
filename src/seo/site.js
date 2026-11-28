@@ -36,9 +36,11 @@ export const HOME_DESCRIPTION =
 // por domínio (public/robots.txt).
 export const ROBOTS_INDEX = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 
-// FAQ da home (/blog#faq). Fixo no código: muda pouco e vale para o blog inteiro.
-// BLOG_FAQ e SEASONS_FAQ têm uma cópia na API (node-express-mongodb/app/config/siteFaq.js)
-// para o llms-full.txt: mudou aqui, mude lá também.
+// FAQ da home (/blog#faq) e de /seasons. A FONTE ÚNICA é a API (GET /api/site/faq, vinda de
+// app/config/siteFaq.js no backend, o mesmo texto do llms-full.txt). BLOG_FAQ e SEASONS_FAQ
+// abaixo são só a RESERVA: valem quando a API cai ou responde fora do formato, para a página
+// e o schema FAQPage nunca ficarem sem FAQ. Mudou o texto lá? Copie para cá e atualize
+// FAQ_HASH em site.test.js (o teste do backend tem o mesmo hash; esquecer um lado quebra o teste).
 export const BLOG_FAQ = [
   {
     question: "Sobre o que é o blog do Marcos Henrique Corrêa?",
@@ -84,6 +86,16 @@ export const SEASONS_FAQ = [
       "O progresso fica salvo no seu próprio navegador, sem cadastro: um episódio conta como lido quando você passa de 75% do texto. A página da season mostra de onde continuar.",
   },
 ];
+
+// Resposta da API (ou do prerender) → { blog, seasons } com a reserva em cada lista que vier
+// vazia ou fora do formato. Nunca devolve FAQ vazio.
+export function resolveSiteFaq(raw) {
+  const pick = (list, fallback) => {
+    const pairs = Array.isArray(list) ? cleanFaq(list) : [];
+    return pairs.length ? pairs : fallback;
+  };
+  return { blog: pick(raw?.blog, BLOG_FAQ), seasons: pick(raw?.seasons, SEASONS_FAQ) };
+}
 
 // Mesmo @id usado no portfólio — o Google consolida as duas páginas na mesma entidade.
 export const PERSON_ID = `${PORTFOLIO_URL}#person`;
@@ -160,7 +172,7 @@ export function postDescription(post) {
   );
 }
 
-export function blogHomeSchema(posts = []) {
+export function blogHomeSchema(posts = [], faq = BLOG_FAQ) {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -192,7 +204,7 @@ export function blogHomeSchema(posts = []) {
         })),
       },
       PERSON,
-      faqPageSchema(BLOG_FAQ, `${SITE_URL}/blog#faq`),
+      faqPageSchema(faq, `${SITE_URL}/blog#faq`),
     ],
   };
 }
@@ -202,7 +214,7 @@ export function seasonUrl(season) {
 }
 
 // Página /seasons: coleção das séries + FAQ
-export function seasonsIndexSchema(seasons = []) {
+export function seasonsIndexSchema(seasons = [], faq = SEASONS_FAQ) {
   const url = `${SITE_URL}/seasons`;
   return {
     "@context": "https://schema.org",
@@ -234,7 +246,7 @@ export function seasonsIndexSchema(seasons = []) {
         ],
       },
       PERSON,
-      faqPageSchema(SEASONS_FAQ, `${url}#faq`),
+      faqPageSchema(faq, `${url}#faq`),
     ],
   };
 }

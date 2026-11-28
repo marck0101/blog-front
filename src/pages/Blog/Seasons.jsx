@@ -8,13 +8,15 @@ import SubscribeForm from "../../components/SubscribeForm";
 import SeasonsService from "../../services/seasons.service";
 import SeasonCard from "../../components/SeasonCard";
 import { setPageContext } from "../../utils/analytics";
-import { AUTHOR_NAME, SEASONS_DESCRIPTION, SEASONS_FAQ } from "../../seo/site";
+import { AUTHOR_NAME, SEASONS_DESCRIPTION } from "../../seo/site";
+import useSiteFaq from "../../hooks/useSiteFaq";
 import PostFaq from "../../components/PostFaq";
 import { SeasonsIndexSchema } from "../../components/StructuredData";
 import { Loading, Skeleton } from "../../components/Skeleton";
 
 // /seasons — séries de posts que se complementam (só as que já têm episódio publicado)
 export default function Seasons() {
+  const siteFaq = useSiteFaq();
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,7 @@ export default function Seasons() {
         description={SEASONS_DESCRIPTION}
         url="/seasons"
       />
-      <SeasonsIndexSchema seasons={seasons} />
+      <SeasonsIndexSchema seasons={seasons} faq={siteFaq.seasons} />
 
       <main className="max-w-5xl mx-auto px-6 py-10">
         <nav className="text-sm text-gray-500 dark:text-gray-300 mb-6">
@@ -84,7 +86,7 @@ export default function Seasons() {
           </div>
         )}
 
-        <PostFaq items={SEASONS_FAQ} className="mt-16 max-w-3xl" />
+        <PostFaq items={siteFaq.seasons} className="mt-16 max-w-3xl" />
 
         <div className="mt-16 max-w-3xl">
           <SubscribeForm />

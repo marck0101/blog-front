@@ -9,7 +9,8 @@ import FilterChips from "../../components/FilterChips";
 import FilterBar from "../../components/FilterBar";
 import SEO from "../../components/SEO";
 import { BlogSchema } from "../../components/StructuredData";
-import { AUTHOR_NAME, PORTFOLIO_URL, BLOG_FAQ } from "../../seo/site";
+import { AUTHOR_NAME, PORTFOLIO_URL } from "../../seo/site";
+import useSiteFaq from "../../hooks/useSiteFaq";
 import PostFaq from "../../components/PostFaq";
 import PostsService from "../../services/posts.service";
 import SubscriberService from "../../services/subscriber.service";
@@ -105,6 +106,7 @@ function WeeklyHighlights({ posts, categories }) {
 }
 
 export default function BlogHome() {
+  const siteFaq = useSiteFaq();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Fonte de verdade: array de categorias ativas, suporta múltiplos valores
@@ -280,7 +282,7 @@ export default function BlogHome() {
   return (
     <BlogLayout>
       <SEO url="/blog" />
-      <BlogSchema posts={posts} />
+      <BlogSchema posts={posts} faq={siteFaq.blog} />
 
       {/* Hero */}
       <section className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
@@ -499,7 +501,7 @@ export default function BlogHome() {
 
         <SuggestTopicCard location="home" className="mt-12" />
 
-        <PostFaq items={BLOG_FAQ} className="mt-16 max-w-3xl" />
+        <PostFaq items={siteFaq.blog} className="mt-16 max-w-3xl" />
 
         <div className="mt-12">
           <SubscribeForm location="home" />

@@ -2,6 +2,7 @@
 // (<script type="application/json" id="…">, não executáveis — a CSP não libera
 // script inline):
 //   prerendered-data      → categories, seasons (todas as páginas);
+//                           siteFaq: { blog, seasons } (só /blog e /seasons, OPS-01);
 //                           home: { posts, total, pinned, highlights } (só /blog);
 //                           seasonEpisodes, related: { postId, posts } (só /blog/:slug)
 //   prerendered-post      → o post de /blog/:slug

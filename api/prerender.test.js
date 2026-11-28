@@ -263,3 +263,66 @@ describe("serviços no prerender (R8.2)", () => {
     expect(headers["Cache-Control"]).toBe(PRERENDER_CACHE_OK);
   });
 });
+
+// OPS-01: FAQ da home e de /seasons vem da API (fonte única) com reserva embutida
+describe("FAQ no prerender (fonte única na API)", () => {
+  const API_FAQ = {
+    blog: [{ question: "Pergunta da API?", answer: "Resposta da API." }],
+    seasons: [{ question: "Season da API?", answer: "Resposta season." }],
+  };
+
+  const render = async (query, faqResponse) => {
+    const { vi } = await import("vitest");
+    const { default: handler } = await import("./prerender");
+    const { readFileSync } = await import("node:fs");
+    const shell = readFileSync("index.html", "utf8");
+    vi.stubGlobal("fetch", vi.fn(async (url) => {
+      const json = (body) => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
+      if (String(url).includes("/site/faq")) {
+        if (faqResponse === "down") throw new Error("API fora");
+        return json(faqResponse);
+      }
+      if (String(url).includes("/posts/published")) return json({ posts: [], total: 0 });
+      if (String(url).includes("/api/")) return json([]);
+      return { ok: true, status: 200, text: async () => shell, json: async () => ({}) };
+    }));
+    let body = "";
+    const res = { setHeader() {}, status() { return res; }, send(b) { body = b; return res; }, end() { return res; } };
+    await handler({ query }, res);
+    vi.unstubAllGlobals();
+    return body;
+  };
+
+  it("home: usa o FAQ da API no HTML, no schema FAQPage e no bloco de dados", async () => {
+    const html = await render({}, API_FAQ);
+    expect(html).toContain("Pergunta da API?");
+    expect(html).toContain('"FAQPage"');
+    expect(html).toContain('"siteFaq"');
+    expect(html).not.toContain("Sobre o que é o blog do Marcos");
+  });
+
+  it("home: API fora do ar mantém o FAQ da reserva no HTML e no schema", async () => {
+    const html = await render({}, "down");
+    expect(html).toContain("Sobre o que é o blog do Marcos");
+    expect(html).toContain('"FAQPage"');
+    expect(html).not.toContain('"siteFaq"');
+  });
+
+  it("home: resposta fora do formato também cai na reserva", async () => {
+    const html = await render({}, { blog: "x" });
+    expect(html).toContain("Sobre o que é o blog do Marcos");
+  });
+
+  it("/seasons: usa o FAQ da API", async () => {
+    const html = await render({ page: "seasons" }, API_FAQ);
+    expect(html).toContain("Season da API?");
+    expect(html).toContain('"FAQPage"');
+    expect(html).not.toContain("O que é uma season?");
+  });
+
+  it("/seasons: API fora do ar mantém a reserva", async () => {
+    const html = await render({ page: "seasons" }, "down");
+    expect(html).toContain("O que é uma season?");
+    expect(html).toContain('"FAQPage"');
+  });
+});
